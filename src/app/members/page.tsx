@@ -36,41 +36,43 @@ export default function MembersPage() {
         <div className="px-4 py-6 sm:px-0">
           <h1 className="text-2xl font-semibold text-foreground mb-6">Members</h1>
           
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
-                <Input 
-                  type="text" 
-                  placeholder="Search members..." 
-                  className="pl-10 w-64"
-                />
-              </div>
-              <Select>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by cell" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Cells</SelectItem>
-                  <SelectItem value="cell-a">Cell A</SelectItem>
-                  <SelectItem value="cell-b">Cell B</SelectItem>
-                  <SelectItem value="cell-c">Cell C</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <AddMemberModal />
-          </div>
-          
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-4 mb-6">
+  <div className="flex flex-col lg:flex-row items-center gap-4 lg:gap-6">
+    <div className="relative w-full lg:w-auto">
+      <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground" size={20} />
+      <Input 
+        type="text" 
+        placeholder="Search members..." 
+        className="pl-10 w-full lg:w-64"
+      />
+    </div>
+    <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+      <Select>
+        <SelectTrigger className="w-full lg:w-[180px]">
+          <SelectValue placeholder="Filter by cell" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Cells</SelectItem>
+          <SelectItem value="cell-a">Cell A</SelectItem>
+          <SelectItem value="cell-b">Cell B</SelectItem>
+          <SelectItem value="cell-c">Cell C</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select>
+        <SelectTrigger className="w-full lg:w-[180px]">
+          <SelectValue placeholder="Filter by status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Statuses</SelectItem>
+          <SelectItem value="active">Active</SelectItem>
+          <SelectItem value="inactive">Inactive</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  </div>
+  <AddMemberModal />
+</div>
+
           <Table>
             <TableHeader>
               <TableRow>
