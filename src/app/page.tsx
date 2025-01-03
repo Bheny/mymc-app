@@ -80,13 +80,13 @@ export default function OverviewPage() {
     <div>
       <Header mcHeadName={mcData.mcHeadName} />
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 mb-16">
-        <div className="px-4 py-6 sm:px-0">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-            Welcome, <span className='text-blue-500'>{mcData.mcHeadName}</span>! <br /> Here&apos;s what&apos;s happening in your MC:
+        <div className="px-4 py-4 sm:px-0">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">
+            Welcome, <span className='text-blue-500 '>{mcData.mcHeadName}</span>! <br /> Here&apos;s what&apos;s happening in your MC:
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-4">
                 <SummaryCard 
                   title="Total Members" 
                   value={mcData.totalMembers} 

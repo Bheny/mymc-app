@@ -37,7 +37,7 @@ export default function MemberDetailsPage() {
       <main className=" max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 mb-64">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-semibold text-foreground">Member Details</h1>
+            <h1 className="text-xl font-semibold text-foreground">Member Details</h1>
             <Button>
               <Edit className="mr-2 h-4 w-4" /> Edit Member
             </Button>
@@ -98,42 +98,42 @@ export default function MemberDetailsPage() {
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
                           <p className="text-sm font-medium">Attendance Rate</p>
-                          <p className="text-2xl font-bold">{member.attendanceRate}%</p>
+                          <p className="text-xl md:text-2xl font-bold">{member.attendanceRate}%</p>
                         </div>
                         <div className="space-y-2">
                           <p className="text-sm font-medium">Souls Won</p>
-                          <p className="text-2xl font-bold">{member.soulsWon}</p>
+                          <p className="text-xl md:text-2xl font-bold">{member.soulsWon}</p>
                         </div>
                         <div className="space-y-2">
                           <p className="text-sm font-medium">Discipleship Level</p>
-                          <p className="text-2xl font-bold">{member.discipleshipLevel}</p>
+                          <p className="text-xl md:text-2xl font-bold text-wrap">{member.discipleshipLevel}</p>
                         </div>
                         <div className="space-y-2">
                           <p className="text-sm font-medium">Cell</p>
-                          <p className="text-2xl font-bold">{member.cell}</p>
+                          <p className="text-xl md:text-2xl font-bold">{member.cell}</p>
                         </div>
                         <div className="space-y-2">
                           <p className="text-sm font-medium">Shepherd</p>
-                          <p className="text-2xl font-bold">{member.shepherd}</p>
+                          <p className="text-xl md:text-2xl font-bold">{member.shepherd}</p>
                         </div>
                         <div className="space-y-2">
                           <p className="text-sm font-medium">Department</p>
-                          <p className="text-2xl font-bold">{member.department}</p>
+                          <p className="text-xl md:text-2xl font-bold">{member.department}</p>
                         </div>
                         <div className="space-y-2">
                           <p className="text-sm font-medium">Branch</p>
-                          <p className="text-2xl font-bold">{member.branch}</p>
+                          <p className="text-xl md:text-2xl font-bold">{member.branch}</p>
                         </div>
                         <div className="space-y-2">
                           <p className="text-sm font-medium">Rank</p>
-                          <p className="text-2xl font-bold">{member.rank}</p>
+                          <p className="text-xl md:text-2xl font-bold">{member.rank}</p>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
                 <TabsContent value="attendance">
-                  <Card>
+                  <Card className='p-0'>
                     <CardHeader>
                       <CardTitle>Attendance Chart</CardTitle>
                       <CardDescription>Monthly attendance over the past year</CardDescription>

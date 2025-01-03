@@ -114,12 +114,12 @@ export default function MembersPage() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-2xl font-semibold text-foreground">
+            <h1 className="text-xl font-semibold text-foreground">
               Members (197)
             </h1>
             <AddMemberModal />
           </div>
-          <div className="grid grid-cols-3 md:grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-3 md:grid-cols-2 gap-2 mb-6">
             {cellData &&
               cellData.map((cellData, index) => (
                 <SummaryCard
