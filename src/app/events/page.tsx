@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { PlusCircle, Search, Calendar } from 'lucide-react'
+import { PlusCircle, Search} from 'lucide-react'
 
 // Mock data for events
 const events = [
@@ -29,7 +29,7 @@ export default function EventsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header mcHeadName="John Doe" />
+      <Header mcHeadName="Elder Favour" />
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">

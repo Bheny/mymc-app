@@ -57,7 +57,7 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
         <DialogHeader>
           <DialogTitle>Create New Event</DialogTitle>
           <DialogDescription>
-            Enter the details of the new event here. Click save when you're done.
+            Enter the details of the new event here. Click save when you&apos;re done.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>

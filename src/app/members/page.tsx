@@ -21,12 +21,7 @@ import {
   Search,
   Edit,
   Trash2,
-  UserCircle,
-  UserPlus,
-  BlocksIcon,
-  UserCheck,
-  TrendingUp,
-  Users,
+  UserCircle
 } from "lucide-react";
 import { SummaryCard } from "@/components/summary-card";
 import Link from "next/link";
@@ -70,14 +65,14 @@ const members = [
   },
 ];
 
-const mcData = {
-  mcHeadName: "Favour",
-  totalMembers: 180,
-  totalCells: 12,
-  avgAttendance: 150,
-  attendanceRate: "83%",
-  soulsWon: 15,
-};
+// const mcData = {
+//   mcHeadName: "Favour",
+//   totalMembers: 180,
+//   totalCells: 12,
+//   avgAttendance: 150,
+//   attendanceRate: "83%",
+//   soulsWon: 15,
+// };
 
 const cellData = [
   {
