@@ -8,7 +8,7 @@ import { UpcomingEvents } from '@/components/upcoming-events'
 
 // Mock data (in a real app, you'd fetch this from an API or database)
 const mcData = {
-  mcHeadName: "John Doe",
+  mcHeadName: "Favour",
   totalMembers: 180,
   totalCells: 12,
   avgAttendance: 150,
@@ -82,7 +82,7 @@ export default function OverviewPage() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 mb-16">
         <div className="px-4 py-6 sm:px-0">
           <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-            Welcome, {mcData.mcHeadName}! Here&apos;s what&apos;s happening in your MC:
+            Welcome, <span className='text-blue-500'>{mcData.mcHeadName}</span>! <br /> Here&apos;s what&apos;s happening in your MC:
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">

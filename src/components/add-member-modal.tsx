@@ -35,7 +35,7 @@ export function AddMemberModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>Add Member</Button>
+        <Button className="w-auto">Add Member</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>

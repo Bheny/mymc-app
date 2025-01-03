@@ -3,15 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 interface SummaryCardProps {
   title: string
   value: string | number
-  icon: React.ReactNode
+  icon?: React.ReactNode 
   target?: string | number
 }
 
-export function SummaryCard({ title, value, icon, target }: SummaryCardProps) {
+export function SummaryCard({ title, value, icon , target }: SummaryCardProps) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <CardTitle className="text-sm font-medium truncate">{title}</CardTitle>
         {icon}
       </CardHeader>
       <CardContent>

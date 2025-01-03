@@ -21,7 +21,7 @@ export function UpcomingEvents({ events }: { events: Event[] }) {
       <CardContent>
         <div className="space-y-4">
           {events.map((event) => (
-            <div key={event.id} className="flex flex-col space-y-2 p-3 bg-[#D0E3FF] rounded-md">
+            <div key={event.id} className="flex flex-col space-y-2 p-3 bg-[#e5effd] rounded-md">
               <h3 className="text-sm font-medium">{event.title}</h3>
               <div className="flex items-center space-x-2 text-xs text-muted-foreground">
                 <Calendar className="h-4 w-4" />
