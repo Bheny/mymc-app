@@ -3,7 +3,7 @@ import { SummaryCard } from '../components/summary-card'
 import { RecentActivity } from '../components/recent-activity'
 import { TopPerformingCells } from '../components/top-performing-cells'
 import { TopPerformingShepherds } from '../components/top-performing-shepherds'
-import { Users, Home, UserCheck, UserPlus, TrendingUp, BlocksIcon } from 'lucide-react'
+import { Users,  UserCheck, UserPlus, TrendingUp, BlocksIcon } from 'lucide-react'
 import { UpcomingEvents } from '@/components/upcoming-events'
 
 // Mock data (in a real app, you'd fetch this from an API or database)
@@ -82,7 +82,7 @@ export default function OverviewPage() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 mb-16">
         <div className="px-4 py-6 sm:px-0">
           <h2 className="text-2xl font-semibold text-gray-900 mb-6">
-            Welcome, {mcData.mcHeadName}! Here's what's happening in your MC:
+            Welcome, {mcData.mcHeadName}! Here&apos;s what&apos;s happening in your MC:
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
@@ -120,9 +120,7 @@ export default function OverviewPage() {
               <TopPerformingCells cells={topPerformingCells} />
               <TopPerformingShepherds shepherds={topPerformingShepherds} />
             </div>
-            {/* <div className="space-y-6">
-              
-            </div> */}
+
           </div>
         </div>
       </main>
