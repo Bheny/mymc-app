@@ -1,3 +1,4 @@
+"use client";
 import { Header } from "../../components/header";
 import { AddMemberModal } from "../../components/add-member-modal";
 import { Button } from "@/components/ui/button";
@@ -21,10 +22,12 @@ import {
   Search,
   Edit,
   Trash2,
-  UserCircle
+  UserCircle,
+  PlusCircle
 } from "lucide-react";
 import { SummaryCard } from "@/components/summary-card";
 import Link from "next/link";
+import { useState } from "react";
 
 // Mock data for members
 const members = [
@@ -102,6 +105,8 @@ const cellData = [
 ];
 
 export default function MembersPage() {
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  
   return (
     <div className="min-h-screen bg-background ">
       <Header mcHeadName="Favour" />
@@ -161,6 +166,11 @@ export default function MembersPage() {
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto" onClick={() => setIsCreateModalOpen(true)}>
+              <PlusCircle className="mr-2 h-4 w-4" /> Create Cell
+            </Button>
             </div>
           </div>
 

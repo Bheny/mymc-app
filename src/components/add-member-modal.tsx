@@ -20,6 +20,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
+import { PlusCircle } from "lucide-react"
 
 export function AddMemberModal() {
   const [open, setOpen] = useState(false)
@@ -35,7 +36,7 @@ export function AddMemberModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button className="w-auto">Add Member</Button>
+        <Button className="w-auto"> <PlusCircle className="mr-2 h-4 w-4" />Add Member</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
