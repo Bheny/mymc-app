@@ -28,6 +28,7 @@ import {
 import { SummaryCard } from "@/components/summary-card";
 import Link from "next/link";
 import { useState } from "react";
+import { CreateEventModal } from "@/components/create-event-modal";
 
 // Mock data for members
 const members = [
@@ -225,6 +226,7 @@ export default function MembersPage() {
           </Table>
         </div>
       </main>
+       <CreateEventModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
     </div>
   );
 }
