@@ -1,6 +1,7 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
-import { BottomNavbar } from '../components/bottom-navbar'
+import { BottomNavbar } from '@/components/bottom-navbar'
+import { Toaster } from "@/components/ui/toaster"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -16,11 +17,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <div className="min-h-screen bg-[#f5f5f5] pt-12 pb-16">
+      <body className={`${inter.className} bg-[#F9FCFF]`}>
+        <div className="min-h-screen pt-12 pb-16">
           {children}
           <BottomNavbar />
         </div>
+        <Toaster />
       </body>
     </html>
   )

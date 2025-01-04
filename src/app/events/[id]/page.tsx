@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Calendar, Clock, MapPin, Users, Edit, Trash2 } from 'lucide-react'
+import { TakeAttendanceButton } from '@/components/take-attendance-button'
 
 // Mock data for a single event (in a real app, you'd fetch this based on the ID)
 const event = {
@@ -81,7 +82,7 @@ export default function EventDetailsPage() {
                 </div>
               </CardContent>
             </Card>
-            
+            <TakeAttendanceButton />
             <Card>
               <CardHeader>
                 <CardTitle>Attendees</CardTitle>

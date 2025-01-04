@@ -17,11 +17,15 @@ import { PlusCircle, Search} from 'lucide-react'
 
 // Mock data for events
 const events = [
+ 
   { id: 1, title: 'Monthly Prayer Meeting', date: '2023-06-15', time: '19:00', location: 'Main Sanctuary', type: 'Prayer' },
   { id: 2, title: 'Cell Leaders Training', date: '2023-06-20', time: '18:30', location: 'Conference Room A', type: 'Training' },
   { id: 3, title: 'Community Outreach', date: '2023-06-25', time: '10:00', location: 'City Park', type: 'Outreach' },
   { id: 4, title: 'Youth Fellowship', date: '2023-07-01', time: '17:00', location: 'Youth Center', type: 'Fellowship' },
   { id: 5, title: 'Bible Study', date: '2023-07-05', time: '19:30', location: 'Online (Zoom)', type: 'Study' },
+  { id: 6 , title: 'Mega Gathering Service', date: '2023-06-15', time: '19:00', location: 'Main Sanctuary', type: 'Service' },
+  { id: 7 , title: 'Them that love his appearing Service', date: '2023-06-15', time: '19:00', location: 'Main Sanctuary', type: 'Service' },
+
 ]
 
 export default function EventsPage() {
@@ -57,6 +61,7 @@ export default function EventsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Types</SelectItem>
+                  <SelectItem value="service">Service</SelectItem>
                   <SelectItem value="prayer">Prayer</SelectItem>
                   <SelectItem value="training">Training</SelectItem>
                   <SelectItem value="outreach">Outreach</SelectItem>
