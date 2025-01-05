@@ -1,20 +1,37 @@
-import { Header } from '../components/header'
+"use client"
+// import { Header } from '../components/header'
 import { SummaryCard } from '../components/summary-card'
 import { RecentActivity } from '../components/recent-activity'
 import { TopPerformingCells } from '../components/top-performing-cells'
 import { TopPerformingShepherds } from '../components/top-performing-shepherds'
-import { Users,  UserCheck, UserPlus, TrendingUp, BlocksIcon } from 'lucide-react'
+import { Users,  UserCheck, UserPlus, TrendingUp, Home } from 'lucide-react'
 import { UpcomingEvents } from '@/components/upcoming-events'
+import { useEffect, useState } from 'react'
+import Loader from '@/components/loader'
+import { useSession } from 'next-auth/react'
+
+
+interface DashboardData {
+  totalMembers: number
+  totalCells: number
+  avgAttendance: number
+  attendanceRate: string
+  soulsWon: number
+  recentActivities: unknown[]
+  upcomingEvents: unknown[]
+  topPerformingCells: unknown[]
+  topPerformingShepherds: unknown[]
+}
 
 // Mock data (in a real app, you'd fetch this from an API or database)
-const mcData = {
-  mcHeadName: "Favour",
-  totalMembers: 180,
-  totalCells: 12,
-  avgAttendance: 150,
-  attendanceRate: "83%",
-  soulsWon: 15
-}
+// const mcData = {
+//   mcHeadName: "Favour",
+//   totalMembers: 180,
+//   totalCells: 12,
+//   avgAttendance: 150,
+//   attendanceRate: "83%",
+//   soulsWon: 15
+// }
 
 const recentActivities = [
   {
@@ -76,42 +93,67 @@ const upcomingEvents = [
 
 
 export default function OverviewPage() {
+    const [dashboardData, setDashboardData] = useState<DashboardData | null>(null)
+  
+    useEffect(() => {
+      const fetchDashboardData = async () => {
+        try {
+          const response = await fetch('/api/dashboard')
+          if (!response.ok) {
+            throw new Error('Failed to fetch dashboard data')
+          }
+          const data = await response.json()
+          setDashboardData(data)
+        } catch (error) {
+          console.error('Error fetching dashboard data:', error)
+          // Handle error (e.g., show error message to user)
+        }
+      }
+  
+      fetchDashboardData()
+    }, [])
+
+    // fectch user data from session
+    const session = useSession();
+
+    console.log(session.data?.user)
+  
+    if (!dashboardData) {
+      return <Loader /> // Or a more sophisticated loading component
+    }
   return (
     <div>
-      <Header mcHeadName={mcData.mcHeadName} />
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 mb-16">
         <div className="px-4 py-4 sm:px-0">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">
-            Welcome, <span className='text-blue-500 '>{mcData.mcHeadName}</span>! <br /> Here&apos;s what&apos;s happening in your MC:
+            Welcome, <span className='text-blue-500 '>{session.data?.user?.name}</span>! <br /> Here&apos;s what&apos;s happening in <span className='text-blue-500 font-bold'>{session.data?.user?.mcName || "your MC"}</span>:
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
               <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-4">
-                <SummaryCard 
-                  title="Total Members" 
-                  value={mcData.totalMembers} 
-                  target={200}
+              <SummaryCard 
+                  title="Total MC Members" 
+                  value={dashboardData.totalMembers} 
                   icon={<Users className="h-4 w-4 text-muted-foreground" />} 
                 />
                 <SummaryCard 
                   title="Total Cells" 
-                  value={mcData.totalCells} 
-                  target={20}
-                  icon={<BlocksIcon className="h-4 w-4 text-muted-foreground" />} 
+                  value={dashboardData.totalCells} 
+                  icon={<Home className="h-4 w-4 text-muted-foreground" />} 
                 />
                 <SummaryCard 
                   title="Average Attendance" 
-                  value={mcData.avgAttendance} 
+                  value={dashboardData.avgAttendance} 
                   icon={<UserCheck className="h-4 w-4 text-muted-foreground" />} 
                 />
                 <SummaryCard 
                   title="Attendance Rate" 
-                  value={mcData.attendanceRate} 
+                  value={dashboardData.attendanceRate} 
                   icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} 
                 />
                 <SummaryCard 
                   title="Souls Won This Month" 
-                  value={mcData.soulsWon} 
+                  value={dashboardData.soulsWon} 
                   icon={<UserPlus className="h-4 w-4 text-muted-foreground" />} 
                 />
               </div>
@@ -127,4 +169,3 @@ export default function OverviewPage() {
     </div>
   )
 }
-

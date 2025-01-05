@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Header } from '@/components/header'
+// import { Header } from '@/components/header'
 import { GeneralMetrics } from '@/components/general-metrics'
 import { ReportRequestForm } from '@/components/report-request-form'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -13,7 +13,7 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header mcHeadName="John Doe" />
+      {/* <Header mcHeadName="John Doe" /> */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <h1 className="text-3xl font-semibold text-foreground mb-6">Reports</h1>

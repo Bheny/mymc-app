@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { Header } from '@/components/header'
+// import { Header } from '@/components/header'
 import { EventCard } from '@/components/event-card'
 import { CreateEventModal } from '@/components/create-event-modal'
 import { Button } from "@/components/ui/button"
@@ -33,7 +33,7 @@ export default function EventsPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header mcHeadName="Elder Favour" />
+      {/* <Header mcHeadName="Elder Favour" /> */}
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
