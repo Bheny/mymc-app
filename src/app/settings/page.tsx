@@ -9,7 +9,7 @@ import { NotificationSettings } from '@/components/settings/notification-setting
 import { PrivacySecuritySettings } from '@/components/settings/privacy-security-settings'
 import { CustomizationSettings } from '@/components/settings/customization-settings'
 import { IntegrationSettings } from '@/components/settings/integration-settings'
-import { DataManagementSettings } from '@/components/settings/data-management-settings'
+import { UserGroupsAndPermissions } from '@/components/settings/user-groups-and-permissions'
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState("general")
@@ -28,7 +28,7 @@ export default function SettingsPage() {
               <TabsTrigger value="privacy">Privacy & Security</TabsTrigger>
               <TabsTrigger value="customization">Customization</TabsTrigger>
               <TabsTrigger value="integrations">Integrations</TabsTrigger>
-              <TabsTrigger value="data">Data Management</TabsTrigger>
+              <TabsTrigger value="data">User Group Permissions </TabsTrigger>
             </TabsList>
             <br />
             <TabsContent value="general">
@@ -87,15 +87,7 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
             <TabsContent value="data">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Data Management</CardTitle>
-                  <CardDescription>Manage your data and exports</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <DataManagementSettings />
-                </CardContent>
-              </Card>
+             <UserGroupsAndPermissions />
             </TabsContent>
           </Tabs>
         </div>

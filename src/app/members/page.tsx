@@ -30,6 +30,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { CreateEventModal } from "@/components/create-event-modal";
 
+import { CellInfoModal } from "@/components/cell-info-modal";
 // Mock data for members
 const members = [
   {
@@ -105,8 +106,59 @@ const cellData = [
   },
 ];
 
+interface CellDataInfo {
+  name: string
+    totalMembers: number
+    startedBy: string
+    headedBy: string
+    assistedBy: string[]
+    shepherds: number
+    shepherdsInTraining: number
+    members: number
+    outreaches: number
+    attendanceRate: number
+    areaCovered: string
+    membersInDepartments: number
+    lowestAttendance: {
+      record: number
+      member: string
+    }
+    highestAttendance: {
+      record: number
+      member: string
+    }
+}
+
+const mockCellData = [
+  {
+    name: "Cell A",
+    totalMembers: 25,
+    startedBy: "John Doe",
+    headedBy: "Jane Smith",
+    assistedBy: ["Alice Johnson", "Bob Williams"],
+    shepherds: 3,
+    shepherdsInTraining: 2,
+    members: 15,
+    outreaches: 5,
+    attendanceRate: 85,
+    areaCovered: "Downtown",
+    membersInDepartments: 15,
+    lowestAttendance: {
+      record: 18,
+      member: "Charlie Brown"
+    },
+    highestAttendance: {
+      record: 30,
+      member: "Diana Prince"
+    }
+  },
+  // ... add more mock data for other cells
+]
+
 export default function MembersPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+    const [isCellInfoModalOpen, setIsCellInfoModalOpen] = useState(false)
+    const [selectedCellInfo, setSelectedCellInfo] = useState<CellDataInfo | null>(null)
   
   return (
     <div className="min-h-screen bg-background ">
@@ -119,9 +171,10 @@ export default function MembersPage() {
             </h1>
             <AddMemberModal />
           </div>
-          <div className="grid grid-cols-3 md:grid-cols-2 gap-2 mb-6">
+          <div className="grid grid-cols-3 md:grid-cols-2 lg:grid-cols-6 gap-2 mb-6">
             {cellData &&
               cellData.map((cellData, index) => (
+               <button key={index} onClick={() => {setIsCellInfoModalOpen(true); setSelectedCellInfo(mockCellData[index])}}>
                 <SummaryCard
                   title={cellData.name}
                   value={cellData.totalMembers}
@@ -129,6 +182,7 @@ export default function MembersPage() {
                   key={index}
                   // icon={<Users className="h-4 w-4 text-muted-foreground" />}
                 />
+               </button>
               ))}
           </div>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
@@ -227,6 +281,10 @@ export default function MembersPage() {
         </div>
       </main>
        <CreateEventModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} />
+        {selectedCellInfo && (
+
+        <CellInfoModal isOpen={isCellInfoModalOpen} onClose={() => setIsCellInfoModalOpen(false)} cellInfo={selectedCellInfo} />
+        )}
     </div>
   );
 }

@@ -1,25 +1,27 @@
-import { Header } from '@/components/header'
+"use client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { AttendanceChart } from '@/components/attendance-chart'
 import { MemberActivityFeed } from '@/components/member-activity-feed'
-import { CalendarIcon, PhoneIcon, MailIcon, MapPinIcon, Edit } from 'lucide-react'
+import { CalendarIcon, PhoneIcon, MailIcon, MapPinIcon,Star, Trophy, BookOpen } from 'lucide-react'
+import { MemberRewards } from '@/components/member-rewards'
+import { EditMemberModal } from '@/components/edit-member-modal'
 
 // Mock data for the member
 const member = {
   id: 1,
-  name: "Bernard Tay",
+  firstName: "Bernard",
+  lastName: "Tay",
+  gender: "Male",
   email: "benardk.tay@gmail.com",
   phone: "0552274951",
-  address: "Old Housing Estate",
+  location: "Old Housing Estate",
   joinDate: "2022-01-15",
   last_seen : "2022-01-15",
   cell: "Kairos Cell",
   status: "Active",
-  role: "Cell Leader",
   attendanceRate: 85,
   soulsWon: 7,
   discipleshipLevel: "Intermediate",
@@ -27,20 +29,48 @@ const member = {
   department: "Media",
   shepherd: "Elder Favour",
   branch: "Ho",
-  rank: "Shepherd"
+  rank: "Cell Shepherd",
+  broughtBy: "Eli",
+
 }
 
+interface Member {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  gender: string;
+  attendanceRate: number;
+  soulsWon: number;
+  discipleshipLevel: string;
+  photo: string;
+  department: string;
+  shepherd: string;
+  branch: string;
+  broughtBy: string;
+  location: string;
+  cell: string;
+  status: string;
+  rank: string;
+  joinDate: string;
+  last_seen: string;
+}
+
+
 export default function MemberDetailsPage() {
+  const handleSaveMember = (updatedMember : Member) => {
+    // Here you would typically make an API call to update the member
+    console.log('Saving updated member:', updatedMember)
+  }
   return (
     <div className="min-h-screen h-full bg-background">
-      <Header mcHeadName="Elder Favour" />
+      {/* <Header mcHeadName="Elder Favour" /> */}
       <main className=" max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 mb-64">
         <div className="px-4 py-6 sm:px-0">
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-foreground">Member Details</h1>
-            <Button>
-              <Edit className="mr-2 h-4 w-4" /> Edit Member
-            </Button>
+            <EditMemberModal member={member} onSave={handleSaveMember} />
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 ">
@@ -49,11 +79,11 @@ export default function MemberDetailsPage() {
               <Card>
                 <CardHeader className="text-center">
                   <Avatar className="w-32 h-32 mx-auto">
-                    <AvatarImage src={member.photo} alt={member.name} />
-                    <AvatarFallback>{member.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+                    <AvatarImage src={member.photo} alt={member.firstName + ' ' + member.lastName} />
+                    <AvatarFallback>{member.firstName[0]} {member.lastName[0]}</AvatarFallback>
                   </Avatar>
-                  <CardTitle className="mt-4">{member.name}</CardTitle>
-                  <CardDescription>{member.role}</CardDescription>
+                  <CardTitle className="mt-4">{member.firstName} {member.lastName}</CardTitle>
+                  <CardDescription>{member.rank}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
@@ -64,7 +94,7 @@ export default function MemberDetailsPage() {
                       <PhoneIcon className="mr-2 h-4 w-4 opacity-70" /> {member.phone}
                     </div>
                     <div className="flex items-center">
-                      <MapPinIcon className="mr-2 h-4 w-4 opacity-70" /> {member.address}
+                      <MapPinIcon className="mr-2 h-4 w-4 opacity-70" /> {member.location}
                     </div>
                     <div className="flex items-center">
                       <CalendarIcon className="mr-2 h-4 w-4 opacity-70" /> Joined: {member.joinDate}
@@ -88,8 +118,19 @@ export default function MemberDetailsPage() {
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="attendance">Attendance</TabsTrigger>
                   <TabsTrigger value="activity">Activity</TabsTrigger>
+                  <TabsTrigger value="discipleship">Discipleship</TabsTrigger>
                 </TabsList>
                 <TabsContent value="overview">
+                <MemberRewards 
+                  weeklyPoints={75}
+                  totalPoints={1250}
+                  streak={14}
+                  rewards={[
+                    { id: 1, name: "First Prayer", description: "Attended your first prayer meeting", icon: <Star className="h-5 w-5 text-yellow-500" /> },
+                    { id: 2, name: "Volunteer Hero", description: "Volunteered for 5 church events", icon: <Trophy className="h-5 w-5 text-purple-500" /> },
+                    { id: 3, name: "Bible Scholar", description: "Completed 10 Bible study sessions", icon: <BookOpen className="h-5 w-5 text-green-500" /> },
+                  ]}
+                />
                   <Card>
                     <CardHeader>
                       <CardTitle>Member Overview</CardTitle>
@@ -153,7 +194,11 @@ export default function MemberDetailsPage() {
                     </CardContent>
                   </Card>
                 </TabsContent>
+                
               </Tabs>
+            </div>
+            <div className="md:col-span-2 space-y-6">
+            {/* <DiscipleshipLineage /> */}
             </div>
           </div>
         </div>

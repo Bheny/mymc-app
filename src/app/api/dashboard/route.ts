@@ -7,6 +7,7 @@ export async function GET() {
     totalCells: 12,
     avgAttendance: 150,
     attendanceRate: "83%",
+    monthlyOutreach: 4,
     soulsWon: 15,
     recentActivities: [
       { id: 1, type: 'new-member', description: 'Sarah Johnson joined Cell A', date: '2 hours ago' },

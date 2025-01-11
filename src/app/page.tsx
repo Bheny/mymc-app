@@ -16,6 +16,7 @@ interface DashboardData {
   totalCells: number
   avgAttendance: number
   attendanceRate: string
+  monthlyOutreach: number
   soulsWon: number
   recentActivities: unknown[]
   upcomingEvents: unknown[]
@@ -129,8 +130,8 @@ export default function OverviewPage() {
             Welcome, <span className='text-blue-500 '>{session.data?.user?.name}</span>! <br /> Here&apos;s what&apos;s happening in <span className='text-blue-500 font-bold'>{session.data?.user?.mcName || "your MC"}</span>:
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <div className="grid grid-cols-2 md:grid-cols-2 gap-2 md:gap-4">
+            <div className="lg:col-span-3 space-y-6">
+              <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-6 gap-2 md:gap-4">
               <SummaryCard 
                   title="Total MC Members" 
                   value={dashboardData.totalMembers} 
@@ -151,17 +152,29 @@ export default function OverviewPage() {
                   value={dashboardData.attendanceRate} 
                   icon={<TrendingUp className="h-4 w-4 text-muted-foreground" />} 
                 />
+                
+                <SummaryCard 
+                  title="Monthly Outreach" 
+                  value={dashboardData.monthlyOutreach} 
+                
+                  icon={<UserPlus className="h-4 w-4 text-muted-foreground" />} 
+                />
                 <SummaryCard 
                   title="Souls Won This Month" 
                   value={dashboardData.soulsWon} 
                   icon={<UserPlus className="h-4 w-4 text-muted-foreground" />} 
                 />
               </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4">
               <RecentActivity activities={recentActivities} />
               <UpcomingEvents events={upcomingEvents} />
+              </div>
+              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-2 md:gap-4'>
               <TopPerformingCells cells={topPerformingCells} />
               <TopPerformingShepherds shepherds={topPerformingShepherds} />
-            </div>
+            
+              </div>
+              </div>
 
           </div>
         </div>
