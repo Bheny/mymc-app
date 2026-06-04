@@ -9,8 +9,9 @@ import {
   LayoutGrid, ClipboardList, Building2, Heart,
   BarChart2, Menu, X,
 } from 'lucide-react';
-import { useActiveRole } from '@/hooks/use-active-role';
+import { useActiveRole, roleLabel as getRoleLabel, type RoleView } from '@/hooks/use-active-role';
 import { RoleSwitcher } from '@/components/role-switcher';
+import { Check } from 'lucide-react';
 
 type NavItem = { name: string; short?: string; href: string; icon: React.ElementType };
 type NavConfig = { primary: NavItem[]; secondary: NavItem[] };
@@ -102,15 +103,22 @@ function HamburgerDrawer({
   pathname,
   userName,
   role,
+  allViews,
+  activeView,
+  switchToView,
 }: {
-  items:    NavItem[];
-  open:     boolean;
-  onClose:  () => void;
-  pathname: string;
-  userName: string | null | undefined;
-  role:     string | null | undefined;
+  items:        NavItem[];
+  open:         boolean;
+  onClose:      () => void;
+  pathname:     string;
+  userName:     string | null | undefined;
+  role:         string | null | undefined;
+  allViews:     RoleView[];
+  activeView:   RoleView | null;
+  switchToView: (key: string) => void;
 }) {
   const roleLabel = role ? role.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) : '';
+  const hasMultipleViews = allViews.length > 1;
 
   return (
     <>
@@ -199,6 +207,40 @@ function HamburgerDrawer({
             );
           })}
         </nav>
+
+        {/* ── Role switcher (mobile) ── */}
+        {hasMultipleViews && (
+          <div style={{ borderTop: '1px solid var(--brand-border)', padding: '12px 20px 16px' }}>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-2"
+               style={{ color: 'var(--brand-muted)' }}>
+              Switch View
+            </p>
+            {allViews.map((view) => {
+              const isCurrent = view.key === activeView?.key;
+              return (
+                <button
+                  key={view.key}
+                  onClick={() => { switchToView(view.key); onClose(); }}
+                  className="w-full flex items-center gap-3 py-2.5 px-1 rounded-lg transition-colors hover:bg-[var(--brand-navy-light)]"
+                >
+                  <span style={{ width: 18, flexShrink: 0 }}>
+                    {isCurrent && <Check style={{ width: 14, height: 14, color: 'var(--brand-navy)' }} />}
+                  </span>
+                  <span className="flex-1 text-left text-[14px]"
+                        style={{ color: 'var(--brand-text)', fontWeight: isCurrent ? 600 : 400 }}>
+                    {getRoleLabel(view.role)}
+                  </span>
+                  {view.isActing && (
+                    <span className="text-[10px] font-semibold rounded-pill px-2 py-0.5"
+                          style={{ background: '#FEF3DC', color: '#854F0B' }}>
+                      acting
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </>
   );
@@ -209,7 +251,7 @@ function HamburgerDrawer({
 export function BottomNavbar() {
   const pathname              = usePathname();
   const { data: session }     = useSession();
-  const { activeView }        = useActiveRole();
+  const { activeView, allViews, switchToView } = useActiveRole();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const role       = activeView?.role ?? session?.user?.role;
@@ -355,6 +397,9 @@ export function BottomNavbar() {
         pathname={pathname}
         userName={session?.user?.name}
         role={role}
+        allViews={allViews}
+        activeView={activeView}
+        switchToView={switchToView}
       />
     </>
   );
