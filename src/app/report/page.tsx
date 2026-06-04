@@ -74,9 +74,9 @@ function Th({ children, right }: { children: React.ReactNode; right?: boolean })
   );
 }
 
-function Td({ children, right }: { children: React.ReactNode; right?: boolean }) {
+function Td({ children, right, style }: { children: React.ReactNode; right?: boolean; style?: React.CSSProperties }) {
   return (
-    <td style={{ padding: "10px 12px", fontSize: 13, color: "#1F2937", textAlign: right ? "right" : "left", borderBottom: "1px solid #F3F4F6" }}>
+    <td style={{ padding: "10px 12px", fontSize: 13, color: "#1F2937", textAlign: right ? "right" : "left", borderBottom: "1px solid #F3F4F6", ...style }}>
       {children}
     </td>
   );

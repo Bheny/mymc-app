@@ -100,7 +100,7 @@ function CardSectionLabel({ label }: { label: string }) {
 
 type MemberOption = { id: string; firstName: string; lastName: string };
 
-function CellCard({ cell, onRefresh }: { cell: CellInfo; onRefresh: () => void }) {
+function CellCard({ cell }: { cell: CellInfo; onRefresh: () => void }) {
   const [expanded, setExpanded] = useState(false);
 
   // Local shepherd list — updated in place so shepherd actions don't remount the page

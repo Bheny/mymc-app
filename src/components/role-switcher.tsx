@@ -24,12 +24,12 @@ function useScopeName(view: RoleView | null): string | null {
       .then((r) => r.json())
       .then((d) => setName(d.name ?? null))
       .catch(() => {});
-  }, [view?.scopeId, view?.scopeType]);
+  }, [view?.scopeId, view?.scopeType, view?.isActing]);
 
   return name;
 }
 
-function ViewLabel({ view, showScopeName = true }: { view: RoleView; showScopeName?: boolean }) {
+function ViewLabel({ view }: { view: RoleView; showScopeName?: boolean }) {
   const scopeName = useScopeName(view.isActing ? view : null);
 
   return (
@@ -42,7 +42,7 @@ function ViewLabel({ view, showScopeName = true }: { view: RoleView; showScopeNa
   );
 }
 
-export function RoleSwitcher({ collapsed = false }: { collapsed?: boolean }) {
+export function RoleSwitcher({ collapsed = false }: { collapsed?: boolean }) { // eslint-disable-line @typescript-eslint/no-unused-vars
   const { allViews, activeView, switchToView, removeActing, hasMultipleViews } = useActiveRole();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);

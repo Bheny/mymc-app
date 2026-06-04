@@ -29,6 +29,7 @@ function shepherdDisplayName(sh: ShepherdNode): string {
 type CellNode = {
   id: string;
   name: string;
+  location: string | null;
   shepherds: ShepherdNode[];
   _count: { shepherds: number; members: number };
   userRoles: { user: { id: string; name: string } }[];
@@ -91,11 +92,6 @@ function ActingUpBadge({ severity }: { severity: string }) {
       Acting up
     </span>
   );
-}
-
-function AssignedTo({ name }: { name?: string | null }) {
-  if (!name) return <span style={{ color: "var(--brand-muted)", fontSize: 12 }}>Unassigned</span>;
-  return <span style={{ color: "var(--brand-muted)", fontSize: 12 }}>{name}</span>;
 }
 
 // ─── Collapsible row ──────────────────────────────────────────────────────────
@@ -666,7 +662,7 @@ function EditCellSheet({
 export default function OrgPage() {
   const [branches, setBranches]       = useState<BranchNode[]>([]);
   const [flags, setFlags]             = useState<Flag[]>([]);
-  const [warnings, setWarnings]       = useState<Warn[]>([]);
+  const [, setWarnings] = useState<Warn[]>([]);
   const [loading, setLoading]         = useState(true);
   const [openWarnings, setOpenWarnings] = useState(0);
   const [editingMC,         setEditingMC]         = useState<EditingMC | null>(null);

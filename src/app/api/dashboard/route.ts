@@ -10,22 +10,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
-  const { branchId, mcId, buscentreId, cellId } = session.user;
 
-  // Build a scope filter from the caller's role so each role only sees their slice
-  const cellWhere = cellId
-    ? { id: cellId }
-    : buscentreId
-    ? { buscentreId }
-    : mcId
-    ? { buscentre: { mcId } }
-    : branchId
-    ? { buscentre: { mc: { branchId } } }
-    : {};
-
-  const memberWhere = Object.keys(cellWhere).length
-    ? { OR: [{ cell: cellWhere }, { cellId: undefined }] }
-    : {};
 
   const [
     totalMembers,

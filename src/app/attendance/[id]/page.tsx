@@ -62,20 +62,6 @@ type ServiceDetail = {
   }[];
 };
 
-function StatusBadge({ status }: { status: AttendanceStatus }) {
-  const cfg: Record<AttendanceStatus, { label: string; bg: string; color: string }> = {
-    PRESENT: { label: "Present", bg: "#E0F4EC", color: "#085041" },
-    ABSENT:  { label: "Absent",  bg: "#FDECEA", color: "#791F1F" },
-    EXCUSED: { label: "Excused", bg: "#FEF3DC", color: "#854F0B" },
-  };
-  const c = cfg[status];
-  return (
-    <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5"
-          style={{ background: c.bg, color: c.color }}>
-      {c.label}
-    </span>
-  );
-}
 
 function StatusButton({
   value, current, onChange,
@@ -243,7 +229,7 @@ export default function AttendanceDetailPage() {
           { label: "Absent",  value: service.stats.absent,  color: "var(--brand-danger)",  icon: XCircle },
           { label: "Excused", value: service.stats.excused, color: "var(--brand-warning)", icon: Clock },
           { label: "Rate",    value: `${rate}%`,            color: rate >= 80 ? "var(--brand-success)" : rate >= 60 ? "var(--brand-warning)" : "var(--brand-danger)", icon: CheckCircle2 },
-        ].map(({ label, value, color, icon: Icon }) => (
+        ].map(({ label, value, color }) => (
           <div key={label} className="flex flex-col items-center gap-1">
             <span className="text-[22px] font-semibold" style={{ color }}>{value}</span>
             <span className="text-[11px] font-medium uppercase tracking-[0.04em]"

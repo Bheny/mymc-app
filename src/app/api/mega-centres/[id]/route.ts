@@ -1,63 +1,38 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 type Params = { params: { id: string } };
 
 export async function GET(_req: Request, { params }: Params) {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
-  const mc = await prisma.megaCentre.findUnique({
-    where: { id: params.id },
-    include: {
-      assignedPastor: { select: { id: true, name: true, email: true, role: true } },
-      users: {
-        select: { id: true, name: true, email: true, role: true },
-        orderBy: { name: "asc" },
-      },
-    },
+  const mc = await prisma.megaChurch.findUnique({
+    where:   { id: params.id },
+    include: { _count: { select: { buscentres: true } } },
   });
 
-  if (!mc) {
-    return NextResponse.json({ error: "MegaCentre not found" }, { status: 404 });
-  }
-
+  if (!mc) return NextResponse.json({ error: "Not found" }, { status: 404 });
   return NextResponse.json(mc);
 }
 
 export async function PATCH(request: Request, { params }: Params) {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
-  const body = await request.json();
-  const { name, location, description, logoUrl, assignedPastorId } = body;
+  const { name, location } = await request.json();
 
-  // Verify the pastor exists if being set
-  if (assignedPastorId) {
-    const pastor = await prisma.user.findUnique({ where: { id: assignedPastorId } });
-    if (!pastor) {
-      return NextResponse.json({ error: "Assigned pastor user not found" }, { status: 404 });
-    }
-  }
-
-  const mc = await prisma.megaCentre.update({
+  const mc = await prisma.megaChurch.update({
     where: { id: params.id },
     data: {
-      ...(name             !== undefined && { name }),
-      ...(location         !== undefined && { location }),
-      ...(description      !== undefined && { description }),
-      ...(logoUrl          !== undefined && { logoUrl }),
-      // Pass null explicitly to unlink a pastor
-      ...(assignedPastorId !== undefined && { assignedPastorId: assignedPastorId ?? null }),
-    },
-    include: {
-      assignedPastor: { select: { id: true, name: true, email: true, role: true } },
-      users: { select: { id: true, name: true, email: true, role: true } },
+      ...(name     !== undefined && { name }),
+      ...(location !== undefined && { location }),
     },
   });
 
@@ -65,12 +40,11 @@ export async function PATCH(request: Request, { params }: Params) {
 }
 
 export async function DELETE(_req: Request, { params }: Params) {
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   }
 
-  await prisma.megaCentre.delete({ where: { id: params.id } });
-
-  return NextResponse.json({ message: "MegaCentre deleted" });
+  await prisma.megaChurch.delete({ where: { id: params.id } });
+  return NextResponse.json({ success: true });
 }

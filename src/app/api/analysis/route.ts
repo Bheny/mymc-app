@@ -255,7 +255,7 @@ export async function GET(request: Request) {
   if (!buscentre) return NextResponse.json({ error: "Buscentre not found" }, { status: 404 });
 
   const cells = await prisma.cell.findMany({
-    where:   { buscentreId, ...(filterCellId ? { id: filterCellId } : {}) },
+    where:   { buscentreId: buscentreId!, ...(filterCellId ? { id: filterCellId } : {}) },
     select: {
       id: true, name: true,
       userRoles: {
@@ -306,7 +306,7 @@ export async function GET(request: Request) {
         where:  { cellId: { in: cellIds }, date: { gte: yearStart, lte: yearEnd } },
         select: { id: true, cellId: true, date: true },
       }),
-      prisma.member.count({ where: { cell: { buscentreId }, isActive: true } }),
+      prisma.member.count({ where: { cell: { buscentreId: buscentreId! }, isActive: true } }),
     ]);
 
   const periodSvcs     = filterPeriod(yearServices,    "date",        month) as typeof yearServices;

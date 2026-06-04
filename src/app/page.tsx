@@ -330,7 +330,6 @@ type BuscentreData = {
 };
 
 function BuscentreHeadOverview() {
-  const { data: session } = useSession();
   const { activeView } = useActiveRole();
   const [data, setData] = useState<BuscentreData | null>(null);
 

@@ -38,6 +38,7 @@ export async function sendActivationEmail(payload: ActivationEmailPayload) {
   // });
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function activationEmailHtml({
   name, roleLabel, to, tempPassword, appUrl,
 }: {

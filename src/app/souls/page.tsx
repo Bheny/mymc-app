@@ -324,7 +324,7 @@ export default function SoulTrackerPage() {
               Soul Tracker
             </h1>
             <p className="text-[13px] mt-0.5" style={{ color: "var(--brand-muted)" }}>
-              People you've reached out to
+              People you&apos;ve reached out to
             </p>
           </div>
         </div>

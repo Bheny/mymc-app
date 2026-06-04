@@ -15,7 +15,7 @@ import {
   SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, UserCheck, AlertTriangle, X } from "lucide-react";
+import { ExternalLink, UserCheck, AlertTriangle } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

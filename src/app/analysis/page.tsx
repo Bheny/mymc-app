@@ -10,7 +10,6 @@ import {
   UserPlus, UserCheck, ClipboardList, BarChart2, Loader2, FileText,
 } from "lucide-react";
 import { useActiveRole } from "@/hooks/use-active-role";
-import { useSession } from "next-auth/react";
 import { GenerateReportModal } from "@/components/generate-report-modal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -164,12 +163,6 @@ function ServiceTooltip({ active, payload, label }: {
   );
 }
 
-const TYPE_SHORT: Record<string, string> = {
-  LC_LIVE:           "LC",
-  MGS:               "MGS",
-  SHEPHERDS_MEETING: "Shep",
-  SPECIAL_MEETING:   "Spl",
-};
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 
@@ -193,8 +186,7 @@ function Skeleton() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AnalysisPage() {
-  useSession(); // required for GenerateReportModal's useSession inside
-  const { activeView }     = useActiveRole();
+  const { activeView } = useActiveRole();
   const actingCellId      = activeView?.isActing && activeView.cellId      ? activeView.cellId      : null;
   const actingBuscentreId = activeView?.isActing && activeView.buscentreId ? activeView.buscentreId : null;
 
@@ -216,7 +208,7 @@ export default function AnalysisPage() {
   // Cache the final-level breakdown options (cells for buscentre/mc, shepherds for cell)
   const [dropdownOptions, setDropdownOptions] = useState<(ShepherdBreakdown | CellBreakdown)[]>([]);
 
-  const activeRole = activeView?.role ?? session?.user?.role ?? null;
+  const activeRole = activeView?.role ?? null;
 
   const load = useCallback(async () => {
     setLoading(true);

@@ -134,7 +134,7 @@ function MemberRow({ member }: { member: ShepherdMember }) {
 // ─── Unassigned member row — expandable with details + shepherd assign ─────────
 
 function UnassignedMemberRow({
-  member, shepherds, cellShepherds, isLast, onAssigned,
+  member, shepherds, isLast, onAssigned,
 }: {
   member:         ShepherdMember;
   shepherds:      ShepherdSlot[];
