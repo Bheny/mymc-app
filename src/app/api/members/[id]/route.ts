@@ -1,0 +1,90 @@
+import { NextResponse } from "next/server";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+
+type Params = { params: { id: string } };
+
+const MEMBER_INCLUDE = {
+  shepherd:  { select: { id: true, user: { select: { id: true, name: true } }, person: { select: { firstName: true, lastName: true } } } },
+  cell:      { select: { id: true, name: true, buscentre: { select: { id: true, name: true } } } },
+  buscentre: { select: { id: true, name: true } },
+  mc:        { select: { id: true, name: true } },
+  // When this member is a system user, include their supervisor + their role
+  user: {
+    select: {
+      id:   true,
+      name: true,
+      role: { select: { role: true } },
+      supervisor: {
+        select: {
+          id:   true,
+          name: true,
+          role: { select: { role: true } },
+        },
+      },
+    },
+  },
+} as const;
+
+export async function GET(_req: Request, { params }: Params) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
+  const member = await prisma.member.findUnique({
+    where:   { id: params.id },
+    include: MEMBER_INCLUDE,
+  });
+  if (!member) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json(member);
+}
+
+export async function PATCH(request: Request, { params }: Params) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
+  const body = await request.json();
+  const {
+    firstName, lastName, phone, email,
+    gender, dateOfBirth, joinedDate, isActive,
+    shepherdId, cellId,
+    hometown, previousChurch,
+    parentName, parentPhone,
+    emergencyName, emergencyPhone, emergencyRelation,
+  } = body;
+
+  const member = await prisma.member.update({
+    where: { id: params.id },
+    data: {
+      ...(firstName  !== undefined && { firstName:   firstName?.trim() }),
+      ...(lastName   !== undefined && { lastName:    lastName?.trim() }),
+      ...(phone      !== undefined && { phone }),
+      ...(email      !== undefined && { email }),
+      ...(gender     !== undefined && { gender }),
+      ...(isActive   !== undefined && { isActive }),
+      ...(shepherdId !== undefined && { shepherdId }),
+      ...(cellId     !== undefined && { cellId }),
+      ...(dateOfBirth !== undefined && { dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null }),
+      ...(joinedDate  !== undefined && { joinedDate:  joinedDate  ? new Date(joinedDate)  : null }),
+      // Extended profile fields
+      ...(hometown          !== undefined && { hometown }),
+      ...(previousChurch    !== undefined && { previousChurch }),
+      ...(parentName        !== undefined && { parentName }),
+      ...(parentPhone       !== undefined && { parentPhone }),
+      ...(emergencyName     !== undefined && { emergencyName }),
+      ...(emergencyPhone    !== undefined && { emergencyPhone }),
+      ...(emergencyRelation !== undefined && { emergencyRelation }),
+    },
+    include: MEMBER_INCLUDE,
+  });
+
+  return NextResponse.json(member);
+}
+
+export async function DELETE(_req: Request, { params }: Params) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
+  await prisma.member.delete({ where: { id: params.id } });
+  return NextResponse.json({ success: true });
+}

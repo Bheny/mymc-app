@@ -1,0 +1,407 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum ServiceType {
+  LC_LIVE            // Wednesday service
+  MGS                // Sunday service (Mega Gospel Service)
+  SHEPHERDS_MEETING  // Friday shepherds meeting
+  SPECIAL_MEETING    // Ad-hoc program with guest minister / prophet
+}
+
+enum ServiceMode {
+  IN_PERSON
+  ONLINE
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+}
+
+enum Role {
+  admin
+  chief_shepherd
+  mc_pastor
+  buscentre_head
+  cell_shepherd
+  shepherd
+}
+
+enum Gender {
+  Male
+  Female
+  Other
+}
+
+enum FirstTimerIntent {
+  JUST_VISITING
+  UNDECIDED
+  WANTS_TO_JOIN
+}
+
+// ─── Users ───────────────────────────────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  emailVerified DateTime? @map("email_verified")
+  password      String?   // bcrypt hash — null until account is activated
+  name          String?
+  image         String?
+
+  mustChangePassword Boolean   @default(true) @map("must_change_password")
+  isActive           Boolean   @default(true) @map("is_active")
+  activatedAt        DateTime? @map("activated_at")
+  activatedById      String?   @map("activated_by_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Pastoral oversight chain — who directly oversees this user
+  supervisorId String? @map("supervisor_id")
+
+  // Relations
+  role             UserRole?
+  shepherd         Shepherd?
+  member           Member?           @relation("MemberUser")
+  supervisor       User?             @relation("Supervision", fields: [supervisorId], references: [id], onDelete: SetNull)
+  supervisees      User[]            @relation("Supervision")
+  activatedBy      User?             @relation("ActivatedBy", fields: [activatedById], references: [id], onDelete: SetNull)
+  activatedUsers   User[]            @relation("ActivatedBy")
+  actingUpFlags    ActingUpFlag[]
+  capacityWarnings CapacityWarning[]
+  servicesCreated  Service[]     @relation("ServiceCreatedBy")
+  attendanceMarked Attendance[]  @relation("AttendanceMarkedBy")
+  firstTimersRecorded  FirstTimer[] @relation("FirstTimerRecordedBy")
+  firstTimersConverted FirstTimer[] @relation("FirstTimerConvertedBy")
+  notifications        Notification[]
+  soulsRecorded        Soul[]       @relation("SoulRecordedBy")
+
+  @@map("users")
+}
+
+// ─── Church hierarchy ────────────────────────────────────────────────────────
+
+model Branch {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  megaChurches MegaChurch[]
+  userRoles    UserRole[]
+
+  @@map("branches")
+}
+
+model MegaChurch {
+  id        String   @id @default(cuid())
+  branchId  String   @map("branch_id")
+  name      String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // No capacity limit — unlimited MCs per Branch
+  branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  buscentres Buscentre[]
+  userRoles  UserRole[]
+  members    Member[]    // MC-level members (MC Pastors, etc.)
+
+  @@map("mega_churches")
+}
+
+model Buscentre {
+  id        String   @id @default(cuid())
+  mcId      String   @map("mc_id")
+  name      String
+  location  String?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // MAX 4 per MegaChurch — enforced in application logic
+  mc        MegaChurch @relation(fields: [mcId], references: [id], onDelete: Cascade)
+  cells     Cell[]
+  userRoles UserRole[]
+  members   Member[]   // buscentre-level members (Buscentre Heads, etc.)
+
+  @@map("buscentres")
+}
+
+model Cell {
+  id          String   @id @default(cuid())
+  buscentreId String   @map("buscentre_id")
+  name        String
+  location    String?  @map("location")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  // MAX 4 per Buscentre — enforced in application logic
+  buscentre    Buscentre    @relation(fields: [buscentreId], references: [id], onDelete: Cascade)
+  shepherds    Shepherd[]
+  members      Member[]
+  userRoles    UserRole[]
+  services     Service[]
+  firstTimers  FirstTimer[]
+  souls        Soul[]
+
+  @@map("cells")
+}
+
+model Shepherd {
+  id        String   @id @default(cuid())
+  cellId    String   @map("cell_id")
+  userId    String?  @unique @map("user_id")   // set when fully activated (system login)
+  memberId  String?  @unique @map("member_id") // set when named but not yet activated
+  createdAt DateTime @default(now()) @map("created_at")
+
+  // MAX 2 per Cell — enforced in application logic
+  cell      Cell       @relation(fields: [cellId], references: [id], onDelete: Cascade)
+  user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
+  person    Member?    @relation("ShepherdPerson", fields: [memberId], references: [id], onDelete: SetNull)
+  members   Member[]
+  userRoles UserRole[]
+
+  @@map("shepherds")
+}
+
+model Member {
+  id          String    @id @default(cuid())
+
+  // Hierarchy placement — exactly one level is populated:
+  //   Regular member  → shepherdId + cellId
+  //   Cell-level      → cellId only (e.g. acting cell shepherd without system access)
+  //   Buscentre-level → buscentreId only (e.g. Buscentre Head)
+  //   MC-level        → mcId only (e.g. MC Pastor)
+  shepherdId  String?   @map("shepherd_id")
+  cellId      String?   @map("cell_id")
+  buscentreId String?   @map("buscentre_id")
+  mcId        String?   @map("mc_id")
+
+  firstName   String    @map("first_name")
+  lastName    String    @map("last_name")
+  phone       String?
+  email       String?
+  gender      Gender?
+  dateOfBirth DateTime? @map("date_of_birth") @db.Date
+  isActive    Boolean   @default(true) @map("is_active")
+  isUser      Boolean   @default(false) @map("is_user")
+  joinedDate  DateTime? @map("joined_date") @db.Date
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  // Extended profile — collected over time, not required at creation
+  hometown              String?  @map("hometown")
+  previousChurch        String?  @map("previous_church")
+  parentName            String?  @map("parent_name")
+  parentPhone           String?  @map("parent_phone")
+  emergencyName         String?  @map("emergency_name")
+  emergencyPhone        String?  @map("emergency_phone")
+  emergencyRelation     String?  @map("emergency_relation")
+
+  shepherd  Shepherd?   @relation(fields: [shepherdId],  references: [id])
+  cell      Cell?       @relation(fields: [cellId],      references: [id])
+  buscentre Buscentre?  @relation(fields: [buscentreId], references: [id])
+  mc        MegaChurch? @relation(fields: [mcId],        references: [id])
+
+  // Set when this member is activated as a system user
+  userId String?  @unique @map("user_id")
+  user   User?    @relation("MemberUser", fields: [userId], references: [id], onDelete: SetNull)
+
+  // Back-relation: this member IS a shepherd in a slot (named but not yet activated)
+  shepherdRole         Shepherd?   @relation("ShepherdPerson")
+  attendance           Attendance[]
+  firstTimerConversion FirstTimer? @relation("FirstTimerConversion")
+
+  @@map("members")
+}
+
+// ─── Roles & scope ───────────────────────────────────────────────────────────
+
+model UserRole {
+  id   String @id @default(cuid())
+  userId String @unique @map("user_id")
+  role   Role
+
+  // Scope — only the relevant fields for this role are populated:
+  //   admin / chief_shepherd → branchId
+  //   mc_pastor              → branchId + mcId
+  //   buscentre_head         → branchId + mcId + buscentreId
+  //   cell_shepherd          → branchId + mcId + buscentreId + cellId
+  //   shepherd               → branchId + mcId + buscentreId + cellId + shepherdId
+  branchId    String? @map("branch_id")
+  mcId        String? @map("mc_id")
+  buscentreId String? @map("buscentre_id")
+  cellId      String? @map("cell_id")
+  shepherdId  String? @map("shepherd_id")
+
+  // Acting-up fields
+  actingAs String[] @map("acting_as") // e.g. ["cell_shepherd"]
+  actingAt Json?    @map("acting_at") // e.g. {"cell_id": "xxx"}
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  branch    Branch?     @relation(fields: [branchId], references: [id])
+  mc        MegaChurch? @relation(fields: [mcId], references: [id])
+  buscentre Buscentre?  @relation(fields: [buscentreId], references: [id])
+  cell      Cell?       @relation(fields: [cellId], references: [id])
+  shepherd  Shepherd?   @relation(fields: [shepherdId], references: [id])
+
+  @@map("user_roles")
+}
+
+// ─── Capacity warnings ───────────────────────────────────────────────────────
+
+model CapacityWarning {
+  id           String    @id @default(cuid())
+  level        String    // "buscentre" | "cell" | "shepherd" | "member"
+  parentId     String    @map("parent_id")
+  parentName   String    @map("parent_name")
+  currentCount Int       @map("current_count")
+  maxCount     Int       @map("max_count")
+  createdById  String    @map("created_by")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  resolved     Boolean   @default(false)
+  resolvedAt   DateTime? @map("resolved_at")
+
+  createdBy User @relation(fields: [createdById], references: [id])
+
+  @@map("capacity_warnings")
+}
+
+// ─── Services & Attendance ───────────────────────────────────────────────────
+
+model Service {
+  id          String      @id @default(cuid())
+  type        ServiceType
+  date        DateTime    @db.Date
+  mode        ServiceMode @default(IN_PERSON)
+  notes       String?
+  speaker     String?     // Minister / Prophet name — used for SPECIAL_MEETING
+  cellId      String      @map("cell_id")
+  createdById String      @map("created_by_id")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  cell        Cell         @relation(fields: [cellId],      references: [id], onDelete: Cascade)
+  createdBy   User         @relation("ServiceCreatedBy", fields: [createdById], references: [id])
+  attendance  Attendance[]
+  firstTimers FirstTimer[]
+
+  // One service record per cell per type per date
+  @@unique([cellId, type, date])
+  @@map("services")
+}
+
+model Attendance {
+  id         String           @id @default(cuid())
+  serviceId  String           @map("service_id")
+  memberId   String           @map("member_id")
+  status     AttendanceStatus
+  notes      String?
+  markedById String?          @map("marked_by_id")
+  markedAt   DateTime         @default(now()) @map("marked_at")
+
+  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  member     Member   @relation(fields: [memberId],  references: [id], onDelete: Cascade)
+  markedBy   User?    @relation("AttendanceMarkedBy", fields: [markedById], references: [id], onDelete: SetNull)
+
+  @@unique([serviceId, memberId])
+  @@map("attendance")
+}
+
+// ─── Acting-up flags ─────────────────────────────────────────────────────────
+
+model ActingUpFlag {
+  id             String    @id @default(cuid())
+  userId         String    @map("user_id")
+  userName       String    @map("user_name")
+  realRole       String    @map("real_role")
+  actingAs       String    @map("acting_as")
+  nodeId         String    @map("node_id")
+  nodeType       String    @map("node_type")
+  nodeName       String    @map("node_name")
+  recommendation String
+  severity       String    @default("amber") // "amber" | "red"
+  flaggedAt      DateTime  @default(now()) @map("flagged_at")
+  resolved       Boolean   @default(false)
+  resolvedAt     DateTime? @map("resolved_at")
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("acting_up_flags")
+}
+
+// ─── First Timers ─────────────────────────────────────────────────────────────
+
+model FirstTimer {
+  id         String           @id @default(cuid())
+  firstName  String           @map("first_name")
+  lastName   String           @map("last_name")
+  phone      String?
+  location   String?
+  intent     FirstTimerIntent @default(UNDECIDED)
+  referredBy String?          @map("referred_by") // free-text name of person who brought them
+
+  serviceId String @map("service_id")
+  cellId    String @map("cell_id")
+
+  // Set when cell shepherd converts them to a full member
+  convertedToMemberId String?   @unique @map("converted_to_member_id")
+  convertedAt         DateTime? @map("converted_at")
+  convertedById       String?   @map("converted_by_id")
+
+  recordedById String   @map("recorded_by_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  service         Service  @relation(fields: [serviceId],            references: [id], onDelete: Cascade)
+  cell            Cell     @relation(fields: [cellId],               references: [id], onDelete: Cascade)
+  convertedMember Member?  @relation("FirstTimerConversion",         fields: [convertedToMemberId], references: [id], onDelete: SetNull)
+  recordedBy      User     @relation("FirstTimerRecordedBy",         fields: [recordedById],         references: [id])
+  convertedBy     User?    @relation("FirstTimerConvertedBy",        fields: [convertedById],         references: [id])
+
+  @@map("first_timers")
+}
+
+// ─── Soul Tracker ─────────────────────────────────────────────────────────────
+
+model Soul {
+  id           String   @id @default(cuid())
+  firstName    String   @map("first_name")
+  lastName     String   @map("last_name")
+  phone        String?
+  location     String?
+  date         DateTime @db.Date       // date of outreach
+  notes        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt     @map("updated_at")
+
+  cellId       String @map("cell_id")
+  recordedById String @map("recorded_by_id")
+
+  cell       Cell @relation(fields: [cellId],       references: [id], onDelete: Cascade)
+  recordedBy User @relation("SoulRecordedBy", fields: [recordedById], references: [id])
+
+  @@map("souls")
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  type      String   @default("info")  // "absent_member" | "info"
+  title     String
+  body      String
+  read      Boolean  @default(false)
+  linkHref  String?  @map("link_href")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}

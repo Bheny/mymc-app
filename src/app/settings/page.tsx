@@ -22,7 +22,7 @@ export default function SettingsPage() {
           <h1 className="text-3xl font-semibold text-foreground mb-6">Settings</h1>
           
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
+            <TabsList className="pl-12 flex overflow-x-scroll md:grid w-full grid-cols-3 lg:grid-cols-6">
               <TabsTrigger value="general">General</TabsTrigger>
               <TabsTrigger value="notifications">Notifications</TabsTrigger>
               <TabsTrigger value="privacy">Privacy & Security</TabsTrigger>

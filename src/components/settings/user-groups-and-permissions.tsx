@@ -127,7 +127,7 @@ export function UserGroupsAndPermissions() {
                 <div key={group.id} className="flex items-center justify-between mb-2">
                   <Button
                     variant={selectedGroup?.id === group.id ? "secondary" : "ghost"}
-                    className="w-full justify-start"
+                    className="w-full justify-start text-wrap text-left"
                     onClick={() => handleSelectGroup(group.id)}
                   >
                     {group.name}
@@ -144,8 +144,8 @@ export function UserGroupsAndPermissions() {
             </ScrollArea>
             <Dialog open={isAddingGroup} onOpenChange={setIsAddingGroup}>
               <DialogTrigger asChild>
-                <Button className="w-full mt-2">
-                  <Plus className="mr-2 h-4 w-4" /> Add Group
+                <Button className="">
+                  <Plus className=" h-4 w-4" /> Add Group
                 </Button>
               </DialogTrigger>
               <DialogContent>

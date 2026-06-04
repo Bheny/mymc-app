@@ -19,7 +19,12 @@ export default function ReportsPage() {
           <h1 className="text-3xl font-semibold text-foreground mb-6">Reports</h1>
           
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="lg:hidden pl-12 flex sm:overflow-x-scroll  md:grid w-full grid-cols-3 lg:grid-cols-6">
+              <TabsTrigger value="general">General Metrics</TabsTrigger>
+              <TabsTrigger value="demographics">Demographics</TabsTrigger>
+              <TabsTrigger value="custom">Custom Reports</TabsTrigger>
+            </TabsList>
+            <TabsList className="w-full">
               <TabsTrigger value="general">General Metrics</TabsTrigger>
               <TabsTrigger value="demographics">Demographics</TabsTrigger>
               <TabsTrigger value="custom">Custom Reports</TabsTrigger>
