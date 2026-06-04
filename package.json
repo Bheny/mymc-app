@@ -7,6 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "prisma generate",
     "seed": "prisma db seed",
     "dev:users": "tsx prisma/reset-passwords.ts"
   },
