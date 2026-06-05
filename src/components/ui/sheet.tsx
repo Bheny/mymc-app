@@ -42,7 +42,8 @@ const SheetOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/40 backdrop-blur-[1px]",
+      // z-[70] keeps sheets above the bottom nav bar (z-[60]) on mobile
+      "fixed inset-0 z-[70] bg-black/40 backdrop-blur-[1px]",
       "data-[state=open]:animate-in data-[state=closed]:animate-out",
       "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       "transition-all duration-200",
@@ -67,8 +68,8 @@ const SheetContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        // Position — fixed right panel, full height
-        "fixed inset-y-0 right-0 z-50 flex flex-col bg-white",
+        // Position — fixed right panel, full height. z-[70] sits above the mobile bottom nav (z-[60])
+        "fixed inset-y-0 right-0 z-[70] flex flex-col bg-white",
         "w-full sm:max-w-none",
         // Slide-in animation
         "data-[state=open]:animate-in  data-[state=open]:slide-in-from-right",
@@ -157,8 +158,8 @@ SheetBody.displayName = "SheetBody";
 function SheetFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("flex items-center justify-end gap-2 px-6 py-4 shrink-0", className)}
-      style={{ borderTop: "1px solid var(--brand-border)" }}
+      className={cn("flex items-center justify-end gap-2 px-6 pt-4 pb-4 shrink-0", className)}
+      style={{ borderTop: "1px solid var(--brand-border)", paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
       {...props}
     />
   );
