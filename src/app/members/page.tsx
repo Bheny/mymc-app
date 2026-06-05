@@ -322,7 +322,6 @@ function MemberDetailSheet({
     onClose();
   }
 
-  const level = detail ? inferLevel(detail) : null;
 
   return (
     <Sheet open={!!memberId} onOpenChange={(o) => !o && onClose()}>

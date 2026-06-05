@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useActiveRole } from "@/hooks/use-active-role";
-import { Users, UserCheck, UserX, Clock, Phone, MapPin, ChevronDown } from "lucide-react";
+import { Users, Phone, MapPin, ChevronDown } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -198,7 +198,6 @@ function FTRow({ ft, onUpdated }: { ft: FirstTimer; onUpdated: (id: string, stat
     if (res.ok) { setEditing(false); onUpdated(ft.id, ft.reachOutStatus, note || null); }
   }
 
-  const statusKey = ft.reachOutStatus ?? "unreached";
   const rowBg =
     ft.reachOutStatus === "GREEN"  ? "#F0FDF4" :
     ft.reachOutStatus === "YELLOW" ? "#FFFBEB" :
@@ -250,7 +249,7 @@ function FTRow({ ft, onUpdated }: { ft: FirstTimer; onUpdated: (id: string, stat
           {/* Note preview */}
           {ft.reachOutNote && !editing && (
             <p className="text-[12px] mt-1.5 italic" style={{ color: "var(--brand-muted)" }}>
-              "{ft.reachOutNote}"
+              &ldquo;{ft.reachOutNote}&rdquo;
             </p>
           )}
           {/* Note edit */}
