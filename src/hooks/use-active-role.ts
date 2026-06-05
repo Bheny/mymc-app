@@ -61,9 +61,13 @@ export function ActiveRoleProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
-  const [actingAs, setActingAs] = useState<string[]>([]);
-  const [actingAt, setActingAt] = useState<Record<string, string>>({});
-  const [ready,    setReady]    = useState(false);
+  const [actingAs,  setActingAs]  = useState<string[]>([]);
+  const [actingAt,  setActingAt]  = useState<Record<string, string>>({});
+  // fetchDone = the /api/me/acting request has completed (data is in state)
+  const [fetchDone, setFetchDone] = useState(false);
+  // ready = fetchDone AND the activeKey has been resolved from localStorage
+  // Never set this directly — it is set at the end of the activeKey effect below.
+  const [ready,     setReady]     = useState(false);
 
   const fetchActing = useCallback(() => {
     if (!userId) return;
@@ -72,9 +76,9 @@ export function ActiveRoleProvider({ children }: { children: ReactNode }) {
       .then((d) => {
         setActingAs(d.actingAs ?? []);
         setActingAt(d.actingAt ?? {});
-        setReady(true);
+        setFetchDone(true);   // triggers the activeKey effect which then sets ready
       })
-      .catch(() => { setReady(true); });
+      .catch(() => { setFetchDone(true); });
   }, [userId]);
 
   useEffect(() => {
@@ -133,15 +137,19 @@ export function ActiveRoleProvider({ children }: { children: ReactNode }) {
   const [activeKey, setActiveKey] = useState<string>("primary");
 
   useEffect(() => {
-    if (!storageKey) return;
+    if (!storageKey || !fetchDone) return;
+    // Resolve the stored key now that allViews is fully populated
     const stored = localStorage.getItem(storageKey);
     if (stored && allViews.find((v) => v.key === stored)) {
       setActiveKey(stored);
     } else {
       setActiveKey("primary");
     }
+    // Mark ready AFTER activeKey is settled — prevents pages from seeing the
+    // wrong role in the render that immediately follows the acting-fetch.
+    setReady(true);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey, actingAs.length]);
+  }, [storageKey, fetchDone, actingAs.length]);
 
   const switchToView = useCallback(
     (key: string) => {

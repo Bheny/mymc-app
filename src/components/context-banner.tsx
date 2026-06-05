@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
 import { ChevronRight } from "lucide-react";
+import { useActiveRole } from "@/hooks/use-active-role";
 
 type Context = {
   role:      string | null;
@@ -12,8 +12,6 @@ type Context = {
   branch:    { id: string; name: string } | null;
 };
 
-// Roles that get the context banner — these users have a narrow scope
-// and need to know where they sit in the hierarchy.
 const SCOPED_ROLES = new Set(["cell_shepherd", "shepherd", "buscentre_head", "mc_pastor"]);
 
 function roleLabel(role: string): string {
@@ -21,23 +19,34 @@ function roleLabel(role: string): string {
 }
 
 export function ContextBanner() {
-  const { data: session } = useSession();
+  const { activeView, ready } = useActiveRole();
   const [ctx, setCtx] = useState<Context | null>(null);
 
-  const role = session?.user?.role ?? null;
+  // Use the ACTIVE role (acting or primary), not the JWT primary role
+  const activeRole       = activeView?.role ?? null;
+  const actingCellId      = activeView?.isActing && activeView.cellId      ? activeView.cellId      : null;
+  const actingBuscentreId = activeView?.isActing && activeView.buscentreId ? activeView.buscentreId : null;
 
   useEffect(() => {
-    if (!role || !SCOPED_ROLES.has(role)) return;
-    fetch("/api/me/context")
+    if (!ready || !activeRole || !SCOPED_ROLES.has(activeRole)) {
+      setCtx(null);
+      return;
+    }
+    const params = new URLSearchParams();
+    if (actingBuscentreId) params.set("actingBuscentreId", actingBuscentreId);
+    if (actingCellId)      params.set("actingCellId",      actingCellId);
+
+    fetch(`/api/me/context?${params}`)
       .then((r) => r.json())
       .then(setCtx)
       .catch(() => {});
-  }, [role]);
+  // Re-fetch whenever the active view changes
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, activeRole, actingBuscentreId, actingCellId]);
 
-  // Only show for scoped roles
-  if (!role || !SCOPED_ROLES.has(role) || !ctx) return null;
+  // Don't render until role is settled (prevents primary-role flash)
+  if (!ready || !activeRole || !SCOPED_ROLES.has(activeRole) || !ctx) return null;
 
-  // Build the breadcrumb trail narrowest → broadest
   const crumbs: string[] = [];
   if (ctx.cell)      crumbs.push(ctx.cell.name);
   if (ctx.buscentre) crumbs.push(ctx.buscentre.name);
@@ -50,22 +59,23 @@ export function ContextBanner() {
       className="flex items-center gap-2 px-4 sm:px-6 py-2"
       style={{
         position:     "sticky",
-        top:          56,          // stick just below the header
+        top:          56,
         zIndex:       20,
         background:   "var(--brand-navy-light)",
         borderBottom: "1px solid var(--brand-border)",
         fontSize:     12,
       }}
     >
-      {/* Role badge */}
       <span
         className="rounded-pill font-medium px-2 py-0.5 shrink-0"
         style={{ background: "var(--brand-navy)", color: "#fff", fontSize: 11 }}
       >
-        {roleLabel(role)}
+        {roleLabel(activeRole)}
+        {activeView?.isActing && (
+          <span style={{ opacity: 0.7, marginLeft: 4 }}>· acting</span>
+        )}
       </span>
 
-      {/* Hierarchy breadcrumb */}
       {crumbs.map((crumb, i) => (
         <span key={crumb} className="flex items-center gap-2">
           <span style={{ color: "var(--brand-text)", fontWeight: i === 0 ? 500 : 400 }}>

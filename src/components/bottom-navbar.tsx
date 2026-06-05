@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 import {
   Home, Users, Network, TrendingUp, Settings,
   LayoutGrid, ClipboardList, Building2, Heart,
-  BarChart2, Menu, X,
+  BarChart2, Menu, X, UserPlus,
 } from 'lucide-react';
 import { useActiveRole, roleLabel as getRoleLabel, type RoleView } from '@/hooks/use-active-role';
 import { RoleSwitcher } from '@/components/role-switcher';
@@ -43,12 +43,13 @@ const MC_PASTOR_NAV: NavConfig = {
 
 const BUSCENTRE_HEAD_NAV: NavConfig = {
   primary: [
-    { name: 'Overview',     href: '/',          icon: Home },
-    { name: 'My Buscentre', short: 'Buscentre', href: '/buscentre', icon: Building2 },
-    { name: 'Members',      href: '/members',   icon: Users },
-    { name: 'Analysis',     href: '/analysis',  icon: BarChart2 },
+    { name: 'Overview',     href: '/',              icon: Home },
+    { name: 'My Buscentre', short: 'Buscentre',     href: '/buscentre',    icon: Building2 },
+    { name: 'Members',      href: '/members',       icon: Users },
+    { name: 'First Timers', short: '1st Timers',    href: '/first-timers', icon: UserPlus },
   ],
   secondary: [
+    { name: 'Analysis', href: '/analysis', icon: BarChart2 },
     { name: 'Org',      href: '/org',      icon: Network },
     { name: 'Settings', href: '/settings', icon: Settings },
   ],
@@ -56,12 +57,13 @@ const BUSCENTRE_HEAD_NAV: NavConfig = {
 
 const CELL_SHEPHERD_NAV: NavConfig = {
   primary: [
-    { name: 'Overview',   href: '/',          icon: Home },
-    { name: 'My Cell',    short: 'Cell',      href: '/cell',       icon: LayoutGrid },
-    { name: 'Attendance', short: 'Attend',    href: '/attendance', icon: ClipboardList },
-    { name: 'Souls',      href: '/souls',     icon: Heart },
+    { name: 'Overview',      href: '/',               icon: Home },
+    { name: 'My Cell',       short: 'Cell',           href: '/cell',          icon: LayoutGrid },
+    { name: 'Attendance',    short: 'Attend',         href: '/attendance',    icon: ClipboardList },
+    { name: 'First Timers',  short: '1st Timers',     href: '/first-timers',  icon: UserPlus },
   ],
   secondary: [
+    { name: 'Souls',    href: '/souls',    icon: Heart },
     { name: 'Members',  href: '/members',  icon: Users },
     { name: 'Analysis', href: '/analysis', icon: BarChart2 },
     { name: 'Settings', href: '/settings', icon: Settings },

@@ -239,7 +239,7 @@ function SoulRow({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SoulTrackerPage() {
-  const { activeView } = useActiveRole();
+  const { activeView, ready } = useActiveRole();
   const actingCellId = activeView?.isActing && activeView.cellId ? activeView.cellId : null;
 
   const [souls,    setSouls]    = useState<Soul[]>([]);
@@ -254,6 +254,7 @@ export default function SoulTrackerPage() {
   const [deleting, setDeleting] = useState<string | null>(null);
 
   const load = useCallback(async () => {
+    if (!ready) return;
     setLoading(true);
     const params = new URLSearchParams();
     if (actingCellId) params.set("actingCellId", actingCellId);
@@ -265,7 +266,7 @@ export default function SoulTrackerPage() {
     const res = await fetch(`/api/souls?${params}`);
     if (res.ok) setSouls(await res.json());
     setLoading(false);
-  }, [actingCellId, q, month]);
+  }, [ready, actingCellId, q, month]);
 
   useEffect(() => { load(); }, [load]);
 

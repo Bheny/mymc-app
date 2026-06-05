@@ -506,7 +506,7 @@ function Skeleton() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MyBuscentrePage() {
-  useRoleGuard(["buscentre_head"]);
+  const { isLoading: roleLoading } = useRoleGuard(["buscentre_head"]);
 
   const [overview, setOverview] = useState<BuscentreOverview | null>(null);
   const [cells,    setCells]    = useState<CellInfo[]>([]);
@@ -538,7 +538,7 @@ export default function MyBuscentrePage() {
   // Re-fetch whenever the active role changes (role switcher)
   useEffect(() => { load(); }, [actingBuscentreId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (loading) return <Skeleton />;
+  if (roleLoading || loading) return <Skeleton />;
 
   if (error || !overview) {
     return (

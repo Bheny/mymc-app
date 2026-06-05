@@ -359,6 +359,12 @@ model FirstTimer {
   recordedById String   @map("recorded_by_id")
   createdAt    DateTime @default(now()) @map("created_at")
 
+  // Reach-out / follow-up tracking
+  // null = not yet reached · "GREEN" = committed · "YELLOW" = promising · "RED" = not a fit
+  reachOutStatus String?   @map("reach_out_status")
+  reachOutNote   String?   @map("reach_out_note")
+  reachedOutAt   DateTime? @map("reached_out_at")
+
   service         Service  @relation(fields: [serviceId],            references: [id], onDelete: Cascade)
   cell            Cell     @relation(fields: [cellId],               references: [id], onDelete: Cascade)
   convertedMember Member?  @relation("FirstTimerConversion",         fields: [convertedToMemberId], references: [id], onDelete: SetNull)

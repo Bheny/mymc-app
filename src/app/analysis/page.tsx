@@ -186,7 +186,7 @@ function Skeleton() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AnalysisPage() {
-  const { activeView } = useActiveRole();
+  const { activeView, ready } = useActiveRole();
   const actingCellId      = activeView?.isActing && activeView.cellId      ? activeView.cellId      : null;
   const actingBuscentreId = activeView?.isActing && activeView.buscentreId ? activeView.buscentreId : null;
 
@@ -211,6 +211,7 @@ export default function AnalysisPage() {
   const activeRole = activeView?.role ?? null;
 
   const load = useCallback(async () => {
+    if (!ready) return; // wait for acting-roles before fetching scoped data
     setLoading(true);
     const params = new URLSearchParams({ year: String(year) });
     if (month !== null)    params.set("month",            String(month));
@@ -245,7 +246,7 @@ export default function AnalysisPage() {
       setData(null);
     }
     setLoading(false);
-  }, [year, month, filterId, filterMcId, filterBuscentreId, actingCellId, actingBuscentreId, activeRole]);
+  }, [ready, year, month, filterId, filterMcId, filterBuscentreId, actingCellId, actingBuscentreId, activeRole]);
 
   useEffect(() => { load(); }, [load]);
 

@@ -549,7 +549,7 @@ function CardSectionLabel({ label }: { label: string }) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function MyCellPage() {
-  useRoleGuard(["cell_shepherd", "shepherd"]);
+  const { isLoading: roleLoading } = useRoleGuard(["cell_shepherd", "shepherd"]);
 
   const [data,    setData]    = useState<CellOverview | null>(null);
   const [loading, setLoading] = useState(true);
@@ -574,7 +574,7 @@ export default function MyCellPage() {
   // Re-fetch whenever the active role changes (role switcher)
   useEffect(() => { load(); }, [actingCellId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (loading) return <Skeleton />;
+  if (roleLoading || loading) return <Skeleton />;
 
   if (error || !data) {
     return (

@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, XCircle, Clock, Users, UserPlus, Trash2, Plus, Mic2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Clock, Users, UserPlus, Trash2, Plus, Mic2, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useActiveRole } from "@/hooks/use-active-role";
+import { useSession } from "next-auth/react";
 
 type FirstTimerIntent = "JUST_VISITING" | "UNDECIDED" | "WANTS_TO_JOIN";
 
@@ -116,7 +117,7 @@ function StatusButton({
     <button
       type="button"
       onClick={() => onChange(value)}
-      className="w-9 h-9 rounded-lg text-[13px] font-semibold flex items-center justify-center transition-all"
+      className="w-10 h-10 sm:w-9 sm:h-9 rounded-lg text-[13px] font-semibold flex items-center justify-center transition-all"
       style={current === value ? c.active : c.inactive}
       title={value.charAt(0) + value.slice(1).toLowerCase()}
     >
@@ -127,7 +128,8 @@ function StatusButton({
 
 export default function NewAttendancePage() {
   const router = useRouter();
-  const { activeView } = useActiveRole();
+  const { data: session }     = useSession();
+  const { activeView, ready } = useActiveRole();
   const actingCellId = activeView?.isActing && activeView.cellId ? activeView.cellId : null;
 
   // Service fields
@@ -169,9 +171,11 @@ export default function NewAttendancePage() {
     setFirstTimers((prev) => prev.filter((ft) => ft._key !== key));
   }
 
-  // Load regular cell members — scoped to the active cell
+  // Load regular cell members — scoped to the active cell.
+  // `ready` must be in the dep array: without it, if cellId is already set when
+  // ready flips true the effect never re-runs and the skeleton stays forever.
   useEffect(() => {
-    if (!cellId) return;
+    if (!ready || !cellId) return;
     setLoadingMembers(true);
     fetch(`/api/members?cellId=${cellId}`)
       .then((r) => r.json())
@@ -184,11 +188,11 @@ export default function NewAttendancePage() {
         setLoadingMembers(false);
       })
       .catch(() => setLoadingMembers(false));
-  }, [cellId]);
+  }, [ready, cellId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load shepherd slot holders for Shepherds Meeting
+  // Load shepherd slot holders for Shepherds Meeting — same dep-array fix
   useEffect(() => {
-    if (serviceType !== "SHEPHERDS_MEETING" || !cellId) return;
+    if (!ready || serviceType !== "SHEPHERDS_MEETING" || !cellId) return;
     fetch(`/api/org/shepherds?cellId=${cellId}`)
       .then((r) => r.json())
       .then((slots: ShepherdSlot[]) => {
@@ -210,7 +214,7 @@ export default function NewAttendancePage() {
         setAttendance(init);
       })
       .catch(() => {});
-  }, [serviceType, cellId]);
+  }, [ready, serviceType, cellId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Re-initialise attendance map when switching away from Shepherds Meeting back to normal types
   useEffect(() => {
@@ -286,13 +290,12 @@ export default function NewAttendancePage() {
     <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[800px] mx-auto pb-20 lg:pb-8">
 
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/attendance" className="flex items-center gap-1.5 text-[13px] hover:underline"
+      <div className="mb-6">
+        <Link href="/attendance" className="flex items-center gap-1.5 text-[13px] mb-2 hover:underline w-fit"
               style={{ color: "var(--brand-muted)" }}>
-          <ArrowLeft className="h-3.5 w-3.5" /> Attendance
+          <ArrowLeft className="h-3.5 w-3.5" /> Back to attendance
         </Link>
-        <span style={{ color: "var(--brand-border)" }}>·</span>
-        <h1 className="text-[20px] font-semibold" style={{ color: "var(--brand-text)" }}>
+        <h1 className="text-[22px] font-semibold" style={{ color: "var(--brand-text)" }}>
           Record Attendance
         </h1>
       </div>
@@ -408,40 +411,60 @@ export default function NewAttendancePage() {
 
       {/* ── Attendance summary bar ── */}
       <div
-        className="rounded-xl px-5 py-3 mb-4 flex items-center justify-between flex-wrap gap-3 sticky"
+        className="rounded-xl px-4 py-3 mb-4 sticky"
         style={{ top: 56, zIndex: 10, background: "var(--brand-navy-light)", border: "1px solid var(--brand-border)" }}
       >
-        <div className="flex items-center gap-4 flex-wrap text-[13px]">
-          <span style={{ color: "var(--brand-navy)", fontWeight: 500 }}>{marked}/{total} marked</span>
-          {present > 0 && (
-            <span className="flex items-center gap-1" style={{ color: "var(--brand-success)" }}>
-              <CheckCircle2 className="h-3.5 w-3.5" /> {present}
-            </span>
-          )}
-          {absent > 0 && (
-            <span className="flex items-center gap-1" style={{ color: "var(--brand-danger)" }}>
-              <XCircle className="h-3.5 w-3.5" /> {absent}
-            </span>
-          )}
-          {excused > 0 && (
-            <span className="flex items-center gap-1" style={{ color: "var(--brand-warning)" }}>
-              <Clock className="h-3.5 w-3.5" /> {excused}
-            </span>
-          )}
-        </div>
-        <div className="w-32">
-          <div className="rounded-pill overflow-hidden" style={{ height: 6, background: "var(--brand-border)" }}>
-            <div className="h-full rounded-pill transition-all"
-                 style={{ width: `${total > 0 ? Math.round((marked / total) * 100) : 0}%`,
-                          background: "var(--brand-navy)" }} />
+        {/* Top row: marked count + status icons */}
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-3 flex-wrap text-[13px]">
+            <span style={{ color: "var(--brand-navy)", fontWeight: 600 }}>{marked}/{total} marked</span>
+            {present > 0 && (
+              <span className="flex items-center gap-1" style={{ color: "var(--brand-success)" }}>
+                <CheckCircle2 className="h-3.5 w-3.5" /> {present}
+              </span>
+            )}
+            {absent > 0 && (
+              <span className="flex items-center gap-1" style={{ color: "var(--brand-danger)" }}>
+                <XCircle className="h-3.5 w-3.5" /> {absent}
+              </span>
+            )}
+            {excused > 0 && (
+              <span className="flex items-center gap-1" style={{ color: "var(--brand-warning)" }}>
+                <Clock className="h-3.5 w-3.5" /> {excused}
+              </span>
+            )}
           </div>
+          <span className="text-[12px] font-semibold shrink-0" style={{ color: "var(--brand-navy)" }}>
+            {total > 0 ? Math.round((marked / total) * 100) : 0}%
+          </span>
+        </div>
+        {/* Progress bar — full width on all screens */}
+        <div className="rounded-pill overflow-hidden" style={{ height: 5, background: "var(--brand-border)" }}>
+          <div className="h-full rounded-pill transition-all"
+               style={{ width: `${total > 0 ? Math.round((marked / total) * 100) : 0}%`,
+                        background: "var(--brand-navy)" }} />
         </div>
       </div>
 
       {/* ── Member / shepherd list ── */}
       {loadingMembers ? (
-        <div className="flex flex-col gap-3">
-          {[...Array(5)].map((_, i) => <div key={i} className="skeleton h-12 rounded-xl" />)}
+        <div className="rounded-xl p-8 flex flex-col items-center gap-3 text-center"
+             style={{ border: "1px solid var(--brand-border)" }}>
+          <Loader2 className="h-7 w-7 animate-spin" style={{ color: "var(--brand-navy)" }} />
+          <div>
+            <p className="text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>
+              {!ready ? "Checking your role…" : isShepherdsMeeting ? "Loading shepherds…" : "Loading members…"}
+            </p>
+            <p className="text-[12px] mt-1" style={{ color: "var(--brand-muted)" }}>
+              This should only take a moment
+            </p>
+          </div>
+          {/* Skeleton rows beneath the spinner for visual continuity */}
+          <div className="w-full flex flex-col gap-2 mt-2">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="skeleton h-12 rounded-xl" style={{ opacity: 1 - i * 0.2 }} />
+            ))}
+          </div>
         </div>
       ) : total === 0 ? (
         <div className="rounded-xl p-10 text-center" style={{ border: "1px solid var(--brand-border)" }}>
@@ -463,8 +486,17 @@ export default function NewAttendancePage() {
                   <span className="text-[12px] font-medium uppercase tracking-[0.04em]"
                         style={{ color: "var(--brand-muted)" }}>Shepherd:</span>
                   <span className="text-[13px] font-medium" style={{ color: "var(--brand-text)" }}>
-                    {group.label}
+                    {/* "No shepherd" means directly overseen by the cell shepherd */}
+                    {key === "__none__"
+                      ? (session?.user?.name ?? "Cell Shepherd")
+                      : group.label}
                   </span>
+                  {key === "__none__" && (
+                    <span className="text-[10px] font-semibold rounded-pill px-1.5 py-0.5"
+                          style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                      you
+                    </span>
+                  )}
                   <span className="text-[12px] ml-auto" style={{ color: "var(--brand-muted)" }}>
                     {group.members.length} member{group.members.length !== 1 ? "s" : ""}
                   </span>
@@ -478,11 +510,12 @@ export default function NewAttendancePage() {
                 return (
                   <div
                     key={m.id}
-                    className="flex items-center gap-3 px-4 py-3"
+                    className="flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3"
                     style={{ borderBottom: i < group.members.length - 1 ? "1px solid var(--brand-border)" : "none" }}
                   >
+                    {/* Avatar — hidden on very small screens to give name more room */}
                     <div
-                      className="flex items-center justify-center rounded-lg text-[12px] font-semibold shrink-0"
+                      className="hidden xs:flex items-center justify-center rounded-lg text-[12px] font-semibold shrink-0"
                       style={{
                         width: 32, height: 32,
                         background: status === "PRESENT" ? "#1A8C6C" : status === "ABSENT" ? "#C0392B" : status === "EXCUSED" ? "#B87015" : "var(--brand-navy)",
@@ -491,7 +524,7 @@ export default function NewAttendancePage() {
                     >
                       {initials}
                     </div>
-                    <span className="flex-1 text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>
+                    <span className="flex-1 min-w-0 text-[14px] font-medium truncate" style={{ color: "var(--brand-text)" }}>
                       {m.firstName} {m.lastName}
                       {m.gender && (
                         <span className="ml-1.5 text-[12px] font-normal" style={{ color: "var(--brand-muted)" }}>
@@ -499,7 +532,8 @@ export default function NewAttendancePage() {
                         </span>
                       )}
                     </span>
-                    <div className="flex items-center gap-1.5 shrink-0">
+                    {/* P / A / E buttons */}
+                    <div className="flex items-center gap-1 shrink-0">
                       {(["PRESENT", "ABSENT", "EXCUSED"] as AttendanceStatus[]).map((s) => (
                         <StatusButton key={s} value={s} current={status} onChange={(v) => setStatus(m.id, v)} />
                       ))}
@@ -515,20 +549,22 @@ export default function NewAttendancePage() {
       {/* ── First Timers (hidden for Shepherds Meeting) ── */}
       {!isShepherdsMeeting && (
         <div className="mt-8">
-          <div className="flex items-center justify-between mb-3">
-            <div>
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="min-w-0">
               <h2 className="text-[16px] font-semibold" style={{ color: "var(--brand-text)" }}>First Timers</h2>
               <p className="text-[12px] mt-0.5" style={{ color: "var(--brand-muted)" }}>
-                People attending for the first time — not yet members
+                New faces — not yet members
               </p>
             </div>
             <button
               type="button"
               onClick={addFirstTimer}
-              className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-[13px] font-medium transition-colors"
+              className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-[13px] font-medium transition-colors shrink-0"
               style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)", border: "1px solid var(--brand-border)" }}
             >
-              <Plus className="h-3.5 w-3.5" /> Add first timer
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Add first timer</span>
+              <span className="sm:hidden">Add</span>
             </button>
           </div>
 
@@ -665,10 +701,21 @@ export default function NewAttendancePage() {
         <Button
           onClick={handleSubmit}
           disabled={saving || !allDone}
-          className="h-11 text-[15px] font-medium w-full"
+          className="h-12 text-[15px] font-medium w-full flex flex-col items-center justify-center gap-0.5"
           style={{ background: "var(--brand-navy)", color: "#fff", borderRadius: 8 }}
         >
-          {saving ? "Saving…" : `Submit attendance (${present} present, ${absent} absent, ${excused} excused)`}
+          {saving ? (
+            "Saving…"
+          ) : (
+            <>
+              <span>Submit Attendance</span>
+              {allDone && (
+                <span className="text-[11px] font-normal opacity-80">
+                  {present} present · {absent} absent{excused > 0 ? ` · ${excused} excused` : ""}
+                </span>
+              )}
+            </>
+          )}
         </Button>
       </div>
     </div>

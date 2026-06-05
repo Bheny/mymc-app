@@ -177,6 +177,12 @@ type MemberDetail = Member & {
   emergencyName?:     string | null;
   emergencyPhone?:    string | null;
   emergencyRelation?: string | null;
+  // Populated if this member IS a shepherd in some cell
+  shepherdRole?: {
+    id:     string;
+    _count: { members: number };
+    cell:   { id: string; name: string } | null;
+  } | null;
   // Set when the member has been activated as a system user
   user: {
     id:   string;
@@ -189,6 +195,18 @@ type MemberDetail = Member & {
     } | null;
   } | null;
 };
+
+// Derive the human-readable church position for a member
+function memberPosition(detail: MemberDetail): { label: string; badge: string; badgeBg: string; badgeColor: string } {
+  const sysRole = detail.user?.role?.role;
+  if (sysRole === "cell_shepherd")  return { label: "Cell Shepherd",  badge: "Cell Shepherd",  badgeBg: "var(--brand-navy)",      badgeColor: "#fff"     };
+  if (sysRole === "buscentre_head") return { label: "Buscentre Head", badge: "Buscentre Head", badgeBg: "#7C3AED",                badgeColor: "#fff"     };
+  if (sysRole === "mc_pastor")      return { label: "MC Pastor",      badge: "MC Pastor",      badgeBg: "#059669",                badgeColor: "#fff"     };
+  if (sysRole === "chief_shepherd") return { label: "Chief Shepherd", badge: "Chief Shepherd", badgeBg: "#B45309",                badgeColor: "#fff"     };
+  if (sysRole === "admin")          return { label: "Admin",          badge: "Admin",          badgeBg: "#1F2937",                badgeColor: "#fff"     };
+  if (detail.shepherdRole)          return { label: "Shepherd",       badge: "Shepherd",       badgeBg: "#E0F4EC",                badgeColor: "#085041"  };
+  return                                   { label: "Regular Member", badge: "Member",         badgeBg: "var(--brand-navy-light)", badgeColor: "var(--brand-navy)" };
+}
 
 type AttendanceRecord = {
   id:     string;
@@ -326,14 +344,17 @@ function MemberDetailSheet({
                     {detail.firstName} {detail.lastName}
                   </SheetTitle>
                   <div className="flex flex-wrap gap-1.5">
-                    {level && (
-                      <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5"
-                            style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
-                        {LEVEL_LABELS[level]}
-                      </span>
-                    )}
+                    {/* Position / rank badge — replaces the generic level label */}
+                    {(() => {
+                      const pos = memberPosition(detail);
+                      return (
+                        <span className="rounded-pill text-[11px] font-semibold px-2.5 py-0.5"
+                              style={{ background: pos.badgeBg, color: pos.badgeColor }}>
+                          {pos.badge}
+                        </span>
+                      );
+                    })()}
                     <StatusBadge active={detail.isActive} />
-                    {detail.isUser && <SystemUserBadge />}
                   </div>
                 </div>
               </div>
@@ -354,6 +375,32 @@ function MemberDetailSheet({
             </div>
           ) : detail ? (
             <div className="flex flex-col gap-0">
+
+              {/* ── Position / rank ── */}
+              {(() => {
+                const pos = memberPosition(detail);
+                return (
+                  <div className="flex items-center gap-3 py-3"
+                       style={{ borderBottom: "1px solid var(--brand-border)" }}>
+                    <span className="text-[12px] font-medium uppercase tracking-[0.04em] w-24 shrink-0"
+                          style={{ color: "var(--brand-muted)" }}>
+                      Position
+                    </span>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="rounded-pill text-[12px] font-semibold px-3 py-1"
+                            style={{ background: pos.badgeBg, color: pos.badgeColor }}>
+                        {pos.badge}
+                      </span>
+                      {/* If they're a shepherd, show which cell and member count */}
+                      {detail.shepherdRole && (
+                        <span className="text-[12px]" style={{ color: "var(--brand-muted)" }}>
+                          in {detail.shepherdRole.cell?.name ?? "—"} · {detail.shepherdRole._count.members} member{detail.shepherdRole._count.members !== 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* ── Personal ── */}
               <p className="text-[11px] font-medium uppercase tracking-[0.06em] py-3"
@@ -539,6 +586,15 @@ function EditMemberSheet({
   const [joinedDate,  setJoinedDate]  = useState("");
   const [isActive,    setIsActive]    = useState(true);
 
+  // ── Extended profile fields ──
+  const [hometown,          setHometown]          = useState("");
+  const [previousChurch,    setPreviousChurch]    = useState("");
+  const [parentName,        setParentName]        = useState("");
+  const [parentPhone,       setParentPhone]       = useState("");
+  const [emergencyName,     setEmergencyName]     = useState("");
+  const [emergencyPhone,    setEmergencyPhone]    = useState("");
+  const [emergencyRelation, setEmergencyRelation] = useState("");
+
   // ── Reassignment ──
   const [reassigning,  setReassigning]  = useState(false);
   const [level,        setLevel]        = useState<MemberLevel>("shepherd");
@@ -554,7 +610,7 @@ function EditMemberSheet({
   const [busy,  setBusy]  = useState(false);
   const [error, setError] = useState("");
 
-  // Populate fields when member changes
+  // Populate fields when member changes — fetch full detail for extended fields
   useEffect(() => {
     if (!member) return;
     setFirstName(member.firstName);
@@ -562,11 +618,28 @@ function EditMemberSheet({
     setPhone(member.phone ?? "");
     setEmail(member.email ?? "");
     setGender(member.gender ?? "");
-    setDateOfBirth(""); // dateOfBirth not in current type — can be added later
     setJoinedDate(member.joinedDate ? member.joinedDate.slice(0, 10) : "");
     setIsActive(member.isActive);
     setReassigning(false);
     setError("");
+    // Reset extended fields until detail loads
+    setDateOfBirth(""); setHometown(""); setPreviousChurch("");
+    setParentName(""); setParentPhone("");
+    setEmergencyName(""); setEmergencyPhone(""); setEmergencyRelation("");
+    // Fetch full detail to get extended profile + dateOfBirth
+    fetch(`/api/members/${member.id}`)
+      .then((r) => r.json())
+      .then((d: MemberDetail) => {
+        setDateOfBirth(d.dateOfBirth ? d.dateOfBirth.slice(0, 10) : "");
+        setHometown(d.hometown ?? "");
+        setPreviousChurch(d.previousChurch ?? "");
+        setParentName(d.parentName ?? "");
+        setParentPhone(d.parentPhone ?? "");
+        setEmergencyName(d.emergencyName ?? "");
+        setEmergencyPhone(d.emergencyPhone ?? "");
+        setEmergencyRelation(d.emergencyRelation ?? "");
+      })
+      .catch(() => {});
   }, [member]);
 
   // When reassign section opens — load MCs and pre-fill current placement
@@ -628,9 +701,16 @@ function EditMemberSheet({
         phone:     phone       || null,
         email:     email       || null,
         gender:    gender      || null,
-        dateOfBirth: dateOfBirth || null,
-        joinedDate:  joinedDate  || null,
+        dateOfBirth:       dateOfBirth       || null,
+        joinedDate:        joinedDate        || null,
         isActive,
+        hometown:          hometown          || null,
+        previousChurch:    previousChurch    || null,
+        parentName:        parentName        || null,
+        parentPhone:       parentPhone       || null,
+        emergencyName:     emergencyName     || null,
+        emergencyPhone:    emergencyPhone    || null,
+        emergencyRelation: emergencyRelation || null,
         ...placementPatch,
       }),
     });
@@ -722,6 +802,78 @@ function EditMemberSheet({
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
+              </div>
+            </section>
+
+            <div className="h-px" style={{ background: "var(--brand-border)" }} />
+
+            {/* ── Background ── */}
+            <section className="flex flex-col gap-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em]"
+                 style={{ color: "var(--brand-muted)" }}>Background</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel>Hometown</FieldLabel>
+                  <Input value={hometown} onChange={(e) => setHometown(e.target.value)}
+                         placeholder="e.g. Kumasi" className="h-10 text-[14px]"
+                         style={{ borderColor: "var(--brand-border)" }} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel>Previous church</FieldLabel>
+                  <Input value={previousChurch} onChange={(e) => setPreviousChurch(e.target.value)}
+                         placeholder="e.g. ICGC" className="h-10 text-[14px]"
+                         style={{ borderColor: "var(--brand-border)" }} />
+                </div>
+              </div>
+            </section>
+
+            <div className="h-px" style={{ background: "var(--brand-border)" }} />
+
+            {/* ── Parent / Guardian ── */}
+            <section className="flex flex-col gap-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em]"
+                 style={{ color: "var(--brand-muted)" }}>Parent / Guardian</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel>Name</FieldLabel>
+                  <Input value={parentName} onChange={(e) => setParentName(e.target.value)}
+                         placeholder="Full name" className="h-10 text-[14px]"
+                         style={{ borderColor: "var(--brand-border)" }} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel>Phone</FieldLabel>
+                  <Input value={parentPhone} onChange={(e) => setParentPhone(e.target.value)}
+                         placeholder="+233 …" className="h-10 text-[14px]"
+                         style={{ borderColor: "var(--brand-border)" }} />
+                </div>
+              </div>
+            </section>
+
+            <div className="h-px" style={{ background: "var(--brand-border)" }} />
+
+            {/* ── Emergency Contact ── */}
+            <section className="flex flex-col gap-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em]"
+                 style={{ color: "var(--brand-muted)" }}>Emergency Contact</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel>Name</FieldLabel>
+                  <Input value={emergencyName} onChange={(e) => setEmergencyName(e.target.value)}
+                         placeholder="Full name" className="h-10 text-[14px]"
+                         style={{ borderColor: "var(--brand-border)" }} />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel>Phone</FieldLabel>
+                  <Input value={emergencyPhone} onChange={(e) => setEmergencyPhone(e.target.value)}
+                         placeholder="+233 …" className="h-10 text-[14px]"
+                         style={{ borderColor: "var(--brand-border)" }} />
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Relationship</FieldLabel>
+                <Input value={emergencyRelation} onChange={(e) => setEmergencyRelation(e.target.value)}
+                       placeholder="e.g. Spouse, Sibling, Parent" className="h-10 text-[14px]"
+                       style={{ borderColor: "var(--brand-border)" }} />
               </div>
             </section>
 
@@ -844,7 +996,7 @@ function EditMemberSheet({
 
 export default function MembersPage() {
   const { data: session } = useSession();
-  const { activeView }    = useActiveRole();
+  const { activeView, ready } = useActiveRole();
   const [members,         setMembers]         = useState<Member[]>([]);
   const [loading,         setLoading]         = useState(true);
   const [query,           setQuery]           = useState("");
@@ -859,6 +1011,7 @@ export default function MembersPage() {
   const scopedBuscentreId = role === "buscentre_head" ? (activeView?.buscentreId ?? session?.user?.buscentreId) : null;
 
   const loadMembers = useCallback(async () => {
+    if (!ready) return; // wait for acting-roles before scoping the query
     setLoading(true);
     const params = new URLSearchParams();
     if (query) params.set("q", query);
@@ -872,7 +1025,7 @@ export default function MembersPage() {
     const res = await fetch(`/api/members?${params.toString()}`);
     if (res.ok) setMembers(await res.json());
     setLoading(false);
-  }, [query, filter, scopedBuscentreId, scopedCellId, scopedShepherdId]);
+  }, [ready, query, filter, scopedBuscentreId, scopedCellId, scopedShepherdId]);
 
   useEffect(() => { loadMembers(); }, [loadMembers]);
 

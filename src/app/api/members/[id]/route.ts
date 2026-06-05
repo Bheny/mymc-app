@@ -10,6 +10,14 @@ const MEMBER_INCLUDE = {
   cell:      { select: { id: true, name: true, buscentre: { select: { id: true, name: true } } } },
   buscentre: { select: { id: true, name: true } },
   mc:        { select: { id: true, name: true } },
+  // Whether this member IS a shepherd (back-relation via Shepherd.memberId)
+  shepherdRole: {
+    select: {
+      id:      true,
+      _count:  { select: { members: true } },
+      cell:    { select: { id: true, name: true } },
+    },
+  },
   // When this member is a system user, include their supervisor + their role
   user: {
     select: {

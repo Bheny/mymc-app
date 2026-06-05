@@ -161,26 +161,32 @@ type ShepherdSummary = {
   _count: { members: number };
 };
 
+type UnreachedFT = { id: string; firstName: string; lastName: string; phone: string | null; service: { date: string } };
+
 function CellShepherdOverview() {
   const { data: session } = useSession();
   const { activeView } = useActiveRole();
-  const [cell,      setCell]      = useState<CellInfo | null>(null);
-  const [stats,     setStats]     = useState<CellStats | null>(null);
-  const [shepherds, setShepherds] = useState<ShepherdSummary[]>([]);
-  const [birthdays, setBirthdays] = useState<BirthdayEntry[]>([]);
-  const [loading,   setLoading]   = useState(true);
+  const [cell,         setCell]         = useState<CellInfo | null>(null);
+  const [stats,        setStats]        = useState<CellStats | null>(null);
+  const [shepherds,    setShepherds]    = useState<ShepherdSummary[]>([]);
+  const [birthdays,    setBirthdays]    = useState<BirthdayEntry[]>([]);
+  const [unreachedFTs, setUnreachedFTs] = useState<UnreachedFT[]>([]);
+  const [loading,      setLoading]      = useState(true);
 
   const actingCellId = activeView?.isActing && activeView.cellId ? activeView.cellId : null;
 
   useEffect(() => {
     const params = actingCellId ? `?actingCellId=${actingCellId}` : "";
-    fetch(`/api/cell/overview${params}`)
-      .then((r) => r.json())
-      .then((d) => {
+    Promise.all([
+      fetch(`/api/cell/overview${params}`).then((r) => r.json()),
+      fetch(`/api/first-timers?status=unreached&take=5${actingCellId ? `&actingCellId=${actingCellId}` : ""}`).then((r) => r.json()),
+    ])
+      .then(([d, ft]) => {
         setCell(d.cell);
         setStats(d.stats);
         setShepherds(d.shepherds ?? []);
         setBirthdays(d.birthdays ?? []);
+        setUnreachedFTs(ft.firstTimers ?? []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -285,8 +291,52 @@ function CellShepherdOverview() {
       {/* Upcoming birthdays */}
       <BirthdaySection birthdays={birthdays} />
 
+      {/* ── Unreached first timers ── */}
+      {unreachedFTs.length > 0 && (
+        <div className="mt-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-orange-400 shrink-0" />
+              <p className="text-[13px] font-semibold" style={{ color: "var(--brand-text)" }}>
+                {unreachedFTs.length} first timer{unreachedFTs.length !== 1 ? "s" : ""} to reach out to
+              </p>
+            </div>
+            <Link href="/first-timers" className="text-[12px] font-medium hover:underline"
+                  style={{ color: "var(--brand-navy)" }}>
+              View all →
+            </Link>
+          </div>
+          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
+            {unreachedFTs.map((ft, i) => (
+              <div key={ft.id} className="flex items-center gap-3 px-4 py-2.5"
+                   style={{ borderBottom: i < unreachedFTs.length - 1 ? "1px solid var(--brand-border)" : "none" }}>
+                <div className="flex items-center justify-center rounded-lg text-[11px] font-bold shrink-0"
+                     style={{ width: 28, height: 28, background: "#FEF3DC", color: "#854F0B" }}>
+                  {ft.firstName[0]}{ft.lastName[0]}
+                </div>
+                <span className="flex-1 text-[13px] font-medium" style={{ color: "var(--brand-text)" }}>
+                  {ft.firstName} {ft.lastName}
+                </span>
+                {ft.phone && (
+                  <a href={`tel:${ft.phone}`} className="text-[12px] font-medium hover:underline"
+                     style={{ color: "var(--brand-navy)" }}>
+                    {ft.phone}
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+          <Link href="/first-timers">
+            <div className="mt-2 rounded-xl px-4 py-2.5 text-center text-[13px] font-medium transition-colors hover:bg-[var(--brand-navy-light)]"
+                 style={{ border: "1px solid var(--brand-border)", color: "var(--brand-navy)" }}>
+              Open First Timers Focus →
+            </div>
+          </Link>
+        </div>
+      )}
+
       {/* Quick actions */}
-      <div className="flex flex-wrap gap-3 mt-2">
+      <div className="flex flex-wrap gap-3 mt-4">
         <Link href="/cell">
           <Button variant="outline" className="h-9 text-[13px]" style={{ borderRadius: 8 }}>
             <LayoutGrid className="mr-2 h-4 w-4" /> My Cell
@@ -331,16 +381,22 @@ type BuscentreData = {
 
 function BuscentreHeadOverview() {
   const { activeView } = useActiveRole();
-  const [data, setData] = useState<BuscentreData | null>(null);
+  const [data,         setData]         = useState<BuscentreData | null>(null);
+  const [unreachedFTs, setUnreachedFTs] = useState<UnreachedFT[]>([]);
 
   const actingParam = activeView?.isActing && activeView.buscentreId
     ? `?actingBuscentreId=${activeView.buscentreId}`
     : "";
 
   useEffect(() => {
-    fetch(`/api/buscentre/overview${actingParam}`)
-      .then((r) => r.json())
-      .then(setData)
+    const ftParam = actingParam
+      ? `?actingBuscentreId=${actingParam.replace("?actingBuscentreId=", "")}&status=unreached&take=5`
+      : "?status=unreached&take=5";
+    Promise.all([
+      fetch(`/api/buscentre/overview${actingParam}`).then((r) => r.json()),
+      fetch(`/api/first-timers${ftParam}`).then((r) => r.json()),
+    ])
+      .then(([d, ft]) => { setData(d); setUnreachedFTs(ft.firstTimers ?? []); })
       .catch(console.error);
   }, [actingParam]);
 
@@ -485,6 +541,50 @@ function BuscentreHeadOverview() {
         </>
       )}
 
+      {/* ── Unreached first timers ── */}
+      {unreachedFTs.length > 0 && (
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#F59E0B" }} />
+              <p className="text-[13px] font-semibold" style={{ color: "var(--brand-text)" }}>
+                {unreachedFTs.length} first timer{unreachedFTs.length !== 1 ? "s" : ""} need a reach-out
+              </p>
+            </div>
+            <Link href="/first-timers" className="text-[12px] font-medium hover:underline"
+                  style={{ color: "var(--brand-navy)" }}>
+              View all →
+            </Link>
+          </div>
+          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
+            {unreachedFTs.map((ft, i) => (
+              <div key={ft.id} className="flex items-center gap-3 px-4 py-2.5"
+                   style={{ borderBottom: i < unreachedFTs.length - 1 ? "1px solid var(--brand-border)" : "none" }}>
+                <div className="flex items-center justify-center rounded-lg text-[11px] font-bold shrink-0"
+                     style={{ width: 28, height: 28, background: "#FEF3DC", color: "#854F0B" }}>
+                  {ft.firstName[0]}{ft.lastName[0]}
+                </div>
+                <span className="flex-1 text-[13px] font-medium" style={{ color: "var(--brand-text)" }}>
+                  {ft.firstName} {ft.lastName}
+                </span>
+                {ft.phone && (
+                  <a href={`tel:${ft.phone}`} className="text-[12px] font-medium hover:underline"
+                     style={{ color: "var(--brand-navy)" }}>
+                    {ft.phone}
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+          <Link href="/first-timers">
+            <div className="mt-2 rounded-xl px-4 py-2.5 text-center text-[13px] font-medium transition-colors hover:bg-[var(--brand-navy-light)]"
+                 style={{ border: "1px solid var(--brand-border)", color: "var(--brand-navy)" }}>
+              Open First Timers Focus →
+            </div>
+          </Link>
+        </div>
+      )}
+
       {/* Quick actions */}
       <div className="flex flex-wrap gap-3 mt-4">
         <Link href="/members">
@@ -510,9 +610,9 @@ function BuscentreHeadOverview() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function OverviewPage() {
-  const { data: session } = useSession();
-  const { activeView }   = useActiveRole();
-  const [data, setData]  = useState<DashboardData | null>(null);
+  const { data: session }    = useSession();
+  const { activeView, ready } = useActiveRole();
+  const [data, setData]      = useState<DashboardData | null>(null);
 
   // Use the ACTIVE role (may differ from primary if user has switched to an acting view)
   const role     = activeView?.role ?? session?.user?.role;
@@ -521,12 +621,17 @@ export default function OverviewPage() {
 
   // Always call hooks before any conditional returns
   useEffect(() => {
+    if (!ready) return;          // wait for acting-roles fetch before routing
     if (isScoped || isBuscentreHead) return;
     fetch("/api/dashboard")
       .then((r) => r.json())
       .then(setData)
       .catch(console.error);
-  }, [isScoped, isBuscentreHead]);
+  }, [ready, isScoped, isBuscentreHead]);
+
+  // Hold at skeleton until acting-roles have settled — prevents the wrong
+  // role view flashing in before the correct one is confirmed
+  if (!ready) return <PageSkeleton />;
 
   // Route scoped roles to their dedicated view
   if (isScoped) return <CellShepherdOverview />;

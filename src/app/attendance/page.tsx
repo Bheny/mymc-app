@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ClipboardList, Plus, ChevronRight, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useActiveRole } from "@/hooks/use-active-role";
 
 type ServiceSummary = {
   id:        string;
@@ -51,16 +52,18 @@ function formatDate(iso: string) {
 }
 
 export default function AttendancePage() {
+  const { ready } = useActiveRole();
   const [services, setServices] = useState<ServiceSummary[]>([]);
   const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
+    if (!ready) return; // wait for acting-roles before fetching scoped data
     fetch("/api/services?take=30")
       .then((r) => r.json())
       .then(setServices)
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, []);
+  }, [ready]);
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[1200px] mx-auto pb-20 lg:pb-8">

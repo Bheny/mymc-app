@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useActiveRole } from "./use-active-role";
 
-// Where each role lands when redirected away from an unauthorized page
 const ROLE_HOME: Record<string, string> = {
   admin:          "/",
   chief_shepherd: "/",
@@ -16,11 +15,13 @@ const ROLE_HOME: Record<string, string> = {
 };
 
 /**
- * Redirects to the role's home page if the current active role is not in
- * `allowedRoles`. Waits for the acting-roles fetch to settle before acting
- * so it never fires on a stale primary-role snapshot.
+ * Waits for the acting-roles fetch to settle, then:
+ * - redirects if the active role is not in `allowedRoles`
+ *
+ * Returns `{ isLoading: true }` while the role is still being resolved so
+ * pages can render a skeleton instead of role-specific content during that window.
  */
-export function useRoleGuard(allowedRoles: string[]) {
+export function useRoleGuard(allowedRoles: string[]): { isLoading: boolean } {
   const router              = useRouter();
   const { data: session }   = useSession();
   const { activeView, ready } = useActiveRole();
@@ -28,11 +29,13 @@ export function useRoleGuard(allowedRoles: string[]) {
   const role = activeView?.role ?? session?.user?.role ?? null;
 
   useEffect(() => {
-    // Don't redirect until the acting-roles fetch has settled
     if (!ready || !role) return;
     if (!allowedRoles.includes(role)) {
       router.replace(ROLE_HOME[role] ?? "/");
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, role]);
+
+  // isLoading = true until the fetch has settled AND the role is confirmed valid
+  return { isLoading: !ready || !role };
 }
