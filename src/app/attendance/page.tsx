@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ClipboardList, Plus, ChevronRight, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { ClipboardList, Plus, ChevronRight, CheckCircle2, XCircle, Clock, AlertTriangle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveRole } from "@/hooks/use-active-role";
 
@@ -51,19 +51,49 @@ function formatDate(iso: string) {
   });
 }
 
+type Gap = { date: string; type: string; label: string };
+
 export default function AttendancePage() {
-  const { ready } = useActiveRole();
-  const [services, setServices] = useState<ServiceSummary[]>([]);
-  const [loading,  setLoading]  = useState(true);
+  const { ready, activeView } = useActiveRole();
+  const actingCellId = activeView?.isActing && activeView.cellId ? activeView.cellId : null;
+
+  const [services,      setServices]      = useState<ServiceSummary[]>([]);
+  const [loading,       setLoading]       = useState(true);
+  const [gaps,          setGaps]          = useState<Gap[]>([]);
+  const [cancellingGap, setCancellingGap] = useState<string | null>(null); // "date_type"
 
   useEffect(() => {
-    if (!ready) return; // wait for acting-roles before fetching scoped data
-    fetch("/api/services?take=30")
-      .then((r) => r.json())
-      .then(setServices)
+    if (!ready) return;
+    const gapParams = actingCellId ? `?actingCellId=${actingCellId}` : "";
+    Promise.all([
+      fetch("/api/services?take=30").then((r) => r.json()),
+      fetch(`/api/attendance/gaps${gapParams}`).then((r) => r.json()),
+    ])
+      .then(([svcs, gapData]) => {
+        setServices(svcs);
+        setGaps(gapData.gaps ?? []);
+      })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [ready]);
+  }, [ready, actingCellId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function markCancelled(gap: Gap) {
+    const key = `${gap.date}_${gap.type}`;
+    setCancellingGap(key);
+    await fetch("/api/services", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        type:         gap.type,
+        date:         gap.date,
+        cancelled:    true,
+        notes:        "Service cancelled",
+        ...(actingCellId ? { actingCellId } : {}),
+      }),
+    });
+    setGaps((prev) => prev.filter((g) => !(g.date === gap.date && g.type === gap.type)));
+    setCancellingGap(null);
+  }
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[1200px] mx-auto pb-20 lg:pb-8">
@@ -77,6 +107,7 @@ export default function AttendancePage() {
           <p className="mt-0.5 text-[14px]" style={{ color: "var(--brand-muted)" }}>
             LC LIVE (Wed) · MGS (Sun)
           </p>
+
         </div>
         <Link href="/attendance/new">
           <Button className="h-9 px-4 text-[14px] font-medium"
@@ -85,6 +116,61 @@ export default function AttendancePage() {
           </Button>
         </Link>
       </div>
+
+      {/* ── Missed services card ── */}
+      {gaps.length > 0 && (
+        <div className="rounded-xl overflow-hidden mb-6"
+             style={{ border: "1px solid #FCD34D", background: "#FFFBEB" }}>
+          {/* Header */}
+          <div className="flex items-center gap-2 px-4 py-3"
+               style={{ borderBottom: "1px solid #FCD34D" }}>
+            <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: "#D97706" }} />
+            <span className="text-[13px] font-semibold" style={{ color: "#92400E" }}>
+              {gaps.length} missed service{gaps.length !== 1 ? "s" : ""} — up to 4 weeks back
+            </span>
+            <span className="ml-auto text-[11px]" style={{ color: "#B45309" }}>
+              Fill in or mark as cancelled
+            </span>
+          </div>
+
+          {/* Gap rows */}
+          {gaps.map((gap) => {
+            const key    = `${gap.date}_${gap.type}`;
+            const isBusy = cancellingGap === key;
+            return (
+              <div key={key} className="flex items-center gap-3 px-4 py-3"
+                   style={{ borderBottom: "1px solid #FEF3DC" }}>
+                {/* Type badge */}
+                <span className="rounded-pill text-[11px] font-semibold px-2 py-0.5 text-white shrink-0"
+                      style={{ background: TYPE_COLOR[gap.type] ?? "var(--brand-navy)" }}>
+                  {TYPE_LABEL[gap.type] ?? gap.type}
+                </span>
+                {/* Date */}
+                <span className="flex-1 text-[13px] font-medium" style={{ color: "#92400E" }}>
+                  {gap.label}
+                </span>
+                {/* Actions */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <Link href={`/attendance/new?date=${gap.date}&type=${gap.type}`}>
+                    <button className="h-8 px-3 rounded-lg text-[12px] font-semibold transition-colors"
+                            style={{ background: "var(--brand-navy)", color: "#fff" }}>
+                      Fill in
+                    </button>
+                  </Link>
+                  <button
+                    onClick={() => markCancelled(gap)}
+                    disabled={isBusy}
+                    className="h-8 px-3 rounded-lg text-[12px] font-medium transition-colors disabled:opacity-50"
+                    style={{ border: "1px solid #FCD34D", color: "#B45309", background: "#fff" }}
+                  >
+                    {isBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Cancelled"}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* List */}
       {loading ? (

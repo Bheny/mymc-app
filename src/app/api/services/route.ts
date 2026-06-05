@@ -138,7 +138,7 @@ export async function POST(request: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const body = await request.json();
-  const { type, date, mode, notes, speaker, attendance, actingCellId, firstTimers = [] } = body;
+  const { type, date, mode, notes, speaker, cancelled = false, attendance, actingCellId, firstTimers = [] } = body;
 
   const cellResult = resolveCell(session, actingCellId ?? null);
   if (cellResult && typeof cellResult === "object" && "error" in cellResult) {
@@ -150,14 +150,17 @@ export async function POST(request: Request) {
   if (!type || !date) {
     return NextResponse.json({ error: "type and date are required" }, { status: 400 });
   }
-  if (!Array.isArray(attendance) || attendance.length === 0) {
-    return NextResponse.json({ error: "attendance records are required" }, { status: 400 });
-  }
 
-  const validStatuses: AttendanceStatus[] = ["PRESENT", "ABSENT", "EXCUSED"];
-  const invalid = attendance.find((a: { status: string }) => !validStatuses.includes(a.status as AttendanceStatus));
-  if (invalid) {
-    return NextResponse.json({ error: "Invalid status — must be PRESENT, ABSENT or EXCUSED" }, { status: 400 });
+  // Cancelled services have no attendance — skip those validations
+  if (!cancelled) {
+    if (!Array.isArray(attendance) || attendance.length === 0) {
+      return NextResponse.json({ error: "attendance records are required" }, { status: 400 });
+    }
+    const validStatuses: AttendanceStatus[] = ["PRESENT", "ABSENT", "EXCUSED"];
+    const invalid = attendance.find((a: { status: string }) => !validStatuses.includes(a.status as AttendanceStatus));
+    if (invalid) {
+      return NextResponse.json({ error: "Invalid status — must be PRESENT, ABSENT or EXCUSED" }, { status: 400 });
+    }
   }
 
   try {
@@ -169,22 +172,25 @@ export async function POST(request: Request) {
           mode:        mode ?? "IN_PERSON",
           notes:       notes ?? null,
           speaker:     speaker ?? null,
+          cancelled:   Boolean(cancelled),
           cellId,
           createdById: session.user.id,
         },
       });
 
-      await tx.attendance.createMany({
-        data: attendance.map((a: { memberId: string; status: string; notes?: string }) => ({
-          serviceId:  svc.id,
-          memberId:   a.memberId,
-          status:     a.status as AttendanceStatus,
-          notes:      a.notes ?? null,
-          markedById: session.user.id,
-        })),
-      });
+      if (!cancelled && attendance?.length) {
+        await tx.attendance.createMany({
+          data: attendance.map((a: { memberId: string; status: string; notes?: string }) => ({
+            serviceId:  svc.id,
+            memberId:   a.memberId,
+            status:     a.status as AttendanceStatus,
+            notes:      a.notes ?? null,
+            markedById: session.user.id,
+          })),
+        });
+      }
 
-      if (firstTimers.length > 0) {
+      if (!cancelled && firstTimers.length > 0) {
         await tx.firstTimer.createMany({
           data: (firstTimers as FirstTimerInput[]).map((ft) => ({
             firstName:   ft.firstName.trim(),
@@ -203,8 +209,8 @@ export async function POST(request: Request) {
       return svc;
     });
 
-    // Fire absence notifications asynchronously — don't block the response
-    fireAbsenceNotifications(
+    // Fire absence notifications only for real services (not cancellations)
+    if (!cancelled) fireAbsenceNotifications(
       service.id, cellId, type, date,
       attendance.filter((a: { status: string }) => a.status === "ABSENT").map((a: { memberId: string }) => a.memberId)
     ).catch(console.error);

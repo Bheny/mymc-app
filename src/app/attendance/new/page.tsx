@@ -132,9 +132,18 @@ export default function NewAttendancePage() {
   const { activeView, ready } = useActiveRole();
   const actingCellId = activeView?.isActing && activeView.cellId ? activeView.cellId : null;
 
-  // Service fields
+  // Service fields — pre-fill from URL params when navigating from a gaps row
   const [serviceType, setServiceType] = useState<ServiceType>(suggestServiceType());
   const [serviceDate, setServiceDate] = useState(todayISO());
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const sp   = new URLSearchParams(window.location.search);
+    const date = sp.get("date");
+    const type = sp.get("type") as ServiceType | null;
+    if (date) setServiceDate(date);
+    if (type && Object.keys(SERVICE_CONFIG).includes(type)) setServiceType(type);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [serviceMode, setServiceMode] = useState<ServiceMode>("IN_PERSON");
   const [speaker,     setSpeaker]     = useState("");
   const [notes,       setNotes]       = useState("");

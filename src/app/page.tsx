@@ -170,23 +170,27 @@ function CellShepherdOverview() {
   const [stats,        setStats]        = useState<CellStats | null>(null);
   const [shepherds,    setShepherds]    = useState<ShepherdSummary[]>([]);
   const [birthdays,    setBirthdays]    = useState<BirthdayEntry[]>([]);
-  const [unreachedFTs, setUnreachedFTs] = useState<UnreachedFT[]>([]);
-  const [loading,      setLoading]      = useState(true);
+  const [unreachedFTs,   setUnreachedFTs]   = useState<UnreachedFT[]>([]);
+  const [missedServices, setMissedServices] = useState<{ date: string; type: string; label: string }[]>([]);
+  const [loading,        setLoading]        = useState(true);
 
   const actingCellId = activeView?.isActing && activeView.cellId ? activeView.cellId : null;
 
   useEffect(() => {
     const params = actingCellId ? `?actingCellId=${actingCellId}` : "";
+    const gapParam = actingCellId ? `?actingCellId=${actingCellId}` : "";
     Promise.all([
       fetch(`/api/cell/overview${params}`).then((r) => r.json()),
       fetch(`/api/first-timers?status=unreached&take=5${actingCellId ? `&actingCellId=${actingCellId}` : ""}`).then((r) => r.json()),
+      fetch(`/api/attendance/gaps${gapParam}`).then((r) => r.json()),
     ])
-      .then(([d, ft]) => {
+      .then(([d, ft, gapData]) => {
         setCell(d.cell);
         setStats(d.stats);
         setShepherds(d.shepherds ?? []);
         setBirthdays(d.birthdays ?? []);
         setUnreachedFTs(ft.firstTimers ?? []);
+        setMissedServices(gapData.gaps ?? []);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -208,6 +212,26 @@ function CellShepherdOverview() {
           </span>.
         </p>
       </div>
+
+      {/* ── Missed attendance banner — top priority ── */}
+      {missedServices.length > 0 && (
+        <Link href="/attendance">
+          <div className="rounded-xl px-4 py-3 mb-4 flex items-center gap-3 hover:opacity-90 transition-opacity"
+               style={{ background: "#FFFBEB", border: "1px solid #FCD34D" }}>
+            <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: "#D97706" }} />
+            <div className="flex-1 min-w-0">
+              <p className="text-[13px] font-semibold" style={{ color: "#92400E" }}>
+                {missedServices.length} missed service{missedServices.length !== 1 ? "s" : ""} — tap to fill
+              </p>
+              <p className="text-[12px]" style={{ color: "#B45309" }}>
+                {missedServices.slice(0, 2).map((s) => s.label).join(" · ")}
+                {missedServices.length > 2 ? ` · +${missedServices.length - 2} more` : ""}
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "#D97706" }} />
+          </div>
+        </Link>
+      )}
 
       {/* KPIs */}
       {stats && (
@@ -379,24 +403,32 @@ type BuscentreData = {
   birthdays: BirthdayEntry[];
 };
 
+type CellGap = { cellId: string; cellName: string; cellShepherd: string | null; gapCount: number };
+
 function BuscentreHeadOverview() {
   const { activeView } = useActiveRole();
   const [data,         setData]         = useState<BuscentreData | null>(null);
   const [unreachedFTs, setUnreachedFTs] = useState<UnreachedFT[]>([]);
+  const [cellGaps,     setCellGaps]     = useState<CellGap[]>([]);
 
   const actingParam = activeView?.isActing && activeView.buscentreId
     ? `?actingBuscentreId=${activeView.buscentreId}`
     : "";
 
   useEffect(() => {
-    const ftParam = actingParam
-      ? `?actingBuscentreId=${actingParam.replace("?actingBuscentreId=", "")}&status=unreached&take=5`
-      : "?status=unreached&take=5";
+    const bcId    = actingParam ? actingParam.replace("?actingBuscentreId=", "") : null;
+    const ftParam = bcId ? `?actingBuscentreId=${bcId}&status=unreached&take=5` : "?status=unreached&take=5";
+    const gapParam = bcId ? `?actingBuscentreId=${bcId}` : "";
     Promise.all([
       fetch(`/api/buscentre/overview${actingParam}`).then((r) => r.json()),
       fetch(`/api/first-timers${ftParam}`).then((r) => r.json()),
+      fetch(`/api/attendance/gaps${gapParam}`).then((r) => r.json()),
     ])
-      .then(([d, ft]) => { setData(d); setUnreachedFTs(ft.firstTimers ?? []); })
+      .then(([d, ft, gapData]) => {
+        setData(d);
+        setUnreachedFTs(ft.firstTimers ?? []);
+        setCellGaps(gapData.cells ?? []);
+      })
       .catch(console.error);
   }, [actingParam]);
 
@@ -419,6 +451,39 @@ function BuscentreHeadOverview() {
           {buscentre.location && <span> · {buscentre.location}</span>}
         </p>
       </div>
+
+      {/* ── Cells with missed attendance — top priority ── */}
+      {cellGaps.length > 0 && (
+        <div className="rounded-xl overflow-hidden mb-5"
+             style={{ border: "1px solid #FCD34D", background: "#FFFBEB" }}>
+          <div className="flex items-center gap-2 px-4 py-3"
+               style={{ borderBottom: "1px solid #FCD34D" }}>
+            <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: "#D97706" }} />
+            <span className="text-[13px] font-semibold" style={{ color: "#92400E" }}>
+              {cellGaps.length} cell{cellGaps.length !== 1 ? "s" : ""} with missed attendance — follow up needed
+            </span>
+          </div>
+          {cellGaps.map((cg, i) => (
+            <div key={cg.cellId} className="flex items-center gap-3 px-4 py-2.5"
+                 style={{ borderBottom: i < cellGaps.length - 1 ? "1px solid #FEF3DC" : "none" }}>
+              <div className="flex-1 min-w-0">
+                <span className="text-[13px] font-semibold" style={{ color: "#92400E" }}>
+                  {cg.cellName}
+                </span>
+                {cg.cellShepherd && (
+                  <span className="text-[12px] ml-2" style={{ color: "#B45309" }}>
+                    · {cg.cellShepherd}
+                  </span>
+                )}
+              </div>
+              <span className="rounded-pill text-[11px] font-semibold px-2 py-0.5 shrink-0"
+                    style={{ background: "#FEF3DC", color: "#854F0B" }}>
+                {cg.gapCount} gap{cg.gapCount !== 1 ? "s" : ""}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">

@@ -284,6 +284,7 @@ model Service {
   mode        ServiceMode @default(IN_PERSON)
   notes       String?
   speaker     String?     // Minister / Prophet name — used for SPECIAL_MEETING
+  cancelled   Boolean     @default(false) // true = service didn't happen (no attendance required)
   cellId      String      @map("cell_id")
   createdById String      @map("created_by_id")
   createdAt   DateTime    @default(now()) @map("created_at")
