@@ -195,7 +195,7 @@ function AddNodeRow({
 
 // ─── Edit MC dialog ───────────────────────────────────────────────────────────
 
-type EditingMC = { id: string; name: string; currentPastorId?: string };
+type EditingMC = { id: string; name: string };
 type UserOption = { id: string; name: string | null; email: string; role: { role: string } | null };
 
 function EditMCDialog({
@@ -207,41 +207,25 @@ function EditMCDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [name,        setName]       = useState("");
-  const [pastorId,    setPastorId]   = useState<string>("");
-  const [users,       setUsers]      = useState<UserOption[]>([]);
-  const [loadingUsers,setLoadingUsers] = useState(false);
-  const [busy,        setBusy]       = useState(false);
-  const [error,       setError]      = useState("");
+  const [name,  setName]  = useState("");
+  const [busy,  setBusy]  = useState(false);
+  const [error, setError] = useState("");
 
-  // Reset and load users whenever the dialog opens
   useEffect(() => {
     if (!mc) return;
     setName(mc.name);
-    setPastorId(mc.currentPastorId ?? "");
     setError("");
-    setLoadingUsers(true);
-    fetch("/api/org/users?eligible=mc_pastor")
-      .then((r) => r.json())
-      .then((data) => { setUsers(data); setLoadingUsers(false); })
-      .catch(() => setLoadingUsers(false));
   }, [mc]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim()) { setError("Name is required."); return; }
     setBusy(true);
-
     const res = await fetch(`/api/org/mega-churches/${mc!.id}`, {
       method:  "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        name: name.trim(),
-        // Send null to unassign, a user ID to assign, or omit if unchanged
-        assignedPastorUserId: pastorId === "" ? null : pastorId,
-      }),
+      body: JSON.stringify({ name: name.trim() }),
     });
-
     setBusy(false);
     if (res.ok) { onSaved(); onClose(); }
     else { const d = await res.json(); setError(d.error ?? "Save failed."); }
@@ -256,7 +240,6 @@ function EditMCDialog({
 
         <SheetBody>
           <form id="edit-mc-form" onSubmit={handleSave} className="flex flex-col gap-4">
-            {/* Name */}
             <div className="flex flex-col gap-1.5">
               <label className="text-[12px] font-medium uppercase tracking-[0.04em]"
                      style={{ color: "var(--brand-muted)" }}>
@@ -271,33 +254,6 @@ function EditMCDialog({
                 autoFocus
               />
             </div>
-
-            {/* Assigned Pastor */}
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[12px] font-medium uppercase tracking-[0.04em]"
-                     style={{ color: "var(--brand-muted)" }}>
-                Assigned Pastor
-              </label>
-              <select
-                value={pastorId}
-                onChange={(e) => setPastorId(e.target.value)}
-                disabled={loadingUsers}
-                className="h-10 px-3 text-[14px] rounded-lg disabled:opacity-40"
-                style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
-              >
-                <option value="">— None / Unassign —</option>
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name ?? u.email}
-                    {u.role ? ` (${u.role.role.replace(/_/g, " ")})` : ""}
-                  </option>
-                ))}
-              </select>
-              {loadingUsers && (
-                <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>Loading users…</p>
-              )}
-            </div>
-
             {error && (
               <p className="text-[13px]" style={{ color: "var(--brand-danger)" }}>{error}</p>
             )}
@@ -788,14 +744,30 @@ export default function OrgPage() {
                     <>
                       <CapacityBadge count={mc._count.buscentres} max={999} />
                       {hasFlag(mc.id) && <ActingUpBadge severity={hasFlag(mc.id)!.severity} />}
+                      {/* Assign MC Pastor — shows when no one is permanently assigned */}
+                      {!mc.userRoles[0]?.user && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAssigningHead({
+                              nodeType: "mc",
+                              nodeId:   mc.id,
+                              nodeName: mc.name,
+                              branchId: branch.id,
+                              mcId:     mc.id,
+                            });
+                          }}
+                          className="flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:opacity-80"
+                          style={{ background: "#FEF3DC", color: "#854F0B" }}
+                          aria-label={`Assign MC Pastor for ${mc.name}`}
+                        >
+                          <UserPlus style={{ width: 10, height: 10 }} /> Assign head
+                        </button>
+                      )}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setEditingMC({
-                            id:               mc.id,
-                            name:             mc.name,
-                            currentPastorId:  mc.userRoles[0]?.user?.id,
-                          });
+                          setEditingMC({ id: mc.id, name: mc.name });
                         }}
                         className="p-1 rounded hover:bg-white/60 transition-colors"
                         aria-label={`Edit ${mc.name}`}

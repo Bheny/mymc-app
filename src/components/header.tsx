@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, UserCircle, Settings, User, LogOut, CheckCheck } from "lucide-react";
+import { Bell, UserCircle, Settings, User, LogOut, CheckCheck, Users } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -186,9 +186,9 @@ export function Header({ mcHeadName }: { mcHeadName: string }) {
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>
-                <Link href="/profile" className="flex items-center gap-2 text-[14px]">
-                  <User className="h-4 w-4" style={{ color: "var(--brand-muted)" }} />
-                  Profile
+                <Link href="/my-leaders" className="flex items-center gap-2 text-[14px]">
+                  <Users className="h-4 w-4" style={{ color: "var(--brand-muted)" }} />
+                  My Leaders
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>

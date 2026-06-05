@@ -19,7 +19,7 @@ import { ExternalLink, UserCheck, AlertTriangle } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type NodeType = "cell" | "buscentre";
+type NodeType = "cell" | "buscentre" | "mc";
 
 export type AssignHeadSheetProps = {
   open:       boolean;
@@ -38,16 +38,23 @@ export type AssignHeadSheetProps = {
 };
 
 // Roles eligible to act in each head position.
-// Includes both downward coverage (senior steps down) and upward stepping (junior steps up).
 const ELIGIBLE_ACTING_ROLES: Record<NodeType, string[]> = {
   cell:      ["buscentre_head", "mc_pastor", "chief_shepherd", "admin"],
-  buscentre: ["cell_shepherd", "mc_pastor", "chief_shepherd", "admin"],
+  buscentre: ["cell_shepherd", "buscentre_head", "mc_pastor", "chief_shepherd", "admin"],
+  mc:        ["buscentre_head", "cell_shepherd", "chief_shepherd", "admin"],
 };
 
 // Target role for each node type
 const TARGET_ROLE: Record<NodeType, string> = {
   cell:      "cell_shepherd",
   buscentre: "buscentre_head",
+  mc:        "mc_pastor",
+};
+
+const NODE_LABEL: Record<NodeType, string> = {
+  cell:      "Cell Shepherd",
+  buscentre: "Buscentre Head",
+  mc:        "MC Pastor",
 };
 
 const ROLE_LABEL: Record<string, string> = {
@@ -156,7 +163,7 @@ export function AssignHeadSheet({
       <SheetContent width={460}>
         <SheetHeader>
           <SheetTitle>
-            Assign {nodeType === "cell" ? "Cell Shepherd" : "Buscentre Head"}
+            Assign {NODE_LABEL[nodeType]}
           </SheetTitle>
           <SheetDescription>
             {nodeName}
@@ -201,7 +208,7 @@ export function AssignHeadSheet({
                   <div className="rounded-xl p-4"
                        style={{ background: "var(--brand-navy-light)", border: "1px solid var(--brand-border)" }}>
                     <p className="text-[14px] font-medium mb-1" style={{ color: "var(--brand-text)" }}>
-                      Activate a member as {nodeType === "cell" ? "Cell Shepherd" : "Buscentre Head"}
+                      Activate a member as {NODE_LABEL[nodeType]}
                     </p>
                     <p className="text-[13px]" style={{ color: "var(--brand-muted)" }}>
                       This gives them a permanent system login with the appropriate role scoped to {nodeName}.
@@ -252,7 +259,7 @@ export function AssignHeadSheet({
                     ) : users.length === 0 ? (
                       <div className="rounded-lg px-3 py-2.5 text-[13px]"
                            style={{ background: "#FDECEA", color: "#791F1F" }}>
-                        No eligible users found. Only {eligibleRoles.map((r) => ROLE_LABEL[r] ?? r).join(", ")} can act as {nodeType === "cell" ? "Cell Shepherd" : "Buscentre Head"}.
+                        No eligible users found. Only {eligibleRoles.map((r) => ROLE_LABEL[r] ?? r).join(", ")} can act as {NODE_LABEL[nodeType]}.
                       </div>
                     ) : (
                       <select
@@ -287,7 +294,7 @@ export function AssignHeadSheet({
                           Primary role: {selectedUser.role ? (ROLE_LABEL[selectedUser.role.role] ?? selectedUser.role.role) : "—"}
                         </p>
                         <p className="text-[12px] mt-0.5" style={{ color: "var(--brand-muted)" }}>
-                          Will act as: {nodeType === "cell" ? "Cell Shepherd" : "Buscentre Head"} · {nodeName}
+                          Will act as: {NODE_LABEL[nodeType]} · {nodeName}
                         </p>
                       </div>
                     </div>

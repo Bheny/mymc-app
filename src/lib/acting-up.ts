@@ -7,8 +7,8 @@ import { roleRank } from "@/lib/permissions";
 // Upward:   lower role steps up to cover a higher vacancy (e.g. cell_shepherd → buscentre_head)
 export const ACTING_UP_ALLOWED: Partial<Record<Role, Role[]>> = {
   mc_pastor:      ["buscentre_head", "cell_shepherd", "shepherd"],
-  buscentre_head: ["cell_shepherd", "shepherd"],
-  cell_shepherd:  ["buscentre_head", "shepherd"], // can step up to BC head or step down to shepherd
+  buscentre_head: ["mc_pastor", "cell_shepherd", "shepherd"], // can step up to MC pastor when needed
+  cell_shepherd:  ["mc_pastor", "buscentre_head", "shepherd"], // can step up any level
   shepherd:       [],
 };
 

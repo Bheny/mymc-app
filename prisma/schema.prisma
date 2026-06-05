@@ -64,6 +64,7 @@ model User {
   isActive           Boolean   @default(true) @map("is_active")
   activatedAt        DateTime? @map("activated_at")
   activatedById      String?   @map("activated_by_id")
+  rank               String?   // "Reverend" | "Pastor" | "Senior Shepherd" | "Shepherd" | "Member"
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
