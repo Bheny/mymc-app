@@ -13,18 +13,21 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 const TARGET_ROLE: Record<string, string> = {
+  branch:    "chief_shepherd",
   mc:        "mc_pastor",
   buscentre: "buscentre_head",
   cell:      "cell_shepherd",
 };
 
 const SCOPE_FIELD: Record<string, string> = {
+  branch:    "branchId",
   mc:        "mcId",
   buscentre: "buscentreId",
   cell:      "cellId",
 };
 
 const ACTING_AT_KEY: Record<string, string> = {
+  branch:    "branch_id",
   mc:        "mc_id",
   buscentre: "buscentre_id",
   cell:      "cell_id",

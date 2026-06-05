@@ -19,7 +19,7 @@ import { ExternalLink, UserCheck, AlertTriangle, UserCircle, Loader2, RefreshCw,
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type NodeType = "cell" | "buscentre" | "mc";
+type NodeType = "cell" | "buscentre" | "mc" | "branch";
 
 export type AssignHeadSheetProps = {
   open:       boolean;
@@ -42,6 +42,7 @@ const ELIGIBLE_ACTING_ROLES: Record<NodeType, string[]> = {
   cell:      ["buscentre_head", "mc_pastor", "chief_shepherd", "admin"],
   buscentre: ["cell_shepherd", "buscentre_head", "mc_pastor", "chief_shepherd", "admin"],
   mc:        ["buscentre_head", "cell_shepherd", "chief_shepherd", "admin"],
+  branch:    ["mc_pastor", "buscentre_head", "cell_shepherd", "admin"],
 };
 
 // Target role for each node type
@@ -49,12 +50,14 @@ const TARGET_ROLE: Record<NodeType, string> = {
   cell:      "cell_shepherd",
   buscentre: "buscentre_head",
   mc:        "mc_pastor",
+  branch:    "chief_shepherd",
 };
 
 const NODE_LABEL: Record<NodeType, string> = {
   cell:      "Cell Shepherd",
   buscentre: "Buscentre Head",
   mc:        "MC Pastor",
+  branch:    "Chief Shepherd",
 };
 
 const ROLE_LABEL: Record<string, string> = {
@@ -94,6 +97,12 @@ export function AssignHeadSheet({
   const [error,       setError]       = useState("");
   const [success,     setSuccess]     = useState(false);
 
+  // Permanent reassign state
+  const [allUsers,        setAllUsers]        = useState<UserOption[]>([]);
+  const [loadingAllUsers, setLoadingAllUsers] = useState(false);
+  const [reassignId,      setReassignId]      = useState("");
+  const [reassigning,     setReassigning]     = useState(false);
+
   // Current head — fetched when sheet opens
   const [currentHead,    setCurrentHead]    = useState<CurrentHead | null>(null);
   const [loadingHead,    setLoadingHead]    = useState(false);
@@ -114,6 +123,16 @@ export function AssignHeadSheet({
       .then((d) => { setCurrentHead(d.head ?? null); setLoadingHead(false); })
       .catch(() => setLoadingHead(false));
   }, [open, nodeType, nodeId]);
+
+  // Fetch all active users for permanent reassignment
+  useEffect(() => {
+    if (!open) return;
+    setLoadingAllUsers(true);
+    fetch("/api/org/users")
+      .then((r) => r.json())
+      .then((d: UserOption[]) => { setAllUsers(d); setLoadingAllUsers(false); })
+      .catch(() => setLoadingAllUsers(false));
+  }, [open]);
 
   // Remove acting role
   async function handleRemoveActing() {
@@ -153,6 +172,7 @@ export function AssignHeadSheet({
     if (!open) {
       setMode("permanent");
       setSelectedId("");
+      setReassignId("");
       setError("");
       setSuccess(false);
     }
@@ -184,6 +204,33 @@ export function AssignHeadSheet({
     }
   }
 
+  async function assignPermanent() {
+    if (!reassignId) { setError("Select a person."); return; }
+    setReassigning(true); setError("");
+
+    const res = await fetch("/api/org/reassign", {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId:      reassignId,
+        role:        targetRole,
+        branchId:    branchId    ?? null,
+        mcId:        mcId        ?? null,
+        buscentreId: buscentreId ?? null,
+        cellId:      cellId      ?? null,
+      }),
+    });
+
+    setReassigning(false);
+    if (res.ok) {
+      setSuccess(true);
+      setTimeout(() => { onAssigned(); onClose(); }, 1500);
+    } else {
+      const d = await res.json().catch(() => ({}));
+      setError(d.error ?? "Failed to reassign role.");
+    }
+  }
+
   // Build the activate URL with scope pre-filled
   const activateParams = new URLSearchParams();
   if (branchId)    activateParams.set("branchId",    branchId);
@@ -212,10 +259,14 @@ export function AssignHeadSheet({
             <div className="flex flex-col items-center gap-3 py-8 text-center">
               <UserCheck className="h-10 w-10" style={{ color: "var(--brand-success)" }} />
               <p className="text-[15px] font-semibold" style={{ color: "var(--brand-text)" }}>
-                {selectedUser ? "Acting role assigned" : "Acting role removed"}
+                {reassignId
+                  ? "Role permanently assigned"
+                  : selectedUser ? "Acting role assigned" : "Acting role removed"}
               </p>
               <p className="text-[13px]" style={{ color: "var(--brand-muted)" }}>
-                {selectedUser
+                {reassignId
+                  ? `${allUsers.find((u) => u.id === reassignId)?.name ?? "User"} is now ${NODE_LABEL[nodeType]} for ${nodeName}.`
+                  : selectedUser
                   ? `${selectedUser.name} can now switch to this role via the role switcher.`
                   : "The acting assignment has been cleared."}
               </p>
@@ -320,27 +371,97 @@ export function AssignHeadSheet({
 
               {/* ── Permanent mode ── */}
               {mode === "permanent" && (
-                <div className="flex flex-col gap-4">
-                  <div className="rounded-xl p-4"
-                       style={{ background: "var(--brand-navy-light)", border: "1px solid var(--brand-border)" }}>
-                    <p className="text-[14px] font-medium mb-1" style={{ color: "var(--brand-text)" }}>
-                      Activate a member as {NODE_LABEL[nodeType]}
-                    </p>
-                    <p className="text-[13px]" style={{ color: "var(--brand-muted)" }}>
-                      This gives them a permanent system login with the appropriate role scoped to {nodeName}.
-                      Use this when you have a confirmed permanent appointment.
-                    </p>
-                  </div>
+                <div className="flex flex-col gap-5">
 
-                  <Link href={activateUrl} onClick={onClose}>
+                  {/* Option A — reassign an existing user */}
+                  <div className="flex flex-col gap-3">
+                    <p className="text-[12px] font-semibold uppercase tracking-[0.05em]"
+                       style={{ color: "var(--brand-muted)" }}>
+                      Reassign existing user
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      {loadingAllUsers ? (
+                        <div className="h-10 rounded-lg animate-pulse"
+                             style={{ background: "var(--brand-border)" }} />
+                      ) : (
+                        <select
+                          value={reassignId}
+                          onChange={(e) => { setReassignId(e.target.value); setError(""); }}
+                          className="h-10 px-3 text-[14px] rounded-lg"
+                          style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+                        >
+                          <option value="">— Select person —</option>
+                          {allUsers.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.name ?? u.email}
+                              {u.role ? ` · ${ROLE_LABEL[u.role.role] ?? u.role.role}` : ""}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+
+                    {reassignId && (() => {
+                      const u = allUsers.find((x) => x.id === reassignId);
+                      return u ? (
+                        <div className="rounded-xl px-4 py-3 flex items-start gap-3"
+                             style={{ background: "var(--brand-navy-light)", border: "1px solid var(--brand-border)" }}>
+                          <div className="flex items-center justify-center rounded-lg text-[12px] font-semibold shrink-0"
+                               style={{ width: 32, height: 32, background: "var(--brand-navy)", color: "#fff" }}>
+                            {(u.name ?? u.email).slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>
+                              {u.name ?? u.email}
+                            </p>
+                            <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>
+                              Current role: {u.role ? (ROLE_LABEL[u.role.role] ?? u.role.role) : "none"}
+                            </p>
+                            <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--brand-navy)" }}>
+                              New role: {NODE_LABEL[nodeType]} · {nodeName}
+                            </p>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+
+                    {error && (
+                      <p className="text-[13px]" style={{ color: "var(--brand-danger)" }}>{error}</p>
+                    )}
+
                     <Button
-                      className="w-full h-10 text-[14px] font-medium"
+                      onClick={assignPermanent}
+                      disabled={reassigning || !reassignId}
+                      className="h-10 text-[14px] font-medium"
                       style={{ background: "var(--brand-navy)", color: "#fff", borderRadius: 8 }}
                     >
-                      <ExternalLink className="mr-2 h-4 w-4" />
-                      Go to Activate Member
+                      {reassigning ? "Reassigning…" : `Assign as ${NODE_LABEL[nodeType]}`}
                     </Button>
-                  </Link>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-px" style={{ background: "var(--brand-border)" }} />
+                    <span className="text-[12px]" style={{ color: "var(--brand-muted)" }}>or activate a new member</span>
+                    <div className="flex-1 h-px" style={{ background: "var(--brand-border)" }} />
+                  </div>
+
+                  {/* Option B — activate a brand-new member */}
+                  <div className="flex flex-col gap-3">
+                    <p className="text-[13px]" style={{ color: "var(--brand-muted)" }}>
+                      Use this if the person doesn't have a system login yet.
+                    </p>
+                    <Link href={activateUrl} onClick={onClose}>
+                      <Button
+                        variant="outline"
+                        className="w-full h-10 text-[14px] font-medium"
+                        style={{ borderRadius: 8, borderColor: "var(--brand-border)" }}
+                      >
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Go to Activate Member
+                      </Button>
+                    </Link>
+                  </div>
                 </div>
               )}
 

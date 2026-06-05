@@ -21,6 +21,11 @@ export async function GET() {
   const branches = await prisma.branch.findMany({
     where: branchFilter,
     include: {
+      // Chief shepherd at the branch level
+      userRoles: {
+        where:   { role: "chief_shepherd" },
+        include: { user: { select: { id: true, name: true } } },
+      },
       megaChurches: {
         where: mcId && role !== "admin" && role !== "chief_shepherd"
           ? { id: mcId }

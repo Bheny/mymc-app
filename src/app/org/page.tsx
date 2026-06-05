@@ -53,9 +53,10 @@ type MCNode = {
 };
 
 type BranchNode = {
-  id: string;
-  name: string;
+  id:           string;
+  name:         string;
   megaChurches: MCNode[];
+  userRoles:    { user: { id: string; name: string } }[];
 };
 
 type Flag  = { nodeId: string; severity: string; actingAs: string };
@@ -642,6 +643,14 @@ export default function OrgPage() {
     return flags.find((f) => f.nodeId === nodeId);
   }
 
+  async function addMC(branchId: string, name: string) {
+    await fetch("/api/org/mega-churches", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ branchId, name }),
+    });
+    loadTree();
+  }
+
   async function addBuscentre(mcId: string, name: string) {
     await fetch("/api/org/buscentres", {
       method: "POST", headers: { "Content-Type": "application/json" },
@@ -724,10 +733,30 @@ export default function OrgPage() {
             style={{ border: "1px solid var(--brand-border)" }}
           >
             {/* Branch header */}
-            <div className="px-5 py-3 flex items-center gap-2"
+            <div className="px-5 py-3 flex items-center gap-2 flex-wrap"
                  style={{ background: "var(--brand-navy)", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
               <Network style={{ width: 16, height: 16, color: "rgba(255,255,255,0.7)" }} />
               <span className="text-[14px] font-semibold text-white">{branch.name}</span>
+              {/* Chief Shepherd */}
+              {branch.userRoles[0]?.user ? (
+                <span className="text-[12px] px-2 py-0.5 rounded-pill"
+                      style={{ background: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.8)" }}>
+                  {branch.userRoles[0].user.name}
+                </span>
+              ) : (
+                <button
+                  onClick={() => setAssigningHead({
+                    nodeType: "branch",
+                    nodeId:   branch.id,
+                    nodeName: branch.name,
+                    branchId: branch.id,
+                  })}
+                  className="flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium transition-colors hover:opacity-80"
+                  style={{ background: "#FEF3DC", color: "#854F0B" }}
+                >
+                  <UserPlus style={{ width: 10, height: 10 }} /> Assign Chief Shepherd
+                </button>
+              )}
               <span className="text-[12px] ml-auto" style={{ color: "rgba(255,255,255,0.5)" }}>
                 {branch.megaChurches.length} MC{branch.megaChurches.length !== 1 ? "s" : ""}
               </span>
@@ -870,6 +899,9 @@ export default function OrgPage() {
                   <AddNodeRow label="Add buscentre" onAdd={(name) => addBuscentre(mc.id, name)} />
                 </TreeRow>
               ))}
+
+              {/* Add MC */}
+              <AddNodeRow label="Add MegaChurch" onAdd={(name) => addMC(branch.id, name)} />
             </div>
           </div>
         ))

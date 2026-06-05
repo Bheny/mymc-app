@@ -74,9 +74,10 @@ export async function DELETE(request: Request) {
   // Remove the corresponding key from actingAt
   const actingAt = { ...((current.actingAt as Record<string, string>) ?? {}) };
   const scopeKeyMap: Record<string, string> = {
-    cell_shepherd:  "cell_id",
-    buscentre_head: "buscentre_id",
+    chief_shepherd: "branch_id",
     mc_pastor:      "mc_id",
+    buscentre_head: "buscentre_id",
+    cell_shepherd:  "cell_id",
   };
   const scopeKey = scopeKeyMap[actingAs];
   if (scopeKey && actingAt[scopeKey] === nodeId) delete actingAt[scopeKey];
