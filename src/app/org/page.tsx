@@ -691,16 +691,17 @@ export default function OrgPage() {
               </button>
             </Link>
           )}
-          <Link href="/org/chart" className="hidden sm:block">
-            <Button variant="outline" className="h-9 px-4 text-[14px] font-medium"
+          <Link href="/org/chart">
+            <Button variant="outline" className="h-9 px-3 sm:px-4 text-[13px] sm:text-[14px] font-medium"
               style={{ borderRadius: 8, borderColor: "var(--brand-border)" }}>
               Organogram
             </Button>
           </Link>
           <Link href="/org/activate">
-            <Button className="h-9 px-4 text-[14px] font-medium"
+            <Button className="h-9 px-3 sm:px-4 text-[13px] sm:text-[14px] font-medium"
               style={{ background: "var(--brand-navy)", color: "#fff", borderRadius: 8 }}>
-              Activate member
+              <span className="hidden sm:inline">Activate member</span>
+              <span className="sm:hidden">Activate</span>
             </Button>
           </Link>
         </div>
