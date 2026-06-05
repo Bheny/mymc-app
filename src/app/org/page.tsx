@@ -197,7 +197,6 @@ function AddNodeRow({
 // ─── Edit MC dialog ───────────────────────────────────────────────────────────
 
 type EditingMC = { id: string; name: string };
-type UserOption = { id: string; name: string | null; email: string; role: { role: string } | null };
 
 function EditMCDialog({
   mc,

@@ -449,7 +449,7 @@ export function AssignHeadSheet({
                   {/* Option B — activate a brand-new member */}
                   <div className="flex flex-col gap-3">
                     <p className="text-[13px]" style={{ color: "var(--brand-muted)" }}>
-                      Use this if the person doesn't have a system login yet.
+                      Use this if the person doesn&apos;t have a system login yet.
                     </p>
                     <Link href={activateUrl} onClick={onClose}>
                       <Button

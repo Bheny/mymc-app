@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, UserCircle, Settings, User, LogOut, CheckCheck, Users } from "lucide-react";
+import { Bell, UserCircle, Settings, LogOut, CheckCheck, Users } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,

@@ -99,7 +99,7 @@ export async function GET() {
 
   const chain: ReturnType<typeof buildEntry>[] = [];
 
-  let cellId      = myRole.cellId;
+  const cellId    = myRole.cellId;
   let buscentreId = myRole.buscentreId;
   let mcId        = myRole.mcId;
   let branchId    = myRole.branchId;

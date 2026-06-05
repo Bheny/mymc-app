@@ -76,7 +76,7 @@ function Row({ icon: Icon, label, children, last = false }: {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function SettingsPage() {
-  const { data: session } = useSession();
+  useSession();
   const router = useRouter();
 
   const [me,      setMe]      = useState<MeData | null>(null);

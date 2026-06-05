@@ -146,11 +146,10 @@ function ShepherdCard({ shepherd, flag }: { shepherd: ShepherdNode; flag?: Flag 
   );
 }
 
-function TreeView({ branches, flags, expandedBranches, expandedMCs, expandedBuscentres, expandedCells, toggle, toggleBranch, toggleMC, toggleBuscentre, toggleCell }: {
+function TreeView({ branches, flags, expandedBranches, expandedMCs, expandedBuscentres, expandedCells, toggleBranch, toggleMC, toggleBuscentre, toggleCell }: {
   branches: BranchNode[]; flags: Flag[];
   expandedBranches: Set<string>; expandedMCs: Set<string>;
   expandedBuscentres: Set<string>; expandedCells: Set<string>;
-  toggle: (set: Set<string>, setFn: (s: Set<string>) => void, id: string) => void;
   toggleBranch: (id: string) => void; toggleMC: (id: string) => void;
   toggleBuscentre: (id: string) => void; toggleCell: (id: string) => void;
 }) {
@@ -456,7 +455,7 @@ export default function OrgChartPage() {
             { color: "var(--brand-navy)", label: "Buscentre", outline: true },
             { color: "#1A8C6C", label: "Cell" },
             { color: "#B87015", label: "Shepherd" },
-          ] as const).map(({ color, label, outline }) => (
+          ] as { color: string; label: string; outline?: true }[]).map(({ color, label, outline }) => (
             <div key={label} className="flex items-center gap-1.5">
               <div className="rounded-sm shrink-0"
                    style={{ width: 10, height: 10, background: outline ? "#fff" : color,
@@ -482,7 +481,7 @@ export default function OrgChartPage() {
           </Link>
         </div>
       ) : view === "tree" ? (
-        <TreeView {...sharedProps} toggle={toggle} />
+        <TreeView {...sharedProps} />
       ) : (
         <ListView {...sharedProps} />
       )}
