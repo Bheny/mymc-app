@@ -5,6 +5,7 @@ import {
   type ReactNode,
 } from "react";
 import { useSession } from "next-auth/react";
+import { useIdleLogout } from "@/hooks/use-idle-logout";
 
 export type RoleView = {
   key:          string;
@@ -60,6 +61,8 @@ const ActiveRoleContext = createContext<ActiveRoleContextValue | null>(null);
 export function ActiveRoleProvider({ children }: { children: ReactNode }) {
   const { data: session } = useSession();
   const userId = session?.user?.id;
+
+  useIdleLogout(!!userId);
 
   const [actingAs,  setActingAs]  = useState<string[]>([]);
   const [actingAt,  setActingAt]  = useState<Record<string, string>>({});
