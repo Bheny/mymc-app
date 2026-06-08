@@ -1,6 +1,10 @@
 "use client";
 
-import { Gift } from "lucide-react";
+import { useState } from "react";
+import { Gift, Cake, MapPin, Phone, MessageCircle } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from "@/components/ui/dialog";
 import type { BirthdayEntry } from "@/lib/birthdays";
 
 function dayLabel(daysUntil: number): { text: string; style: React.CSSProperties } {
@@ -10,7 +14,93 @@ function dayLabel(daysUntil: number): { text: string; style: React.CSSProperties
   return                      { text: `In ${daysUntil} days`, style: { background: "#F3F4F6",              color: "var(--brand-muted)" } };
 }
 
+// wa.me needs digits only (no "+", spaces or dashes)
+function whatsappDigits(phone: string): string {
+  return phone.replace(/[^\d]/g, "");
+}
+
+function ordinal(n: number): string {
+  const rem100 = n % 100;
+  if (rem100 >= 11 && rem100 <= 13) return `${n}th`;
+  switch (n % 10) {
+    case 1:  return `${n}st`;
+    case 2:  return `${n}nd`;
+    case 3:  return `${n}rd`;
+    default: return `${n}th`;
+  }
+}
+
+function BirthdayDetailDialog({ entry, onClose }: { entry: BirthdayEntry | null; onClose: () => void }) {
+  if (!entry) return null;
+  const initials = `${entry.firstName[0] ?? ""}${entry.lastName[0] ?? ""}`.toUpperCase();
+  const { text } = dayLabel(entry.daysUntil);
+
+  return (
+    <Dialog open={!!entry} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-[400px]">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center rounded-xl text-[16px] font-semibold shrink-0"
+                 style={{ width: 48, height: 48, background: entry.daysUntil === 0 ? "#1A8C6C" : "var(--brand-navy)", color: "#fff" }}>
+              {initials}
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="truncate">{entry.firstName} {entry.lastName}</DialogTitle>
+              <DialogDescription className="m-0">
+                {text} · {entry.dateLabel}
+                {entry.turningAge !== null ? ` · turning ${ordinal(entry.turningAge)}` : ""}
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        {/* Quick info */}
+        <div className="flex flex-col gap-2 py-1">
+          <div className="flex items-center gap-2 text-[13px]" style={{ color: "var(--brand-text)" }}>
+            <Cake className="h-4 w-4 shrink-0" style={{ color: "var(--brand-muted)" }} />
+            Celebrates on {entry.dateLabel}
+            {entry.turningAge !== null ? ` — turning ${entry.turningAge}` : ""}
+          </div>
+          {entry.cellName && (
+            <div className="flex items-center gap-2 text-[13px]" style={{ color: "var(--brand-text)" }}>
+              <MapPin className="h-4 w-4 shrink-0" style={{ color: "var(--brand-muted)" }} />
+              {entry.cellName}
+            </div>
+          )}
+          <div className="flex items-center gap-2 text-[13px]" style={{ color: entry.phone ? "var(--brand-text)" : "var(--brand-muted)" }}>
+            <Phone className="h-4 w-4 shrink-0" style={{ color: "var(--brand-muted)" }} />
+            {entry.phone ?? "No phone number on file"}
+          </div>
+        </div>
+
+        {/* CTAs */}
+        {entry.phone && (
+          <div className="flex items-center gap-2 pt-1">
+            <a
+              href={`https://wa.me/${whatsappDigits(entry.phone)}`}
+              target="_blank" rel="noopener noreferrer"
+              className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-lg text-[13px] font-medium transition-opacity hover:opacity-85"
+              style={{ background: "#1A8C6C", color: "#fff" }}
+            >
+              <MessageCircle className="h-4 w-4" /> WhatsApp
+            </a>
+            <a
+              href={`tel:${entry.phone}`}
+              className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-lg text-[13px] font-medium transition-opacity hover:opacity-85"
+              style={{ background: "var(--brand-navy)", color: "#fff" }}
+            >
+              <Phone className="h-4 w-4" /> Call
+            </a>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function BirthdaySection({ birthdays }: { birthdays: BirthdayEntry[] }) {
+  const [selected, setSelected] = useState<BirthdayEntry | null>(null);
+
   if (birthdays.length === 0) return null;
 
   return (
@@ -37,9 +127,10 @@ export function BirthdaySection({ birthdays }: { birthdays: BirthdayEntry[] }) {
           const initials = `${b.firstName[0] ?? ""}${b.lastName[0] ?? ""}`.toUpperCase();
 
           return (
-            <div
+            <button
               key={b.id}
-              className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--brand-navy-light)]"
+              onClick={() => setSelected(b)}
+              className="w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-[var(--brand-navy-light)]"
               style={{ borderBottom: i < birthdays.length - 1 ? "1px solid var(--brand-border)" : "none" }}
             >
               {/* Avatar */}
@@ -71,10 +162,12 @@ export function BirthdaySection({ birthdays }: { birthdays: BirthdayEntry[] }) {
               >
                 {text}
               </span>
-            </div>
+            </button>
           );
         })}
       </div>
+
+      <BirthdayDetailDialog entry={selected} onClose={() => setSelected(null)} />
     </div>
   );
 }

@@ -3,8 +3,9 @@ import { Inter } from 'next/font/google'
 import { getServerSession } from "next-auth/next"
 import { SessionProvider } from "@/components/session-provider"
 import { ActiveRoleProvider } from "@/hooks/use-active-role"
+import { SidebarProvider } from "@/hooks/use-sidebar"
 import { BottomNavbar } from '@/components/bottom-navbar'
-import { ContextBanner } from '@/components/context-banner'
+import { MainContentArea } from '@/components/main-content-area'
 import { Toaster } from "@/components/ui/toaster"
 import { Header } from '@/components/header'
 
@@ -28,11 +29,11 @@ export default async function RootLayout({
         <SessionProvider session={session}>
           <ActiveRoleProvider>
             {session ? (
-              <>
+              <SidebarProvider>
                 {/* Fixed top bar (56px) */}
                 <Header mcHeadName={session.user.name || 'not logged in'} />
 
-                {/* Desktop sidebar (240px) + main content */}
+                {/* Desktop sidebar (collapsible, 76–240px) + main content */}
                 <BottomNavbar />
 
                 {/* Main — offset for fixed top bar (56px) + mobile bottom nav (60px) */}
@@ -40,14 +41,9 @@ export default async function RootLayout({
                   className="min-h-screen"
                   style={{ paddingTop: 56, paddingBottom: 64 }}
                 >
-                  <div className="lg:pl-[240px]" style={{ minHeight: 'calc(100vh - 56px)' }}>
-                    {/* Context banner sits in the normal flow (sticky), so content
-                        below it is never overlapped */}
-                    <ContextBanner />
-                    {children}
-                  </div>
+                  <MainContentArea>{children}</MainContentArea>
                 </main>
-              </>
+              </SidebarProvider>
             ) : (
               children
             )}

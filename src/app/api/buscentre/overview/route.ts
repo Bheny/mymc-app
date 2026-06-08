@@ -71,6 +71,7 @@ export async function GET(request: Request) {
       id: true, firstName: true, lastName: true,
       gender: true, isActive: true, isUser: true,
       dateOfBirth: true, createdAt: true,
+      phone: true, cell: { select: { name: true } },
     },
   });
 

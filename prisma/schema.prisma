@@ -50,6 +50,18 @@ enum FirstTimerIntent {
   WANTS_TO_JOIN
 }
 
+enum CandidateStatus {
+  RECOMMENDED
+  CERTIFIED
+}
+
+enum WtgfStatus {
+  NOT_TAKEN
+  SCHEDULED
+  PASSED
+  FAILED
+}
+
 // ─── Users ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -88,6 +100,10 @@ model User {
   firstTimersConverted FirstTimer[] @relation("FirstTimerConvertedBy")
   notifications        Notification[]
   soulsRecorded        Soul[]       @relation("SoulRecordedBy")
+
+  shepherdCandidatesRecommended ShepherdCandidate[] @relation("CandidateRecommendedBy")
+  shepherdCandidatesCertified   ShepherdCandidate[] @relation("CandidateCertifiedBy")
+  shepherdCandidatesWtgfBy      ShepherdCandidate[] @relation("CandidateWtgfRecordedBy")
 
   @@map("users")
 }
@@ -151,6 +167,7 @@ model Cell {
   services     Service[]
   firstTimers  FirstTimer[]
   souls        Soul[]
+  shepherdCandidates ShepherdCandidate[]
 
   @@map("cells")
 }
@@ -218,6 +235,9 @@ model Member {
   shepherdRole         Shepherd?   @relation("ShepherdPerson")
   attendance           Attendance[]
   firstTimerConversion FirstTimer? @relation("FirstTimerConversion")
+
+  // Back-relation: this member has been put forward to become a shepherd
+  shepherdCandidacy ShepherdCandidate? @relation("CandidateMember")
 
   @@map("members")
 }
@@ -396,6 +416,45 @@ model Soul {
   recordedBy User @relation("SoulRecordedBy", fields: [recordedById], references: [id])
 
   @@map("souls")
+}
+
+// ─── Shepherd pipeline ────────────────────────────────────────────────────────
+
+// Tracks a member's journey from being recommended by their cell shepherd to
+// being certified as ready to serve as a shepherd. WTGF (Welcome To God's Family)
+// completion is tracked independently — a candidate can be certified, and even
+// later placed as a shepherd, without having sat it yet; it's simply flagged for
+// follow-up the next time a session is held.
+model ShepherdCandidate {
+  id     String @id @default(cuid())
+  cellId String @map("cell_id")
+
+  memberId String @unique @map("member_id")
+
+  status CandidateStatus @default(RECOMMENDED)
+  notes  String?
+
+  recommendedById String   @map("recommended_by_id")
+  recommendedAt   DateTime @default(now()) @map("recommended_at")
+
+  certifiedById String?   @map("certified_by_id")
+  certifiedAt   DateTime? @map("certified_at")
+
+  wtgfStatus       WtgfStatus @default(NOT_TAKEN) @map("wtgf_status")
+  wtgfDate         DateTime?  @map("wtgf_date") @db.Date
+  wtgfRecordedById String?    @map("wtgf_recorded_by_id")
+  wtgfUpdatedAt    DateTime?  @map("wtgf_updated_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt     @map("updated_at")
+
+  cell           Cell  @relation(fields: [cellId], references: [id], onDelete: Cascade)
+  member         Member @relation("CandidateMember",         fields: [memberId],        references: [id], onDelete: Cascade)
+  recommendedBy  User  @relation("CandidateRecommendedBy",   fields: [recommendedById], references: [id])
+  certifiedBy    User? @relation("CandidateCertifiedBy",     fields: [certifiedById],   references: [id], onDelete: SetNull)
+  wtgfRecordedBy User? @relation("CandidateWtgfRecordedBy",  fields: [wtgfRecordedById],references: [id], onDelete: SetNull)
+
+  @@map("shepherd_candidates")
 }
 
 // ─── Notifications ────────────────────────────────────────────────────────────

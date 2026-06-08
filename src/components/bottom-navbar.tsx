@@ -7,9 +7,10 @@ import { useSession } from 'next-auth/react';
 import {
   Home, Users, Network, TrendingUp, Settings,
   LayoutGrid, ClipboardList, Building2, Heart,
-  BarChart2, Menu, X, UserPlus,
+  BarChart2, Menu, X, UserPlus, ChevronsLeft, ChevronsRight,
 } from 'lucide-react';
 import { useActiveRole, roleLabel as getRoleLabel, type RoleView } from '@/hooks/use-active-role';
+import { useSidebar, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/hooks/use-sidebar';
 import { RoleSwitcher } from '@/components/role-switcher';
 import { Check } from 'lucide-react';
 
@@ -26,8 +27,9 @@ const ADMIN_NAV: NavConfig = {
     { name: 'Analysis', href: '/analysis', icon: BarChart2 },
   ],
   secondary: [
-    { name: 'Reports',  href: '/reports',  icon: TrendingUp },
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Attendance', href: '/attendance', icon: ClipboardList },
+    { name: 'Reports',    href: '/reports',    icon: TrendingUp },
+    { name: 'Settings',   href: '/settings',   icon: Settings },
   ],
 };
 
@@ -38,7 +40,9 @@ const MC_PASTOR_NAV: NavConfig = {
     { name: 'Org',      href: '/org',     icon: Network },
     { name: 'Settings', href: '/settings', icon: Settings },
   ],
-  secondary: [],
+  secondary: [
+    { name: 'Attendance', href: '/attendance', icon: ClipboardList },
+  ],
 };
 
 const BUSCENTRE_HEAD_NAV: NavConfig = {
@@ -49,9 +53,10 @@ const BUSCENTRE_HEAD_NAV: NavConfig = {
     { name: 'First Timers', short: '1st Timers',    href: '/first-timers', icon: UserPlus },
   ],
   secondary: [
-    { name: 'Analysis', href: '/analysis', icon: BarChart2 },
-    { name: 'Org',      href: '/org',      icon: Network },
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Attendance', href: '/attendance', icon: ClipboardList },
+    { name: 'Analysis',   href: '/analysis',   icon: BarChart2 },
+    { name: 'Org',        href: '/org',        icon: Network },
+    { name: 'Settings',   href: '/settings',   icon: Settings },
   ],
 };
 
@@ -76,7 +81,9 @@ const SHEPHERD_NAV: NavConfig = {
     { name: 'Members',  href: '/members',  icon: Users },
     { name: 'Settings', href: '/settings', icon: Settings },
   ],
-  secondary: [],
+  secondary: [
+    { name: 'Attendance', href: '/attendance', icon: ClipboardList },
+  ],
 };
 
 function navConfigForRole(role: string | null | undefined): NavConfig {
@@ -254,6 +261,7 @@ export function BottomNavbar() {
   const pathname              = usePathname();
   const { data: session }     = useSession();
   const { activeView, allViews, switchToView } = useActiveRole();
+  const { collapsed, toggle: toggleSidebar } = useSidebar();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const role       = activeView?.role ?? session?.user?.role;
@@ -266,52 +274,80 @@ export function BottomNavbar() {
     <>
       {/* ── Desktop Sidebar ─────────────────────────────────────────── */}
       <aside
-        className="hidden lg:flex fixed top-0 left-0 h-full flex-col"
-        style={{ width: 240, backgroundColor: 'var(--brand-navy)', zIndex: 30 }}
+        className="hidden lg:flex fixed top-0 left-0 h-full flex-col transition-[width] duration-200"
+        style={{ width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH, backgroundColor: 'var(--brand-navy)', zIndex: 30 }}
       >
-        {/* Logo */}
-        <div className="px-5 py-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-          <span className="text-white font-semibold text-[15px] tracking-tight">MyMC</span>
-          <span
-            className="ml-1 text-[11px] font-medium px-1.5 py-0.5 rounded"
-            style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.8)' }}
+        {/* Logo + collapse toggle */}
+        <div
+          className={`flex items-center py-6 ${collapsed ? 'flex-col gap-3 px-0' : 'justify-between px-5'}`}
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}
+        >
+          {collapsed ? (
+            <span
+              className="flex items-center justify-center rounded-lg text-white font-semibold text-[14px]"
+              style={{ width: 32, height: 32, background: 'rgba(255,255,255,0.12)' }}
+            >
+              M
+            </span>
+          ) : (
+            <span>
+              <span className="text-white font-semibold text-[15px] tracking-tight">MyMC</span>
+              <span
+                className="ml-1 text-[11px] font-medium px-1.5 py-0.5 rounded"
+                style={{ background: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.8)' }}
+              >
+                beta
+              </span>
+            </span>
+          )}
+
+          <button
+            onClick={toggleSidebar}
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="flex items-center justify-center rounded-lg transition-colors hover:bg-white/10"
+            style={{ width: 28, height: 28, color: 'rgba(255,255,255,0.6)' }}
           >
-            beta
-          </span>
+            {collapsed ? <ChevronsRight style={{ width: 16, height: 16 }} /> : <ChevronsLeft style={{ width: 16, height: 16 }} />}
+          </button>
         </div>
 
-        <p
-          className="px-5 pt-5 pb-1.5 text-[11px] font-medium uppercase tracking-[0.08em]"
-          style={{ color: 'rgba(255,255,255,0.4)' }}
-        >
-          Main
-        </p>
+        {!collapsed && (
+          <p
+            className="px-5 pt-5 pb-1.5 text-[11px] font-medium uppercase tracking-[0.08em]"
+            style={{ color: 'rgba(255,255,255,0.4)' }}
+          >
+            Main
+          </p>
+        )}
 
-        <nav className="flex-1 flex flex-col gap-0.5 overflow-y-auto">
+        <nav className={`flex-1 flex flex-col gap-0.5 overflow-y-auto ${collapsed ? 'pt-3' : ''}`}>
           {allItems.map((item) => {
             const active = isActive(pathname, item.href);
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className="flex items-center gap-2.5 px-5 py-2.5 text-[14px] transition-colors duration-150"
+                title={collapsed ? item.name : undefined}
+                className={`flex items-center text-[14px] transition-colors duration-150 ${collapsed ? 'justify-center px-0 py-3' : 'gap-2.5 px-5 py-2.5'}`}
                 style={{
                   color:      active ? '#ffffff' : 'rgba(255,255,255,0.65)',
                   fontWeight: active ? 500 : 400,
                   background: active ? 'rgba(255,255,255,0.08)' : 'transparent',
-                  borderLeft: active ? '3px solid #ffffff' : '3px solid transparent',
+                  borderLeft: collapsed ? '3px solid transparent' : active ? '3px solid #ffffff' : '3px solid transparent',
                 }}
               >
                 <item.icon style={{ width: 18, height: 18 }} />
-                <span>{item.name}</span>
+                {!collapsed && <span>{item.name}</span>}
               </Link>
             );
           })}
         </nav>
 
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <RoleSwitcher />
-        </div>
+        {!collapsed && (
+          <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <RoleSwitcher />
+          </div>
+        )}
       </aside>
 
       {/* ── Mobile Bottom Nav ────────────────────────────────────────── */}

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { canCreateMc } from "@/lib/org-scope";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -25,6 +26,10 @@ export async function POST(request: Request) {
   const { branchId, name } = await request.json();
   if (!branchId || !name) {
     return NextResponse.json({ error: "branchId and name are required" }, { status: 400 });
+  }
+
+  if (!canCreateMc(session.user, branchId)) {
+    return NextResponse.json({ error: "You're not permitted to create a mega-church here" }, { status: 403 });
   }
 
   const mc = await prisma.megaChurch.create({ data: { branchId, name } });

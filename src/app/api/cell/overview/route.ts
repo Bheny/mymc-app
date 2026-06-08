@@ -62,6 +62,7 @@ export async function GET(request: Request) {
         select: {
           id: true, firstName: true, lastName: true,
           phone: true, gender: true, isActive: true, isUser: true, joinedDate: true,
+          shepherdCandidacy: { select: { status: true } },
         },
       },
     },
@@ -76,6 +77,7 @@ export async function GET(request: Request) {
       id: true, firstName: true, lastName: true,
       phone: true, gender: true, isActive: true, isUser: true, joinedDate: true,
       user: { select: { id: true, role: { select: { role: true } } } },
+      shepherdCandidacy: { select: { status: true } },
     },
   });
 

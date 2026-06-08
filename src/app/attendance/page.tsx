@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ClipboardList, Plus, ChevronRight, CheckCircle2, XCircle, Clock, AlertTriangle, Loader2 } from "lucide-react";
+import { ClipboardList, Plus, ChevronRight, CheckCircle2, XCircle, Clock, AlertTriangle, Loader2, LayoutDashboard, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveRole } from "@/hooks/use-active-role";
+import { AttendanceOverviewSection } from "@/components/attendance-overview-section";
+import { AttendanceDrilldownSection } from "@/components/attendance-drilldown-section";
+import { AttendanceReviewSection } from "@/components/attendance-review-section";
 
 type ServiceSummary = {
   id:        string;
@@ -57,25 +60,57 @@ export default function AttendancePage() {
   const { ready, activeView } = useActiveRole();
   const actingCellId = activeView?.isActing && activeView.cellId ? activeView.cellId : null;
 
+  const role = activeView?.role;
+  const canRecord = role === "cell_shepherd" || role === "shepherd";
+
+  let overviewActingParam = "";
+  if (activeView?.isActing) {
+    if ((role === "cell_shepherd" || role === "shepherd") && activeView.cellId) {
+      overviewActingParam = `actingCellId=${activeView.cellId}`;
+    } else if (role === "buscentre_head" && activeView.buscentreId) {
+      overviewActingParam = `actingBuscentreId=${activeView.buscentreId}`;
+    } else if (role === "mc_pastor" && activeView.mcId) {
+      overviewActingParam = `actingMcId=${activeView.mcId}`;
+    } else if (role === "chief_shepherd" && activeView.branchId) {
+      overviewActingParam = `actingBranchId=${activeView.branchId}`;
+    }
+  }
+
+  // Chief shepherds and admins get the full headcount drill-down instead of
+  // the single-level breakdown — they oversee multiple org levels at once.
+  const showDrilldown = role === "chief_shepherd" || role === "admin";
+  const drilldownActingParam =
+    role === "chief_shepherd" && activeView?.isActing && activeView.branchId
+      ? `actingBranchId=${activeView.branchId}`
+      : "";
+
+  const [tab, setTab] = useState<"overview" | "review">("overview");
+  const reviewScope = {
+    branchId:    activeView?.branchId,
+    mcId:        activeView?.mcId,
+    buscentreId: activeView?.buscentreId,
+    cellId:      activeView?.cellId,
+  };
+
   const [services,      setServices]      = useState<ServiceSummary[]>([]);
   const [loading,       setLoading]       = useState(true);
   const [gaps,          setGaps]          = useState<Gap[]>([]);
   const [cancellingGap, setCancellingGap] = useState<string | null>(null); // "date_type"
 
   useEffect(() => {
-    if (!ready) return;
+    if (!ready || !canRecord) return;
     const gapParams = actingCellId ? `?actingCellId=${actingCellId}` : "";
     Promise.all([
       fetch("/api/services?take=30").then((r) => r.json()),
       fetch(`/api/attendance/gaps${gapParams}`).then((r) => r.json()),
     ])
       .then(([svcs, gapData]) => {
-        setServices(svcs);
+        setServices(Array.isArray(svcs) ? svcs : []);
         setGaps(gapData.gaps ?? []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [ready, actingCellId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [ready, canRecord, actingCellId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function markCancelled(gap: Gap) {
     const key = `${gap.date}_${gap.type}`;
@@ -109,14 +144,50 @@ export default function AttendancePage() {
           </p>
 
         </div>
-        <Link href="/attendance/new">
-          <Button className="h-9 px-4 text-[14px] font-medium"
-                  style={{ background: "var(--brand-navy)", color: "#fff", borderRadius: 8 }}>
-            <Plus className="mr-2 h-4 w-4" /> Record attendance
-          </Button>
-        </Link>
+        {canRecord && (
+          <Link href="/attendance/new">
+            <Button className="h-9 px-4 text-[14px] font-medium"
+                    style={{ background: "var(--brand-navy)", color: "#fff", borderRadius: 8 }}>
+              <Plus className="mr-2 h-4 w-4" /> Record attendance
+            </Button>
+          </Link>
+        )}
       </div>
 
+      {/* Overview / Review toggle */}
+      <div className="flex justify-end mb-3">
+        <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
+          {([
+            { key: "overview", label: "Overview", icon: LayoutDashboard },
+            { key: "review",   label: "Review",   icon: Filter },
+          ] as const).map(({ key, label, icon: Icon }) => (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium transition-colors"
+              style={{
+                background:  tab === key ? "var(--brand-navy)" : "#fff",
+                color:       tab === key ? "#fff" : "var(--brand-muted)",
+                borderRight: key === "overview" ? "1px solid var(--brand-border)" : "none",
+              }}
+            >
+              <Icon className="h-3.5 w-3.5" /> {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ── Role-scoped overview: latest attendance + breakdown, or filtered review ── */}
+      {tab === "review" ? (
+        <AttendanceReviewSection role={role} scope={reviewScope} />
+      ) : showDrilldown ? (
+        <AttendanceDrilldownSection endpoint="/api/attendance/drilldown" actingParam={drilldownActingParam} />
+      ) : (
+        <AttendanceOverviewSection endpoint="/api/attendance/overview" actingParam={overviewActingParam} />
+      )}
+
+      {!canRecord ? null : (
+      <>
       {/* ── Missed services card ── */}
       {gaps.length > 0 && (
         <div className="rounded-xl overflow-hidden mb-6"
@@ -264,6 +335,8 @@ export default function AttendancePage() {
             );
           })}
         </div>
+      )}
+      </>
       )}
     </div>
   );

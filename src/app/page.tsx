@@ -974,7 +974,8 @@ export default function OverviewPage() {
                     </div>
                   )}
 
-                  {/* Name + cell + badges */}
+                  {/* Name + badges + cell + capacity — all share the flexible column so
+                      nothing competes with it for width on narrow screens */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="text-[14px] font-medium"
@@ -1002,19 +1003,22 @@ export default function OverviewPage() {
                         </span>
                       )}
                     </div>
-                    <p className="text-[12px] mt-0.5" style={{ color: "var(--brand-muted)" }}>
-                      {s.cell.name}
-                    </p>
-                  </div>
 
-                  {/* Capacity bar */}
-                  <div className="w-28 shrink-0">
-                    <CapacityBar count={s._count.members} max={5} />
+                    <div className="flex items-center justify-between gap-3 mt-1.5">
+                      <p className="text-[12px] truncate" style={{ color: "var(--brand-muted)" }}>
+                        {s.cell.name}
+                      </p>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="w-16 sm:w-28">
+                          <CapacityBar count={s._count.members} max={5} />
+                        </div>
+                        <span className="text-[12px] sm:text-[13px] tabular-nums w-8 sm:w-10 text-right"
+                              style={{ color: "var(--brand-muted)" }}>
+                          {s._count.members}/5
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <span className="text-[13px] tabular-nums w-10 text-right shrink-0"
-                        style={{ color: "var(--brand-muted)" }}>
-                    {s._count.members}/5
-                  </span>
                 </div>
               );
             })}

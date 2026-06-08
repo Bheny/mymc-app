@@ -17,7 +17,7 @@ import Link from "next/link";
 import {
   Search, Pencil, Trash2, Users, UserCheck, UserX,
   ShieldCheck, Phone, Mail, Calendar, MapPin,
-  UserCircle, ShieldAlert, ChevronRight,
+  UserCircle, ShieldAlert, ChevronRight, ChevronLeft,
 } from "lucide-react";
 import { AddMemberModal } from "@/components/add-member-modal";
 import { SummaryCard } from "@/components/summary-card";
@@ -1004,6 +1004,10 @@ export default function MembersPage() {
   const [editing,         setEditing]         = useState<Member | null>(null);
   const [deleting,        setDeleting]        = useState<string | null>(null);
 
+  const PAGE_SIZE = 25;
+  const [page,     setPage]     = useState(1);
+  const [showAll,  setShowAll]  = useState(false);
+
   const role               = activeView?.role ?? session?.user?.role;
   const scopedCellId      = role === "cell_shepherd"  ? (activeView?.cellId      ?? session?.user?.cellId)      : null;
   const scopedShepherdId  = role === "shepherd"       ? (session?.user?.shepherdId ?? null) : null;
@@ -1041,11 +1045,21 @@ export default function MembersPage() {
     loadMembers();
   }
 
-  // Derived counts for summary cards
+  // Derived counts for summary cards — always over the full filtered set,
+  // not just the page currently on screen
   const total    = members.length;
   const active   = members.filter((m) => m.isActive).length;
   const inactive = members.filter((m) => !m.isActive).length;
   const system   = members.filter((m) => m.isUser).length;
+
+  // Reset to page 1 whenever the underlying filtered set changes
+  useEffect(() => { setPage(1); }, [query, filter, scopedBuscentreId, scopedCellId, scopedShepherdId]);
+
+  const totalPages     = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const currentPage    = Math.min(page, totalPages);
+  const pagedMembers   = showAll ? members : members.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const rangeStart     = total === 0 ? 0 : (currentPage - 1) * PAGE_SIZE + 1;
+  const rangeEnd       = showAll ? total : Math.min(currentPage * PAGE_SIZE, total);
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[1200px] mx-auto pb-20 lg:pb-8">
@@ -1139,7 +1153,7 @@ export default function MembersPage() {
               </TableHeader>
 
               <TableBody>
-                {members.map((member) => (
+                {pagedMembers.map((member) => (
                   <TableRow
                     key={member.id}
                     style={{ borderBottom: "1px solid var(--brand-border)" }}
@@ -1237,6 +1251,55 @@ export default function MembersPage() {
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {!loading && total > 0 && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mt-4">
+          <p className="text-[13px]" style={{ color: "var(--brand-muted)" }}>
+            {showAll
+              ? `Showing all ${total} member${total !== 1 ? "s" : ""}`
+              : `Showing ${rangeStart}–${rangeEnd} of ${total}`}
+          </p>
+
+          <div className="flex items-center gap-2">
+            {!showAll && totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost" size="icon"
+                  className="h-8 w-8 rounded-lg"
+                  aria-label="Previous page"
+                  disabled={currentPage <= 1}
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  <ChevronLeft className="h-4 w-4" style={{ color: "var(--brand-muted)" }} />
+                </Button>
+                <span className="text-[13px] font-medium px-2" style={{ color: "var(--brand-text)" }}>
+                  Page {currentPage} of {totalPages}
+                </span>
+                <Button
+                  variant="ghost" size="icon"
+                  className="h-8 w-8 rounded-lg"
+                  aria-label="Next page"
+                  disabled={currentPage >= totalPages}
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                >
+                  <ChevronRight className="h-4 w-4" style={{ color: "var(--brand-muted)" }} />
+                </Button>
+              </div>
+            )}
+
+            <button
+              onClick={() => { setShowAll((s) => !s); setPage(1); }}
+              className="rounded-pill text-[12px] font-medium px-3 py-1.5 transition-colors"
+              style={showAll
+                ? { background: "var(--brand-navy)", color: "#fff" }
+                : { background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}
+            >
+              {showAll ? "Show 25 per page" : "Show all"}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Member detail sheet */}
       <MemberDetailSheet

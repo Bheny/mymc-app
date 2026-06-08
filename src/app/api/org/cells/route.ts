@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkCapacity, logCapacityWarning } from "@/lib/capacity";
+import { canCreateCell } from "@/lib/org-scope";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -28,8 +29,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "buscentreId and name are required" }, { status: 400 });
   }
 
-  const buscentre = await prisma.buscentre.findUnique({ where: { id: buscentreId } });
+  const buscentre = await prisma.buscentre.findUnique({
+    where:  { id: buscentreId },
+    select: { id: true, name: true, mcId: true, mc: { select: { branchId: true } } },
+  });
   if (!buscentre) return NextResponse.json({ error: "Buscentre not found" }, { status: 404 });
+
+  if (!canCreateCell(session.user, buscentre)) {
+    return NextResponse.json({ error: "You're not permitted to create a cell here" }, { status: 403 });
+  }
 
   const cap = await checkCapacity("cell", buscentreId);
   if (cap.atCapacity) {

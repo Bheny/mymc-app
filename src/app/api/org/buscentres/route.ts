@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkCapacity, logCapacityWarning } from "@/lib/capacity";
+import { canCreateBuscentre } from "@/lib/org-scope";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -28,8 +29,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "mcId and name are required" }, { status: 400 });
   }
 
-  const mc = await prisma.megaChurch.findUnique({ where: { id: mcId } });
+  const mc = await prisma.megaChurch.findUnique({ where: { id: mcId }, select: { id: true, name: true, branchId: true } });
   if (!mc) return NextResponse.json({ error: "MegaChurch not found" }, { status: 404 });
+
+  if (!canCreateBuscentre(session.user, mc)) {
+    return NextResponse.json({ error: "You're not permitted to create a buscentre here" }, { status: 403 });
+  }
 
   const cap = await checkCapacity("buscentre", mcId);
   if (cap.atCapacity) {

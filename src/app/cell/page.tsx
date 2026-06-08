@@ -17,6 +17,7 @@ import { AttendanceStatsSection } from "@/components/attendance-stats-section";
 import type { BirthdayEntry } from "@/lib/birthdays";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { useRoleGuard } from "@/hooks/use-role-guard";
+import { RecommendShepherdDialog } from "@/components/recommend-shepherd-dialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -31,6 +32,8 @@ type ShepherdMember = {
   joinedDate: string | null;
   // Populated for activated members so we can detect their role
   user?: { id: string; role: { role: string } | null } | null;
+  // Present once a cell shepherd has put this member forward as a shepherd candidate
+  shepherdCandidacy?: { status: string } | null;
 };
 
 type ShepherdSlot = {
@@ -87,7 +90,27 @@ function shepherdName(s: ShepherdSlot): string | null {
   return null;
 }
 
-function MemberRow({ member }: { member: ShepherdMember }) {
+function CandidacyBadge({ status }: { status: string }) {
+  const isCertified = status === "CERTIFIED";
+  return (
+    <span
+      className="rounded-pill text-[10px] font-medium px-2 py-0.5 shrink-0"
+      style={isCertified
+        ? { background: "#E8F0FE", color: "#1D4ED8" }
+        : { background: "#EAF3EE", color: "#1A8C6C" }}
+    >
+      {isCertified ? "Certified shepherd" : "Recommended"}
+    </span>
+  );
+}
+
+function MemberRow({
+  member, canRecommend, onChanged,
+}: {
+  member:       ShepherdMember;
+  canRecommend: boolean;
+  onChanged:    () => void;
+}) {
   return (
     <div
       className="flex items-center gap-3 px-4 py-2.5 transition-colors hover:bg-[var(--brand-navy-light)]"
@@ -126,6 +149,15 @@ function MemberRow({ member }: { member: ShepherdMember }) {
             <ShieldCheck className="h-3.5 w-3.5" style={{ color: "var(--brand-success)" }} />
           </span>
         )}
+        {member.shepherdCandidacy ? (
+          <CandidacyBadge status={member.shepherdCandidacy.status} />
+        ) : canRecommend ? (
+          <RecommendShepherdDialog
+            memberId={member.id}
+            memberName={`${member.firstName} ${member.lastName}`}
+            onDone={onChanged}
+          />
+        ) : null}
       </div>
     </div>
   );
@@ -134,13 +166,14 @@ function MemberRow({ member }: { member: ShepherdMember }) {
 // ─── Unassigned member row — expandable with details + shepherd assign ─────────
 
 function UnassignedMemberRow({
-  member, shepherds, isLast, onAssigned,
+  member, shepherds, isLast, onAssigned, canRecommend,
 }: {
   member:         ShepherdMember;
   shepherds:      ShepherdSlot[];
   cellShepherds:  CellShepherd[];
   isLast:         boolean;
   onAssigned:     () => void;
+  canRecommend:   boolean;
 }) {
   const [open,     setOpen]     = useState(false);
   const [selected, setSelected] = useState("");
@@ -217,6 +250,15 @@ function UnassignedMemberRow({
             <ShieldCheck className="h-3.5 w-3.5" style={{ color: "var(--brand-success)" }} />
           </span>
         )}
+        {member.shepherdCandidacy ? (
+          <CandidacyBadge status={member.shepherdCandidacy.status} />
+        ) : canRecommend ? (
+          <RecommendShepherdDialog
+            memberId={member.id}
+            memberName={`${member.firstName} ${member.lastName}`}
+            onDone={onAssigned}
+          />
+        ) : null}
 
         {/* Expand chevron */}
         <ChevronRight
@@ -310,11 +352,12 @@ function UnassignedMemberRow({
 type MemberOption = { id: string; firstName: string; lastName: string };
 
 function ShepherdCard({
-  slot, index, onAssigned,
+  slot, index, onAssigned, canRecommend,
 }: {
-  slot:       ShepherdSlot;
-  index:      number;
-  onAssigned: () => void;
+  slot:         ShepherdSlot;
+  index:        number;
+  onAssigned:   () => void;
+  canRecommend: boolean;
 }) {
   const name        = shepherdName(slot);
   const isAssigned  = !!name;
@@ -508,7 +551,9 @@ function ShepherdCard({
         </div>
       ) : (
         <div>
-          {slot.members.map((m) => <MemberRow key={m.id} member={m} />)}
+          {slot.members.map((m) => (
+            <MemberRow key={m.id} member={m} canRecommend={canRecommend} onChanged={onAssigned} />
+          ))}
         </div>
       )}
     </div>
@@ -558,6 +603,10 @@ export default function MyCellPage() {
   const { activeView } = useActiveRole();
   const actingCellId = activeView?.isActing && activeView.cellId ? activeView.cellId : null;
   const actingParam  = actingCellId ? `?actingCellId=${actingCellId}` : "";
+
+  // Only the cell shepherd (or someone acting as one for this cell) can put
+  // members forward as shepherd candidates.
+  const canRecommend = activeView?.role === "cell_shepherd";
 
   async function load() {
     setLoading(true);
@@ -728,7 +777,7 @@ export default function MyCellPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {shepherds.map((slot, i) => (
-            <ShepherdCard key={slot.id} slot={slot} index={i} onAssigned={load} />
+            <ShepherdCard key={slot.id} slot={slot} index={i} onAssigned={load} canRecommend={canRecommend} />
           ))}
         </div>
       )}
@@ -759,6 +808,7 @@ export default function MyCellPage() {
                 cellShepherds={cellShepherds}
                 isLast={i === unassignedMembers.length - 1}
                 onAssigned={load}
+                canRecommend={canRecommend}
               />
             ))}
           </div>
@@ -777,6 +827,13 @@ export default function MyCellPage() {
             <UserPlus className="mr-2 h-4 w-4" /> Activate member
           </Button>
         </Link>
+        {canRecommend && (
+          <Link href="/org/shepherd-candidates">
+            <Button variant="outline" className="h-9 text-[13px]" style={{ borderRadius: 8 }}>
+              <ShieldCheck className="mr-2 h-4 w-4" /> Shepherd candidates
+            </Button>
+          </Link>
+        )}
       </div>
 
     </div>

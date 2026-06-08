@@ -10,6 +10,7 @@ import {
   SheetBody, SheetFooter,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { useRoleGuard } from "@/hooks/use-role-guard";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -616,6 +617,8 @@ function EditCellSheet({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function OrgPage() {
+  const { isLoading: roleLoading } = useRoleGuard(["admin", "chief_shepherd", "mc_pastor", "buscentre_head"]);
+
   const [branches, setBranches]       = useState<BranchNode[]>([]);
   const [flags, setFlags]             = useState<Flag[]>([]);
   const [, setWarnings] = useState<Warn[]>([]);
@@ -666,7 +669,7 @@ export default function OrgPage() {
     loadTree();
   }
 
-  if (loading) {
+  if (roleLoading || loading) {
     return (
       <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[1200px] mx-auto">
         <div className="skeleton h-8 w-40 mb-4 rounded-lg" />
@@ -699,6 +702,13 @@ export default function OrgPage() {
               </button>
             </Link>
           )}
+          <Link href="/org/shepherd-candidates">
+            <Button variant="outline" className="h-9 px-3 sm:px-4 text-[13px] sm:text-[14px] font-medium"
+              style={{ borderRadius: 8, borderColor: "var(--brand-border)" }}>
+              <span className="hidden sm:inline">Shepherd candidates</span>
+              <span className="sm:hidden">Candidates</span>
+            </Button>
+          </Link>
           <Link href="/org/chart">
             <Button variant="outline" className="h-9 px-3 sm:px-4 text-[13px] sm:text-[14px] font-medium"
               style={{ borderRadius: 8, borderColor: "var(--brand-border)" }}>

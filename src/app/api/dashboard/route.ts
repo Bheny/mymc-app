@@ -98,7 +98,10 @@ export async function GET() {
     // Members with birthdays in the next 30 days
     prisma.member.findMany({
       where:  { dateOfBirth: { not: null } },
-      select: { id: true, firstName: true, lastName: true, dateOfBirth: true },
+      select: {
+        id: true, firstName: true, lastName: true, dateOfBirth: true,
+        phone: true, cell: { select: { name: true } },
+      },
     }),
   ]);
 
