@@ -1,3 +1,8 @@
+<img width="1894" height="948" alt="image" src="https://github.com/user-attachments/assets/65cc31b3-0440-4428-9622-c2b8f7154da5" />
+
+
+
+
 # MyMC — Church Membership and Growth Management Platform
 
 A full stack web application built for a church organisation to track membership, monitor attendance, record outreach activity, and make data driven decisions about retention and community growth.
@@ -121,6 +126,7 @@ mymc/
 │   └── utils/           # Helper functions
 └── types/               # TypeScript type definitions
 ```
+<img width="1896" height="953" alt="image" src="https://github.com/user-attachments/assets/08784ba9-957d-4b2b-b16d-036e2e93cfb2" />
 
 ---
 
