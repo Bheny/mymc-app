@@ -2,9 +2,10 @@
 
 import { BuscentreDashboard } from "@/components/buscentre-dashboard";
 import { useRoleGuard } from "@/hooks/use-role-guard";
+import { BUSCENTRE_DASHBOARD_ROLES } from "@/lib/view-permissions";
 
-export default function MyBuscentrePage() {
-  const { isLoading } = useRoleGuard(["buscentre_head"]);
+export default function BuscentreByIdPage({ params }: { params: { id: string } }) {
+  const { isLoading } = useRoleGuard(BUSCENTRE_DASHBOARD_ROLES);
 
   if (isLoading) {
     return (
@@ -15,5 +16,5 @@ export default function MyBuscentrePage() {
     );
   }
 
-  return <BuscentreDashboard />;
+  return <BuscentreDashboard buscentreId={params.id} />;
 }

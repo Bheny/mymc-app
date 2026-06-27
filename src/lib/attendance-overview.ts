@@ -53,6 +53,23 @@ export async function latestService(cellId: string, type: ServiceType) {
   });
 }
 
+// Latest two occurrences of a service type for a cell — used to compare the
+// most recent service against the one before it (e.g. for trend indicators).
+export async function recentServices(cellId: string, type: ServiceType) {
+  return prisma.service.findMany({
+    where:   { cellId, type, cancelled: false },
+    orderBy: { date: "desc" },
+    take:    2,
+    select: {
+      id:         true,
+      date:       true,
+      speaker:    true,
+      attendance: { select: { status: true, memberId: true } },
+      _count:     { select: { firstTimers: true } },
+    },
+  });
+}
+
 export async function cellSnapshot(cellId: string): Promise<{ lcLive: Snapshot; mgs: Snapshot }> {
   const [lc, mgs] = await Promise.all([latestService(cellId, "LC_LIVE"), latestService(cellId, "MGS")]);
   return {

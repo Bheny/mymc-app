@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { useRoleGuard } from "@/hooks/use-role-guard";
+import { useActiveRole } from "@/hooks/use-active-role";
+import { BUSCENTRE_DASHBOARD_ROLES, CELL_DASHBOARD_ROLES } from "@/lib/view-permissions";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -99,9 +101,10 @@ function ActingUpBadge({ severity }: { severity: string }) {
 // ─── Collapsible row ──────────────────────────────────────────────────────────
 
 function TreeRow({
-  label, assigned, badges, depth = 0, children, defaultOpen = false,
+  label, href, assigned, badges, depth = 0, children, defaultOpen = false,
 }: {
   label:       string;
+  href?:       string;
   assigned?:   string | null;
   badges?:     React.ReactNode;
   depth?:      number;
@@ -124,9 +127,20 @@ function TreeRow({
             : <ChevronRight style={{ width: 14, height: 14, color: "var(--brand-muted)", flexShrink: 0 }} />
           : <span style={{ width: 14, flexShrink: 0 }} />
         }
-        <span className="text-[13px] font-medium flex-1 min-w-0 truncate" style={{ color: "var(--brand-text)" }}>
-          {label}
-        </span>
+        {href ? (
+          <Link
+            href={href}
+            onClick={(e) => e.stopPropagation()}
+            className="text-[13px] font-medium flex-1 min-w-0 truncate hover:underline"
+            style={{ color: "var(--brand-navy)" }}
+          >
+            {label}
+          </Link>
+        ) : (
+          <span className="text-[13px] font-medium flex-1 min-w-0 truncate" style={{ color: "var(--brand-text)" }}>
+            {label}
+          </span>
+        )}
         {assigned !== undefined && (
           <span className="hidden sm:block shrink-0" style={{ color: "var(--brand-muted)", fontSize: 12 }}>
             {assigned ?? "Unassigned"}
@@ -618,6 +632,10 @@ function EditCellSheet({
 
 export default function OrgPage() {
   const { isLoading: roleLoading } = useRoleGuard(["admin", "chief_shepherd", "mc_pastor", "buscentre_head"]);
+  const { activeView } = useActiveRole();
+  const role = activeView?.role;
+  const canViewBuscentres = !!role && BUSCENTRE_DASHBOARD_ROLES.includes(role);
+  const canViewCells      = !!role && CELL_DASHBOARD_ROLES.includes(role);
 
   const [branches, setBranches]       = useState<BranchNode[]>([]);
   const [flags, setFlags]             = useState<Flag[]>([]);
@@ -821,6 +839,7 @@ export default function OrgPage() {
                     <TreeRow
                       key={bc.id}
                       label={bc.name}
+                      href={canViewBuscentres ? `/buscentre/${bc.id}` : undefined}
                       assigned={bc.userRoles[0]?.user?.name}
                       depth={1}
                       defaultOpen
@@ -856,6 +875,7 @@ export default function OrgPage() {
                         <TreeRow
                           key={cell.id}
                           label={cell.name}
+                          href={canViewCells ? `/cell/${cell.id}` : undefined}
                           assigned={cell.userRoles[0]?.user?.name}
                           depth={2}
                           badges={

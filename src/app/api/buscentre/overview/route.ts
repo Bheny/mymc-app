@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { upcomingBirthdays } from "@/lib/birthdays";
+import { authorizeBuscentreView } from "@/lib/view-scope";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -12,8 +13,9 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const actingBuscentreId = searchParams.get("actingBuscentreId");
+  const viewBuscentreId   = searchParams.get("viewBuscentreId");
 
-  // Resolve buscentre ID — primary role or acting override
+  // Resolve buscentre ID — primary role, acting override, or a read-only drill-down view
   let buscentreId = session.user.buscentreId;
 
   if (actingBuscentreId) {
@@ -23,6 +25,10 @@ export async function GET(request: Request) {
     } else {
       return NextResponse.json({ error: "No acting access to this buscentre" }, { status: 403 });
     }
+  } else if (viewBuscentreId) {
+    const { id, status } = await authorizeBuscentreView(session.user.role, session.user, viewBuscentreId);
+    if (status !== 200) return NextResponse.json({ error: "You don't have access to this buscentre" }, { status });
+    buscentreId = id;
   }
 
   if (!buscentreId) {

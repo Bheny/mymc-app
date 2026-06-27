@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { authorizeBuscentreView } from "@/lib/view-scope";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -9,6 +10,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const actingBuscentreId = searchParams.get("actingBuscentreId");
+  const viewBuscentreId   = searchParams.get("viewBuscentreId");
   const period             = (searchParams.get("period") ?? "year") as "month" | "year";
 
   let buscentreId = session.user.buscentreId;
@@ -17,6 +19,10 @@ export async function GET(request: Request) {
     const actingAt = (session.user.actingAt ?? {}) as Record<string, string>;
     if (actingAt.buscentre_id === actingBuscentreId) buscentreId = actingBuscentreId;
     else return NextResponse.json({ error: "No acting access to this buscentre" }, { status: 403 });
+  } else if (viewBuscentreId) {
+    const { id, status } = await authorizeBuscentreView(session.user.role, session.user, viewBuscentreId);
+    if (status !== 200) return NextResponse.json({ error: "You don't have access to this buscentre" }, { status });
+    buscentreId = id;
   }
 
   if (!buscentreId) return NextResponse.json({ error: "No buscentre assigned" }, { status: 400 });

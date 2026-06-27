@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { authorizeCellView } from "@/lib/view-scope";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -9,6 +10,7 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const actingCellId = searchParams.get("actingCellId");
+  const viewCellId    = searchParams.get("viewCellId");
   const period       = (searchParams.get("period") ?? "year") as "month" | "year";
 
   let cellId = session.user.cellId;
@@ -17,6 +19,10 @@ export async function GET(request: Request) {
     const actingAt = (session.user.actingAt ?? {}) as Record<string, string>;
     if (actingAt.cell_id === actingCellId) cellId = actingCellId;
     else return NextResponse.json({ error: "No acting access to this cell" }, { status: 403 });
+  } else if (viewCellId) {
+    const { id, status } = await authorizeCellView(session.user.role, session.user, viewCellId);
+    if (status !== 200) return NextResponse.json({ error: "You don't have access to this cell" }, { status });
+    cellId = id;
   }
 
   if (!cellId) return NextResponse.json({ error: "No cell assigned" }, { status: 400 });

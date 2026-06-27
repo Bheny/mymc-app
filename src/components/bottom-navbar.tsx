@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 import {
   Home, Users, Network, TrendingUp, Settings,
   LayoutGrid, ClipboardList, Building2, Heart,
-  BarChart2, Menu, X, UserPlus, ChevronsLeft, ChevronsRight,
+  BarChart2, Menu, X, UserPlus, ChevronsLeft, ChevronsRight, Trophy,
 } from 'lucide-react';
 import { useActiveRole, roleLabel as getRoleLabel, type RoleView } from '@/hooks/use-active-role';
 import { useSidebar, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/hooks/use-sidebar';
@@ -27,9 +27,10 @@ const ADMIN_NAV: NavConfig = {
     { name: 'Analysis', href: '/analysis', icon: BarChart2 },
   ],
   secondary: [
-    { name: 'Attendance', href: '/attendance', icon: ClipboardList },
-    { name: 'Reports',    href: '/reports',    icon: TrendingUp },
-    { name: 'Settings',   href: '/settings',   icon: Settings },
+    { name: 'Attendance',  href: '/attendance',  icon: ClipboardList },
+    { name: 'Leaderboard', href: '/leaderboard',  icon: Trophy },
+    { name: 'Reports',     href: '/reports',     icon: TrendingUp },
+    { name: 'Settings',    href: '/settings',    icon: Settings },
   ],
 };
 
@@ -41,7 +42,8 @@ const MC_PASTOR_NAV: NavConfig = {
     { name: 'Settings', href: '/settings', icon: Settings },
   ],
   secondary: [
-    { name: 'Attendance', href: '/attendance', icon: ClipboardList },
+    { name: 'Attendance',  href: '/attendance',  icon: ClipboardList },
+    { name: 'Leaderboard', href: '/leaderboard',  icon: Trophy },
   ],
 };
 
@@ -53,10 +55,11 @@ const BUSCENTRE_HEAD_NAV: NavConfig = {
     { name: 'First Timers', short: '1st Timers',    href: '/first-timers', icon: UserPlus },
   ],
   secondary: [
-    { name: 'Attendance', href: '/attendance', icon: ClipboardList },
-    { name: 'Analysis',   href: '/analysis',   icon: BarChart2 },
-    { name: 'Org',        href: '/org',        icon: Network },
-    { name: 'Settings',   href: '/settings',   icon: Settings },
+    { name: 'Attendance',  href: '/attendance',  icon: ClipboardList },
+    { name: 'Leaderboard', href: '/leaderboard',  icon: Trophy },
+    { name: 'Analysis',    href: '/analysis',    icon: BarChart2 },
+    { name: 'Org',         href: '/org',         icon: Network },
+    { name: 'Settings',    href: '/settings',    icon: Settings },
   ],
 };
 
@@ -68,10 +71,11 @@ const CELL_SHEPHERD_NAV: NavConfig = {
     { name: 'First Timers',  short: '1st Timers',     href: '/first-timers',  icon: UserPlus },
   ],
   secondary: [
-    { name: 'Souls',    href: '/souls',    icon: Heart },
-    { name: 'Members',  href: '/members',  icon: Users },
-    { name: 'Analysis', href: '/analysis', icon: BarChart2 },
-    { name: 'Settings', href: '/settings', icon: Settings },
+    { name: 'Souls',       href: '/souls',       icon: Heart },
+    { name: 'Members',     href: '/members',     icon: Users },
+    { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+    { name: 'Analysis',    href: '/analysis',    icon: BarChart2 },
+    { name: 'Settings',    href: '/settings',    icon: Settings },
   ],
 };
 
@@ -82,7 +86,8 @@ const SHEPHERD_NAV: NavConfig = {
     { name: 'Settings', href: '/settings', icon: Settings },
   ],
   secondary: [
-    { name: 'Attendance', href: '/attendance', icon: ClipboardList },
+    { name: 'Attendance',  href: '/attendance',  icon: ClipboardList },
+    { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
   ],
 };
 

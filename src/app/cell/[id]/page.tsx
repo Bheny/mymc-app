@@ -2,9 +2,10 @@
 
 import { CellDashboard } from "@/components/cell-dashboard";
 import { useRoleGuard } from "@/hooks/use-role-guard";
+import { CELL_DASHBOARD_ROLES } from "@/lib/view-permissions";
 
-export default function MyCellPage() {
-  const { isLoading } = useRoleGuard(["cell_shepherd", "shepherd"]);
+export default function CellByIdPage({ params }: { params: { id: string } }) {
+  const { isLoading } = useRoleGuard(CELL_DASHBOARD_ROLES);
 
   if (isLoading) {
     return (
@@ -15,5 +16,5 @@ export default function MyCellPage() {
     );
   }
 
-  return <CellDashboard />;
+  return <CellDashboard cellId={params.id} />;
 }
