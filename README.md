@@ -1,36 +1,136 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+<img width="1894" height="948" alt="image" src="https://github.com/user-attachments/assets/65cc31b3-0440-4428-9622-c2b8f7154da5" />
 
-## Getting Started
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+
+# MyMC — Church Membership and Growth Management Platform
+
+A full stack web application built for a church organisation to track membership, monitor attendance, record outreach activity, and make data driven decisions about retention and community growth.
+
+---
+
+## The Problem
+
+Church leadership had no reliable way to know whether new members from outreaches were being retained, which cell groups were growing, or where attendance was declining over time. Decisions were being made on gut feeling rather than data. MyMC was built to change that.
+
+---
+
+## What It Does
+
+### Membership Management
+- Register and manage member profiles with contact details, joining date, and cell group assignment
+- Track member status over time to identify inactive or at risk members
+
+### Attendance Tracking
+- Record attendance per service and event
+- Dashboard showing attendance trends over weeks and months
+- Identify patterns in retention and drop off across different services
+
+### Outreach Recording
+- Log souls won on outreaches with follow up status
+- Track conversion from first contact to active membership
+- Give leadership visibility into which outreach efforts are producing retained members
+
+### Cell Group Management
+- Assign members to cell groups
+- Track cell group attendance and growth independently
+- Give cell leaders visibility into their own group metrics
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | Next.js 14, TypeScript, TailwindCSS |
+| Backend | Next.js API Routes (BFF pattern) |
+| Database | Supabase (PostgreSQL) |
+| Authentication | Supabase Auth |
+| Deployment | Vercel |
+
+---
+
+## Architecture
+
+MyMC uses the Next.js App Router with React Server Components for all dashboard and reporting views. This means membership data and attendance metrics are fetched and rendered server side, keeping sensitive member information out of the client bundle entirely.
+
+Supabase handles authentication, the PostgreSQL database, and Row Level Security policies that enforce data access rules at the database level. Each user role, pastor, cell leader, and administrator, sees only the data they are authorised to access regardless of what the application layer requests.
+
+```
+Browser
+  ↓
+Next.js App Router (React Server Components)
+  ↓
+Next.js API Routes (BFF layer)
+  ↓
+Supabase Client
+  ↓
+PostgreSQL (with RLS policies)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Key Technical Decisions
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Row Level Security over application level permission checks**
+Data access rules are enforced directly in Supabase using RLS policies rather than relying solely on middleware. Even if application logic has a bug, the database will not return data a user is not authorised to see. This was a deliberate choice for a system handling personal member information.
 
-## Learn More
+**Server Components for all sensitive data views**
+Membership rosters, attendance records, and outreach data are rendered entirely on the server. No sensitive data is sent to the client as JSON or exposed in network requests that a member could inspect.
 
-To learn more about Next.js, take a look at the following resources:
+**BFF pattern with Next.js API routes**
+Rather than calling Supabase directly from the client, all data requests go through API routes that validate the session, enforce business logic, and return only the data the frontend needs. This keeps the data layer clean and makes future migrations easier.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Status
 
-## Deploy on Vercel
+Currently in internal testing with the church organisation. All three core modules, membership management, attendance tracking, and outreach recording, are fully built and functional.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Setup
+
+```bash
+git clone https://github.com/bheny/mymc
+cd mymc
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+### Environment Variables
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+```
+
+---
+
+## Project Structure
+
+```
+mymc/
+├── app/
+│   ├── (auth)/          # Login and registration flows
+│   ├── dashboard/       # Leadership overview and metrics
+│   ├── members/         # Member management
+│   ├── attendance/      # Service and event attendance
+│   ├── outreach/        # Soul winning and follow up tracking
+│   └── cells/           # Cell group management
+├── components/          # Reusable UI components
+├── lib/
+│   ├── supabase/        # Database client and queries
+│   └── utils/           # Helper functions
+└── types/               # TypeScript type definitions
+```
+<img width="1896" height="953" alt="image" src="https://github.com/user-attachments/assets/08784ba9-957d-4b2b-b16d-036e2e93cfb2" />
+
+---
+
+## Author
+
+Bernard Kojo Tay
+[bernardtay.online](https://www.bernardtay.online) · [LinkedIn](https://www.linkedin.com/in/bernard-kojo-tay/) · [GitHub](https://github.com/bheny)
