@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { buildLeadershipIndex, resolveFromIndex } from "@/lib/leadership";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -63,7 +64,8 @@ async function cellsReadyToDivide(scope: string | null, scopeId: string | null, 
 
 async function consistentAbsentees(
   scope: string | null, scopeId: string | null,
-  from: string | null, to: string | null, minAbsences: number
+  from: string | null, to: string | null, minAbsences: number,
+  branchId: string | null
 ) {
   const { start, end } = parseDates(from, to);
   const cellIds = await resolveCellIds(scope, scopeId);
@@ -86,9 +88,10 @@ async function consistentAbsentees(
     where:  { id: { in: memberIds } },
     select: {
       id: true, firstName: true, lastName: true, phone: true,
+      userId: true, shepherdId: true, cellId: true, buscentreId: true, mcId: true,
       shepherd: {
         select: {
-          user:   { select: { name: true } },
+          user:   { select: { id: true, name: true } },
           person: { select: { firstName: true, lastName: true } },
         },
       },
@@ -96,14 +99,15 @@ async function consistentAbsentees(
     },
   });
 
+  const index = branchId ? await buildLeadershipIndex(branchId) : null;
+
   const rows = members.map((m) => ({
     id:          m.id,
     name:        `${m.firstName} ${m.lastName}`,
     phone:       m.phone,
     cell:        m.cell?.name ?? "—",
     buscentre:   m.cell?.buscentre?.name ?? "—",
-    shepherd:    m.shepherd?.user?.name
-                 ?? (m.shepherd?.person ? `${m.shepherd.person.firstName} ${m.shepherd.person.lastName}` : "Unassigned"),
+    shepherd:    index ? resolveFromIndex(m, index) : "Unassigned",
     absentCount: countMap[m.id] ?? 0,
   })).sort((a, b) => b.absentCount - a.absentCount);
 
@@ -319,7 +323,7 @@ export async function GET(request: Request) {
   let data: unknown;
   switch (type) {
     case "cells-ready-to-divide":   data = await cellsReadyToDivide(scope, scopeId, threshold); break;
-    case "consistent-absentees":    data = await consistentAbsentees(scope, scopeId, from, to, minAbsences); break;
+    case "consistent-absentees":    data = await consistentAbsentees(scope, scopeId, from, to, minAbsences, session.user.branchId ?? null); break;
     case "shepherd-load":           data = await shepherdLoad(scope, scopeId, cap); break;
     case "first-timer-conversion":  data = await firstTimerConversion(scope, scopeId, from, to); break;
     case "highest-attendance":      data = await highestAttendance(scope, scopeId, from, to, topN); break;

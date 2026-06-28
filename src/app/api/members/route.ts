@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkCapacity, logCapacityWarning } from "@/lib/capacity";
+import { buildLeadershipIndex, resolveFromIndex } from "@/lib/leadership";
 
 // ─── Shared include ───────────────────────────────────────────────────────────
 // Covers all four placement levels so the table always has what it needs.
@@ -64,7 +65,14 @@ export async function GET(request: Request) {
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
   });
 
-  return NextResponse.json(members);
+  const branchId = session.user.branchId;
+  const index = branchId ? await buildLeadershipIndex(branchId) : null;
+  const withEffectiveShepherd = members.map((m) => ({
+    ...m,
+    effectiveShepherdName: index ? resolveFromIndex(m, index) : "Unassigned",
+  }));
+
+  return NextResponse.json(withEffectiveShepherd);
 }
 
 // ─── POST ────────────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { findRoleHolder, type RoleHolder } from "@/lib/leadership";
 
 const ROLE_LABELS: Record<string, string> = {
   admin:          "Admin",
@@ -12,59 +13,7 @@ const ROLE_LABELS: Record<string, string> = {
   shepherd:       "Shepherd",
 };
 
-const USER_SELECT = {
-  id:    true,
-  name:  true,
-  email: true,
-  rank:  true,
-  member: { select: { phone: true } },
-} as const;
-
-type UserRow = {
-  id: string; name: string | null; email: string;
-  rank: string | null; member: { phone: string | null } | null;
-};
-
-/**
- * Find the user currently filling a role at a given scope.
- * Checks permanent assignment first, then acting assignment.
- */
-async function findRoleHolder(
-  role: string,
-  scopeKey: "cellId" | "buscentreId" | "mcId" | "branchId",
-  scopeId: string
-): Promise<UserRow | null> {
-  // 1. Permanent: UserRole.role = target role and scopeKey = scopeId
-  const permanent = await prisma.userRole.findFirst({
-    where:  { role: role as never, [scopeKey]: scopeId },
-    select: { user: { select: USER_SELECT } },
-  });
-  if (permanent?.user) return permanent.user as UserRow;
-
-  // 2. Acting: actingAs array contains the role AND actingAt JSON has the scope key
-  // Map from our scope keys to the actingAt JSON keys
-  const actingAtKey: Record<string, string> = {
-    cellId:      "cell_id",
-    buscentreId: "buscentre_id",
-    mcId:        "mc_id",
-    branchId:    "branch_id",
-  };
-  const jsonKey = actingAtKey[scopeKey];
-
-  const actingCandidates = await prisma.userRole.findMany({
-    where:  { actingAs: { has: role } },
-    select: { actingAt: true, user: { select: USER_SELECT } },
-  });
-
-  for (const candidate of actingCandidates) {
-    const at = (candidate.actingAt ?? {}) as Record<string, string>;
-    if (at[jsonKey] === scopeId && candidate.user) {
-      return candidate.user as UserRow;
-    }
-  }
-
-  return null;
-}
+type UserRow = RoleHolder;
 
 function buildEntry(
   roleKey: string,

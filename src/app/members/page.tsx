@@ -40,6 +40,8 @@ type Member = {
   cell:       { id: string; name: string; buscentre: { id: string; name: string } } | null;
   buscentre:  { id: string; name: string } | null;
   mc:         { id: string; name: string } | null;
+  // Resolved server-side: direct shepherd, or whoever leads the next level up
+  effectiveShepherdName?: string;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -57,11 +59,10 @@ function StatusBadge({ active }: { active: boolean }) {
   );
 }
 
-function SystemUserBadge() {
+function SystemUserIcon() {
   return (
-    <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5"
-          style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
-      System user
+    <span title="System user">
+      <ShieldCheck className="h-3.5 w-3.5" style={{ color: "var(--brand-success)" }} />
     </span>
   );
 }
@@ -434,10 +435,7 @@ function MemberDetailSheet({
               {/* ── Assignment ── */}
               <p className="text-[11px] font-medium uppercase tracking-[0.06em] pt-5 pb-3"
                  style={{ color: "var(--brand-muted)" }}>Assignment</p>
-              {detail.shepherd && (
-                <DetailRow icon={Users} label="Shepherd"
-                  value={detail.shepherd.user?.name ?? (detail.shepherd.person ? `${detail.shepherd.person.firstName} ${detail.shepherd.person.lastName}` : "Unassigned")} />
-              )}
+              <DetailRow icon={Users} label="Shepherd" value={detail.effectiveShepherdName ?? "Unassigned"} />
               {detail.cell && <DetailRow icon={MapPin} label="Cell" value={detail.cell.name} />}
               {(detail.cell?.buscentre || detail.buscentre) && (
                 <DetailRow icon={MapPin} label="Buscentre" value={detail.cell?.buscentre?.name ?? detail.buscentre?.name ?? null} />
@@ -1186,15 +1184,17 @@ export default function MembersPage() {
                         className="text-left group"
                         onClick={() => setViewingMemberId(member.id)}
                       >
-                        <span
-                          className="text-[14px] font-medium group-hover:underline"
-                          style={{ color: "var(--brand-navy)" }}
-                        >
-                          {member.firstName} {member.lastName}
+                        <span className="inline-flex items-center gap-1.5">
+                          <span
+                            className="text-[14px] font-medium group-hover:underline"
+                            style={{ color: "var(--brand-navy)" }}
+                          >
+                            {member.firstName} {member.lastName}
+                          </span>
+                          {member.isUser && <SystemUserIcon />}
                         </span>
                         <div className="flex gap-1 flex-wrap mt-0.5">
                           <LevelBadge member={member} />
-                          {member.isUser && <SystemUserBadge />}
                         </div>
                       </button>
                     </TableCell>
@@ -1211,7 +1211,7 @@ export default function MembersPage() {
 
                     {/* Shepherd */}
                     <TableCell className="px-4 py-3 text-[14px]" style={{ color: "var(--brand-text)" }}>
-                      {shepherdName(member)}
+                      {member.effectiveShepherdName ?? shepherdName(member)}
                     </TableCell>
 
                     {/* Gender */}

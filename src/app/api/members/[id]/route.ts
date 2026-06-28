@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { resolveMemberShepherdName } from "@/lib/leadership";
 
 type Params = { params: { id: string } };
 
@@ -45,7 +46,9 @@ export async function GET(_req: Request, { params }: Params) {
     include: MEMBER_INCLUDE,
   });
   if (!member) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  return NextResponse.json(member);
+
+  const effectiveShepherdName = await resolveMemberShepherdName(member);
+  return NextResponse.json({ ...member, effectiveShepherdName });
 }
 
 export async function PATCH(request: Request, { params }: Params) {
@@ -101,7 +104,7 @@ export async function PATCH(request: Request, { params }: Params) {
     include: MEMBER_INCLUDE,
   });
 
-  return NextResponse.json(member);
+  return NextResponse.json({ ...member, effectiveShepherdName: await resolveMemberShepherdName(member) });
 }
 
 export async function DELETE(_req: Request, { params }: Params) {
