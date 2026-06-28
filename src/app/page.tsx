@@ -113,9 +113,20 @@ function SectionDivider({ label }: { label: string }) {
   );
 }
 
-function CapacityBar({ count, max }: { count: number; max: number }) {
+// Membership headcount health — distinct from a slot/seat capacity ratio.
+// <5 struggling · 5-12 growing · 13 hit Net Revelation · 14+ thriving.
+function headcountColor(count: number): string {
+  if (count < 5)  return "var(--brand-danger)";
+  if (count <= 12) return "var(--brand-warning)";
+  if (count === 13) return "var(--brand-success)";
+  return "#22C55E";
+}
+
+function CapacityBar({ count, max, mode = "capacity" }: { count: number; max: number; mode?: "capacity" | "headcount" }) {
   const pct   = Math.min(100, Math.round((count / Math.max(max, 1)) * 100));
-  const color = pct >= 100 ? "var(--brand-danger)" : pct >= 75 ? "var(--brand-warning)" : "var(--brand-success)";
+  const color = mode === "headcount"
+    ? headcountColor(count)
+    : pct >= 100 ? "var(--brand-danger)" : pct >= 75 ? "var(--brand-warning)" : "var(--brand-success)";
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 rounded-pill overflow-hidden" style={{ height: 6, background: "var(--brand-border)" }}>
@@ -931,7 +942,7 @@ export default function OverviewPage() {
                     </span>
                   )}
                 </span>
-                <div className="col-span-2"><CapacityBar count={cell._count.members} max={10} /></div>
+                <div className="col-span-2"><CapacityBar count={cell._count.members} max={10} mode="headcount" /></div>
                 <div className="col-span-2"><CapacityBar count={cell._count.shepherds} max={2} /></div>
               </div>
             </Link>
