@@ -146,6 +146,10 @@ export async function GET(request: Request) {
 
   const birthdays = upcomingBirthdays(allMembers, 30);
 
+  const membersInDepartment = await prisma.member.count({
+    where: { cellId, departments: { some: {} } },
+  });
+
   return NextResponse.json({
     cell: {
       id:        cell.id,
@@ -156,7 +160,7 @@ export async function GET(request: Request) {
     },
     stats: {
       // Primary
-      totalMembers, activeMembers, inactiveMembers, systemUsers,
+      totalMembers, activeMembers, inactiveMembers, systemUsers, membersInDepartment,
       totalShepherds: shepherds.length, occupiedSlots, unoccupiedSlots,
       // Demographics
       maleCount, femaleCount, havePhone, haveDOB,

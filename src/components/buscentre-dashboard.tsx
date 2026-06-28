@@ -72,6 +72,7 @@ type BuscentreOverview = {
     activeMembers:            number;
     inactiveMembers:          number;
     systemUsers:              number;
+    membersInDepartment:      number;
     totalShepherds:           number;
     unoccupiedSlots:          number;
     cellShepherdsAssigned:    number;
@@ -601,7 +602,8 @@ export function BuscentreDashboard({ buscentreId }: { buscentreId?: string }) {
       {/* ── Primary KPIs ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <SummaryCard title="Total Members"  value={stats.totalMembers}
-          icon={<Users className="h-4 w-4" />} />
+          icon={<Users className="h-4 w-4" />}
+          subtitle={`${stats.membersInDepartment} in a department (${stats.totalMembers > 0 ? Math.round((stats.membersInDepartment / stats.totalMembers) * 100) : 0}%)`} />
         <SummaryCard title="Active"         value={stats.activeMembers}
           icon={<UserCheck className="h-4 w-4" />}
           subtitle={`${stats.totalMembers > 0 ? Math.round((stats.activeMembers / stats.totalMembers) * 100) : 0}% of total`} />

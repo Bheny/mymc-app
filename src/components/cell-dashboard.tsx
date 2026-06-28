@@ -56,10 +56,11 @@ type CellOverview = {
   };
   stats: {
     // Primary
-    totalMembers:    number;
-    activeMembers:   number;
-    inactiveMembers: number;
-    systemUsers:     number;
+    totalMembers:        number;
+    activeMembers:       number;
+    inactiveMembers:     number;
+    systemUsers:         number;
+    membersInDepartment: number;
     totalShepherds:  number;
     occupiedSlots:   number;
     unoccupiedSlots: number;
@@ -677,7 +678,8 @@ export function CellDashboard({ cellId }: { cellId?: string }) {
 
       {/* ── Primary KPIs ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <SummaryCard title="Total Members"  value={stats.totalMembers}    icon={<Users className="h-4 w-4" />} />
+        <SummaryCard title="Total Members"  value={stats.totalMembers}    icon={<Users className="h-4 w-4" />}
+          subtitle={`${stats.membersInDepartment} in a department (${stats.totalMembers > 0 ? Math.round((stats.membersInDepartment / stats.totalMembers) * 100) : 0}%)`} />
         <SummaryCard title="Active"         value={stats.activeMembers}   icon={<UserCheck className="h-4 w-4" />}
           subtitle={`${stats.totalMembers > 0 ? Math.round((stats.activeMembers / stats.totalMembers) * 100) : 0}% of total`} />
         <SummaryCard title="Inactive"       value={stats.inactiveMembers} icon={<UserX className="h-4 w-4" />} />

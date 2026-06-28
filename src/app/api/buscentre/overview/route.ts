@@ -114,6 +114,10 @@ export async function GET(request: Request) {
 
   const birthdays = upcomingBirthdays(allMembers, 30);
 
+  const membersInDepartment = await prisma.member.count({
+    where: { cell: { buscentreId }, departments: { some: {} } },
+  });
+
   return NextResponse.json({
     buscentre: {
       id:       buscentre.id,
@@ -128,6 +132,7 @@ export async function GET(request: Request) {
       activeMembers,
       inactiveMembers,
       systemUsers,
+      membersInDepartment,
       totalShepherds,
       unoccupiedSlots,
       cellShepherdsAssigned,

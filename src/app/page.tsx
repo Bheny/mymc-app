@@ -45,10 +45,11 @@ type TopShepherd = {
 };
 
 type DashboardData = {
-  totalMembers:    number;
-  activeMembers:   number;
-  inactiveMembers: number;
-  systemUsers:     number;
+  totalMembers:        number;
+  activeMembers:       number;
+  inactiveMembers:     number;
+  systemUsers:         number;
+  membersInDepartment: number;
   totalMCs:        number;
   totalBuscentres: number;
   totalCells:      number;
@@ -159,6 +160,7 @@ type CellStats = {
   totalMembers: number; activeMembers: number;
   inactiveMembers: number; occupiedSlots: number;
   totalShepherds: number; unoccupiedSlots: number;
+  membersInDepartment: number;
 };
 type CellInfo = {
   name: string;
@@ -247,7 +249,8 @@ function CellShepherdOverview() {
       {/* KPIs */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <SummaryCard title="Total Members" value={stats.totalMembers}   icon={<Users className="h-4 w-4" />} />
+          <SummaryCard title="Total Members" value={stats.totalMembers}   icon={<Users className="h-4 w-4" />}
+            subtitle={`${stats.membersInDepartment} in a department (${stats.totalMembers > 0 ? Math.round((stats.membersInDepartment / stats.totalMembers) * 100) : 0}%)`} />
           <SummaryCard title="Active"        value={stats.activeMembers}  subtitle={`${stats.totalMembers > 0 ? Math.round((stats.activeMembers / stats.totalMembers) * 100) : 0}% of total`} icon={<UserCheck className="h-4 w-4" />} />
           <SummaryCard title="Inactive"      value={stats.inactiveMembers} icon={<Users className="h-4 w-4" />} />
           <SummaryCard title="Shepherds"     value={`${stats.occupiedSlots}/${stats.totalShepherds}`} subtitle={stats.unoccupiedSlots > 0 ? `${stats.unoccupiedSlots} unassigned` : "All filled"} icon={<UserCircle className="h-4 w-4" />} />
@@ -408,6 +411,7 @@ type BuscentreData = {
     inactiveMembers: number; systemUsers: number; totalShepherds: number;
     unoccupiedSlots: number; cellShepherdsAssigned: number;
     cellShepherdsUnassigned: number; newThisMonth: number; newThisYear: number;
+    membersInDepartment: number;
   };
   cells: BCell[];
   recentMembers: { id: string; firstName: string; lastName: string; isActive: boolean; isUser: boolean; createdAt: string; cell: { name: string } | null }[];
@@ -498,7 +502,8 @@ function BuscentreHeadOverview() {
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <SummaryCard title="Total Members"  value={stats.totalMembers}   icon={<Users className="h-4 w-4" />} />
+        <SummaryCard title="Total Members"  value={stats.totalMembers}   icon={<Users className="h-4 w-4" />}
+          subtitle={`${stats.membersInDepartment} in a department (${stats.totalMembers > 0 ? Math.round((stats.membersInDepartment / stats.totalMembers) * 100) : 0}%)`} />
         <SummaryCard title="Active"         value={stats.activeMembers}  icon={<UserCheck className="h-4 w-4" />} subtitle={`${activePct}% of total`} />
         <SummaryCard title="Cells"          value={stats.totalCells}     icon={<Home className="h-4 w-4" />} subtitle={`${stats.cellShepherdsUnassigned} without cell shepherd`} />
         <SummaryCard title="Unoccupied Slots" value={stats.unoccupiedSlots} icon={<UserCircle className="h-4 w-4" />} subtitle="Shepherd slots needing assignment" />
@@ -737,7 +742,8 @@ export default function OverviewPage() {
 
       {/* ── KPI cards ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <SummaryCard title="Total Members" value={data.totalMembers} icon={<Users className="h-4 w-4" />} />
+        <SummaryCard title="Total Members" value={data.totalMembers} icon={<Users className="h-4 w-4" />}
+          subtitle={`${data.membersInDepartment} in a department (${data.totalMembers > 0 ? Math.round((data.membersInDepartment / data.totalMembers) * 100) : 0}%)`} />
         <SummaryCard title="Active"        value={data.activeMembers} subtitle={`${activePct}% of total`} icon={<UserCheck className="h-4 w-4" />} />
         <SummaryCard title="System Users"  value={data.systemUsers}   icon={<ShieldCheck className="h-4 w-4" />} />
         <SummaryCard title="Open Warnings" value={data.totalOpenWarnings} icon={<AlertTriangle className="h-4 w-4" />} />

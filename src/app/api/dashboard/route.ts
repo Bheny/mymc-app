@@ -17,6 +17,7 @@ export async function GET() {
     activeMembers,
     inactiveMembers,
     systemUsers,
+    membersInDepartment,
     totalMCs,
     totalBuscentres,
     totalCells,
@@ -34,6 +35,7 @@ export async function GET() {
     prisma.member.count({ where: { isActive: true } }),
     prisma.member.count({ where: { isActive: false } }),
     prisma.member.count({ where: { isUser: true } }),
+    prisma.member.count({ where: { departments: { some: {} } } }),
 
     // Org structure counts
     prisma.megaChurch.count(),
@@ -113,6 +115,7 @@ export async function GET() {
     activeMembers,
     inactiveMembers,
     systemUsers,
+    membersInDepartment,
 
     // Org structure
     totalMCs,
