@@ -1018,6 +1018,7 @@ export default function MembersPage() {
   const [members,         setMembers]         = useState<Member[]>([]);
   const [loading,         setLoading]         = useState(true);
   const [query,           setQuery]           = useState("");
+  const [debouncedQuery,  setDebouncedQuery]  = useState("");
   const [filter,          setFilter]          = useState<"all" | "active" | "inactive" | "system">("all");
   const [viewingMemberId, setViewingMemberId] = useState<string | null>(null);
   const [editing,         setEditing]         = useState<Member | null>(null);
@@ -1032,11 +1033,18 @@ export default function MembersPage() {
   const scopedShepherdId  = role === "shepherd"       ? (session?.user?.shepherdId ?? null) : null;
   const scopedBuscentreId = role === "buscentre_head" ? (activeView?.buscentreId ?? session?.user?.buscentreId) : null;
 
+  // Debounce search — only the API call waits; the input stays bound to the
+  // raw `query` state so typing itself is never delayed.
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query), 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
   const loadMembers = useCallback(async () => {
     if (!ready) return; // wait for acting-roles before scoping the query
     setLoading(true);
     const params = new URLSearchParams();
-    if (query) params.set("q", query);
+    if (debouncedQuery) params.set("q", debouncedQuery);
     if (filter === "active")   params.set("isActive", "true");
     if (filter === "inactive") params.set("isActive", "false");
     if (filter === "system")   params.set("isUser", "true");
@@ -1047,15 +1055,9 @@ export default function MembersPage() {
     const res = await fetch(`/api/members?${params.toString()}`);
     if (res.ok) setMembers(await res.json());
     setLoading(false);
-  }, [ready, query, filter, scopedBuscentreId, scopedCellId, scopedShepherdId]);
+  }, [ready, debouncedQuery, filter, scopedBuscentreId, scopedCellId, scopedShepherdId]);
 
   useEffect(() => { loadMembers(); }, [loadMembers]);
-
-  // Debounce search
-  useEffect(() => {
-    const t = setTimeout(loadMembers, 300);
-    return () => clearTimeout(t);
-  }, [query, loadMembers]);
 
   async function handleDelete(id: string) {
     setDeleting(id);
@@ -1072,7 +1074,7 @@ export default function MembersPage() {
   const system   = members.filter((m) => m.isUser).length;
 
   // Reset to page 1 whenever the underlying filtered set changes
-  useEffect(() => { setPage(1); }, [query, filter, scopedBuscentreId, scopedCellId, scopedShepherdId]);
+  useEffect(() => { setPage(1); }, [debouncedQuery, filter, scopedBuscentreId, scopedCellId, scopedShepherdId]);
 
   const totalPages     = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentPage    = Math.min(page, totalPages);
