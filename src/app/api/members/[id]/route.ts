@@ -33,6 +33,7 @@ const MEMBER_INCLUDE = {
       },
     },
   },
+  departments: { select: { department: { select: { id: true, name: true } } } },
 } as const;
 
 export async function GET(_req: Request, { params }: Params) {
@@ -59,7 +60,21 @@ export async function PATCH(request: Request, { params }: Params) {
     hometown, previousChurch,
     parentName, parentPhone,
     emergencyName, emergencyPhone, emergencyRelation,
+    departmentIds,
   } = body;
+
+  if (departmentIds !== undefined && (!Array.isArray(departmentIds) || departmentIds.length > 2)) {
+    return NextResponse.json({ error: "A member can belong to at most 2 departments" }, { status: 400 });
+  }
+
+  if (departmentIds !== undefined) {
+    await prisma.memberDepartment.deleteMany({ where: { memberId: params.id } });
+    if (departmentIds.length) {
+      await prisma.memberDepartment.createMany({
+        data: departmentIds.map((departmentId: string) => ({ memberId: params.id, departmentId })),
+      });
+    }
+  }
 
   const member = await prisma.member.update({
     where: { id: params.id },

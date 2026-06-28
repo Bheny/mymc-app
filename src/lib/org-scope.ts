@@ -38,3 +38,11 @@ export function canCreateCell(
     default:               return false;
   }
 }
+
+export function canManageDepartments(user: ScopeUser, branchId: string): boolean {
+  switch (user.role) {
+    case "admin":          return true;
+    case "chief_shepherd": return user.branchId === branchId;
+    default:               return false;
+  }
+}

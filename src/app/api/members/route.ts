@@ -80,10 +80,15 @@ export async function POST(request: Request) {
     level = "shepherd",          // "shepherd" | "cell" | "buscentre" | "mc"
     shepherdId, cellId, buscentreId, mcId,
     firstName, lastName, phone, email, gender, dateOfBirth, joinedDate,
+    departmentIds,
   } = body;
 
   if (!firstName?.trim() || !lastName?.trim()) {
     return NextResponse.json({ error: "firstName and lastName are required" }, { status: 400 });
+  }
+
+  if (departmentIds !== undefined && (!Array.isArray(departmentIds) || departmentIds.length > 2)) {
+    return NextResponse.json({ error: "A member can belong to at most 2 departments" }, { status: 400 });
   }
 
   // Validate the placement anchor exists and build data payload
@@ -142,6 +147,9 @@ export async function POST(request: Request) {
       gender:      gender     || null,
       dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
       joinedDate:  joinedDate  ? new Date(joinedDate)  : null,
+      ...(departmentIds?.length
+        ? { departments: { create: departmentIds.map((departmentId: string) => ({ departmentId })) } }
+        : {}),
     },
     include: MEMBER_INCLUDE,
   });

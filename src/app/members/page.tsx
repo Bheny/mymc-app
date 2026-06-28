@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { AddMemberModal } from "@/components/add-member-modal";
 import { SummaryCard } from "@/components/summary-card";
+import { DepartmentPicker } from "@/components/department-picker";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -177,6 +178,7 @@ type MemberDetail = Member & {
   emergencyName?:     string | null;
   emergencyPhone?:    string | null;
   emergencyRelation?: string | null;
+  departments?: { department: { id: string; name: string } }[];
   // Populated if this member IS a shepherd in some cell
   shepherdRole?: {
     id:     string;
@@ -594,6 +596,10 @@ function EditMemberSheet({
   const [emergencyPhone,    setEmergencyPhone]    = useState("");
   const [emergencyRelation, setEmergencyRelation] = useState("");
 
+  // ── Departments ──
+  const [departments,   setDepartments]   = useState<ScopeOption[]>([]);
+  const [departmentIds, setDepartmentIds] = useState<string[]>([]);
+
   // ── Reassignment ──
   const [reassigning,  setReassigning]  = useState(false);
   const [level,        setLevel]        = useState<MemberLevel>("shepherd");
@@ -625,6 +631,7 @@ function EditMemberSheet({
     setDateOfBirth(""); setHometown(""); setPreviousChurch("");
     setParentName(""); setParentPhone("");
     setEmergencyName(""); setEmergencyPhone(""); setEmergencyRelation("");
+    setDepartmentIds([]);
     // Fetch full detail to get extended profile + dateOfBirth
     fetch(`/api/members/${member.id}`)
       .then((r) => r.json())
@@ -637,7 +644,13 @@ function EditMemberSheet({
         setEmergencyName(d.emergencyName ?? "");
         setEmergencyPhone(d.emergencyPhone ?? "");
         setEmergencyRelation(d.emergencyRelation ?? "");
+        setDepartmentIds((d.departments ?? []).map((md) => md.department.id));
       })
+      .catch(() => {});
+
+    fetch("/api/org/departments")
+      .then((r) => r.json())
+      .then((d) => setDepartments(Array.isArray(d.departments) ? d.departments : []))
       .catch(() => {});
   }, [member]);
 
@@ -710,6 +723,7 @@ function EditMemberSheet({
         emergencyName:     emergencyName     || null,
         emergencyPhone:    emergencyPhone    || null,
         emergencyRelation: emergencyRelation || null,
+        departmentIds,
         ...placementPatch,
       }),
     });
@@ -801,6 +815,11 @@ function EditMemberSheet({
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
+              </div>
+
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Departments</FieldLabel>
+                <DepartmentPicker departments={departments} selected={departmentIds} onChange={setDepartmentIds} />
               </div>
             </section>
 

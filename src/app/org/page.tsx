@@ -720,6 +720,14 @@ export default function OrgPage() {
               </button>
             </Link>
           )}
+          {(role === "admin" || role === "chief_shepherd") && (
+            <Link href="/org/departments">
+              <Button variant="outline" className="h-9 px-3 sm:px-4 text-[13px] sm:text-[14px] font-medium"
+                style={{ borderRadius: 8, borderColor: "var(--brand-border)" }}>
+                Departments
+              </Button>
+            </Link>
+          )}
           <Link href="/org/shepherd-candidates">
             <Button variant="outline" className="h-9 px-3 sm:px-4 text-[13px] sm:text-[14px] font-medium"
               style={{ borderRadius: 8, borderColor: "var(--brand-border)" }}>

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/sheet";
 import { UserPlus, Plus, Loader2, Lock } from "lucide-react";
 import { useActiveRole } from "@/hooks/use-active-role";
+import { DepartmentPicker } from "@/components/department-picker";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -110,6 +111,8 @@ export function AddMemberModal({ onAdded }: { onAdded?: () => void }) {
   const [email,      setEmail]      = useState("");
   const [gender,     setGender]     = useState("");
   const [joinedDate, setJoinedDate] = useState("");
+  const [departments,   setDepartments]   = useState<Option[]>([]);
+  const [departmentIds, setDepartmentIds] = useState<string[]>([]);
 
   // UI
   const [busy,             setBusy]             = useState(false);
@@ -133,6 +136,11 @@ export function AddMemberModal({ onAdded }: { onAdded?: () => void }) {
 
     fetch("/api/org/mega-churches")
       .then((r) => r.json()).then(setMCs).catch(() => {});
+
+    fetch("/api/org/departments")
+      .then((r) => r.json())
+      .then((d) => setDepartments(Array.isArray(d.departments) ? d.departments : []))
+      .catch(() => {});
 
     const params = new URLSearchParams();
     if (actingBuscentreId) params.set("actingBuscentreId", actingBuscentreId);
@@ -221,7 +229,7 @@ export function AddMemberModal({ onAdded }: { onAdded?: () => void }) {
     setCellId(      lockedCell      ? (scopeCtx?.cell?.id      ?? "") : "");
     setShepherdId("");
     setFirstName(""); setLastName(""); setPhone("");
-    setEmail(""); setGender(""); setJoinedDate("");
+    setEmail(""); setGender(""); setJoinedDate(""); setDepartmentIds([]);
     setShepherdWarning(""); setError("");
   }
 
@@ -250,6 +258,7 @@ export function AddMemberModal({ onAdded }: { onAdded?: () => void }) {
         firstName: firstName.trim(), lastName: lastName.trim(),
         phone: phone || null, email: email || null,
         gender: gender || null, joinedDate: joinedDate || null,
+        departmentIds,
       }),
     });
     setBusy(false);
@@ -453,6 +462,10 @@ export function AddMemberModal({ onAdded }: { onAdded?: () => void }) {
           <Field label="Date joined">
             <Input type="date" value={joinedDate} onChange={(e) => setJoinedDate(e.target.value)}
               className="h-10 text-[14px]" style={{ borderColor: "var(--brand-border)" }} />
+          </Field>
+
+          <Field label="Departments">
+            <DepartmentPicker departments={departments} selected={departmentIds} onChange={setDepartmentIds} />
           </Field>
 
           {error && <p className="text-[13px]" style={{ color: "var(--brand-danger)" }}>{error}</p>}
