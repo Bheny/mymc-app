@@ -62,6 +62,23 @@ enum WtgfStatus {
   FAILED
 }
 
+enum SalaryRange {
+  BELOW_1000
+  RANGE_1000_2999
+  RANGE_3000_4999
+  RANGE_5000_9999
+  RANGE_10000_PLUS
+}
+
+enum SchoolLevel {
+  PRIMARY
+  JHS
+  SHS
+  TERTIARY
+  POSTGRADUATE
+  VOCATIONAL
+}
+
 // ─── Users ───────────────────────────────────────────────────────────────────
 
 model User {
@@ -222,6 +239,21 @@ model Member {
   emergencyName         String?  @map("emergency_name")
   emergencyPhone        String?  @map("emergency_phone")
   emergencyRelation     String?  @map("emergency_relation")
+
+  // Employment / profession — salary visibility is restricted to cell_shepherd+ in the API layer
+  isEmployed  Boolean?     @map("is_employed")
+  employer    String?      @map("employer")
+  occupation  String?      @map("occupation")
+  salaryRange SalaryRange? @map("salary_range")
+
+  ownsBusiness Boolean? @map("owns_business")
+  businessName String?  @map("business_name")
+  businessType String?  @map("business_type")
+
+  isStudent      Boolean?     @map("is_student")
+  schoolLevel    SchoolLevel? @map("school_level")
+  schoolName     String?      @map("school_name")
+  programOfStudy String?      @map("program_of_study")
 
   shepherd  Shepherd?   @relation(fields: [shepherdId],  references: [id])
   cell      Cell?       @relation(fields: [cellId],      references: [id])

@@ -18,6 +18,7 @@ import {
   Search, Pencil, Trash2, Users, UserCheck, UserX,
   ShieldCheck, Phone, Mail, Calendar, MapPin,
   UserCircle, ShieldAlert, ChevronRight, ChevronLeft,
+  Briefcase, Wallet, GraduationCap,
 } from "lucide-react";
 import { AddMemberModal } from "@/components/add-member-modal";
 import { SummaryCard } from "@/components/summary-card";
@@ -142,6 +143,32 @@ const LEVEL_LABELS: Record<MemberLevel, string> = {
   mc:        "MC level",
 };
 
+const SALARY_LABELS: Record<string, string> = {
+  BELOW_1000:       "Below GH₵1,000",
+  RANGE_1000_2999:  "GH₵1,000 – 2,999",
+  RANGE_3000_4999:  "GH₵3,000 – 4,999",
+  RANGE_5000_9999:  "GH₵5,000 – 9,999",
+  RANGE_10000_PLUS: "GH₵10,000+",
+};
+
+const SCHOOL_LEVEL_LABELS: Record<string, string> = {
+  PRIMARY:      "Primary",
+  JHS:          "JHS",
+  SHS:          "SHS",
+  TERTIARY:     "Tertiary (University/College)",
+  POSTGRADUATE: "Postgraduate",
+  VOCATIONAL:   "Vocational / Technical",
+};
+
+// Mirrors src/lib/permissions.ts roleRank — kept local so client components
+// don't pull in the Prisma client bundle just for a rank lookup.
+const ROLE_RANK: Record<string, number> = {
+  admin: 0, chief_shepherd: 1, mc_pastor: 2, buscentre_head: 3, cell_shepherd: 4, shepherd: 5,
+};
+function canViewSalary(role: string | null | undefined): boolean {
+  return !!role && (ROLE_RANK[role] ?? 99) <= ROLE_RANK.cell_shepherd;
+}
+
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
     <label className="text-[12px] font-medium uppercase tracking-[0.04em]"
@@ -179,6 +206,18 @@ type MemberDetail = Member & {
   emergencyName?:     string | null;
   emergencyPhone?:    string | null;
   emergencyRelation?: string | null;
+  // Employment / profession — salaryRange comes back null if the viewer isn't permitted to see it
+  isEmployed?:      boolean | null;
+  employer?:        string | null;
+  occupation?:      string | null;
+  salaryRange?:     string | null;
+  ownsBusiness?:    boolean | null;
+  businessName?:    string | null;
+  businessType?:    string | null;
+  isStudent?:       boolean | null;
+  schoolLevel?:     string | null;
+  schoolName?:      string | null;
+  programOfStudy?:  string | null;
   departments?: { department: { id: string; name: string } }[];
   // Populated if this member IS a shepherd in some cell
   shepherdRole?: {
@@ -295,6 +334,10 @@ function MemberDetailSheet({
   onEdit:    (m: Member) => void;
   onDeleted: () => void;
 }) {
+  const { data: session } = useSession();
+  const { activeView } = useActiveRole();
+  const canSeeSalary = canViewSalary(activeView?.role ?? session?.user?.role);
+
   const [detail,    setDetail]    = useState<MemberDetail | null>(null);
   const [loading,   setLoading]   = useState(false);
   const [deleting,  setDeleting]  = useState(false);
@@ -431,6 +474,30 @@ function MemberDetailSheet({
               <DetailRow icon={Users} label="Name"         value={detail.emergencyName} />
               <DetailRow icon={Phone} label="Phone"        value={detail.emergencyPhone} />
               <DetailRow icon={UserCircle} label="Relation" value={detail.emergencyRelation} />
+
+              {/* ── Employment ── */}
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em] pt-5 pb-3"
+                 style={{ color: "var(--brand-muted)" }}>Employment</p>
+              <DetailRow icon={Briefcase} label="Employed"  value={detail.isEmployed == null ? null : detail.isEmployed ? "Yes" : "No"} />
+              <DetailRow icon={Briefcase} label="Employer"   value={detail.employer} />
+              <DetailRow icon={Briefcase} label="Occupation" value={detail.occupation} />
+              <DetailRow icon={Wallet} label="Salary range"
+                value={canSeeSalary ? (detail.salaryRange ? SALARY_LABELS[detail.salaryRange] ?? detail.salaryRange : null) : "Restricted"} />
+
+              {/* ── Business ── */}
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em] pt-5 pb-3"
+                 style={{ color: "var(--brand-muted)" }}>Business</p>
+              <DetailRow icon={Briefcase} label="Owns business" value={detail.ownsBusiness == null ? null : detail.ownsBusiness ? "Yes" : "No"} />
+              <DetailRow icon={Briefcase} label="Business name" value={detail.businessName} />
+              <DetailRow icon={Briefcase} label="Business type" value={detail.businessType} />
+
+              {/* ── Education ── */}
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em] pt-5 pb-3"
+                 style={{ color: "var(--brand-muted)" }}>Education</p>
+              <DetailRow icon={GraduationCap} label="Student"  value={detail.isStudent == null ? null : detail.isStudent ? "Yes" : "No"} />
+              <DetailRow icon={GraduationCap} label="Level"    value={detail.schoolLevel ? SCHOOL_LEVEL_LABELS[detail.schoolLevel] ?? detail.schoolLevel : null} />
+              <DetailRow icon={GraduationCap} label="School"   value={detail.schoolName} />
+              <DetailRow icon={GraduationCap} label="Program"  value={detail.programOfStudy} />
 
               {/* ── Assignment ── */}
               <p className="text-[11px] font-medium uppercase tracking-[0.06em] pt-5 pb-3"
@@ -594,6 +661,23 @@ function EditMemberSheet({
   const [emergencyPhone,    setEmergencyPhone]    = useState("");
   const [emergencyRelation, setEmergencyRelation] = useState("");
 
+  // ── Employment / business / education ──
+  const [isEmployed,     setIsEmployed]     = useState("");
+  const [employer,       setEmployer]       = useState("");
+  const [occupation,     setOccupation]     = useState("");
+  const [salaryRange,    setSalaryRange]    = useState("");
+  const [ownsBusiness,   setOwnsBusiness]   = useState("");
+  const [businessName,   setBusinessName]   = useState("");
+  const [businessType,   setBusinessType]   = useState("");
+  const [isStudent,      setIsStudent]      = useState("");
+  const [schoolLevel,    setSchoolLevel]    = useState("");
+  const [schoolName,     setSchoolName]     = useState("");
+  const [programOfStudy, setProgramOfStudy] = useState("");
+
+  const { data: session } = useSession();
+  const { activeView } = useActiveRole();
+  const canSeeSalary = canViewSalary(activeView?.role ?? session?.user?.role);
+
   // ── Departments ──
   const [departments,   setDepartments]   = useState<ScopeOption[]>([]);
   const [departmentIds, setDepartmentIds] = useState<string[]>([]);
@@ -629,6 +713,9 @@ function EditMemberSheet({
     setDateOfBirth(""); setHometown(""); setPreviousChurch("");
     setParentName(""); setParentPhone("");
     setEmergencyName(""); setEmergencyPhone(""); setEmergencyRelation("");
+    setIsEmployed(""); setEmployer(""); setOccupation(""); setSalaryRange("");
+    setOwnsBusiness(""); setBusinessName(""); setBusinessType("");
+    setIsStudent(""); setSchoolLevel(""); setSchoolName(""); setProgramOfStudy("");
     setDepartmentIds([]);
     // Fetch full detail to get extended profile + dateOfBirth
     fetch(`/api/members/${member.id}`)
@@ -642,6 +729,17 @@ function EditMemberSheet({
         setEmergencyName(d.emergencyName ?? "");
         setEmergencyPhone(d.emergencyPhone ?? "");
         setEmergencyRelation(d.emergencyRelation ?? "");
+        setIsEmployed(d.isEmployed == null ? "" : d.isEmployed ? "yes" : "no");
+        setEmployer(d.employer ?? "");
+        setOccupation(d.occupation ?? "");
+        setSalaryRange(d.salaryRange ?? "");
+        setOwnsBusiness(d.ownsBusiness == null ? "" : d.ownsBusiness ? "yes" : "no");
+        setBusinessName(d.businessName ?? "");
+        setBusinessType(d.businessType ?? "");
+        setIsStudent(d.isStudent == null ? "" : d.isStudent ? "yes" : "no");
+        setSchoolLevel(d.schoolLevel ?? "");
+        setSchoolName(d.schoolName ?? "");
+        setProgramOfStudy(d.programOfStudy ?? "");
         setDepartmentIds((d.departments ?? []).map((md) => md.department.id));
       })
       .catch(() => {});
@@ -721,6 +819,17 @@ function EditMemberSheet({
         emergencyName:     emergencyName     || null,
         emergencyPhone:    emergencyPhone    || null,
         emergencyRelation: emergencyRelation || null,
+        isEmployed:   isEmployed === "" ? null : isEmployed === "yes",
+        employer:     employer   || null,
+        occupation:   occupation || null,
+        ...(canSeeSalary && { salaryRange: salaryRange || null }),
+        ownsBusiness: ownsBusiness === "" ? null : ownsBusiness === "yes",
+        businessName: businessName || null,
+        businessType: businessType || null,
+        isStudent:      isStudent === "" ? null : isStudent === "yes",
+        schoolLevel:    schoolLevel    || null,
+        schoolName:     schoolName     || null,
+        programOfStudy: programOfStudy || null,
         departmentIds,
         ...placementPatch,
       }),
@@ -891,6 +1000,147 @@ function EditMemberSheet({
                        placeholder="e.g. Spouse, Sibling, Parent" className="h-10 text-[14px]"
                        style={{ borderColor: "var(--brand-border)" }} />
               </div>
+            </section>
+
+            <div className="h-px" style={{ background: "var(--brand-border)" }} />
+
+            {/* ── Employment ── */}
+            <section className="flex flex-col gap-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em]"
+                 style={{ color: "var(--brand-muted)" }}>Employment</p>
+
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Employed?</FieldLabel>
+                <select value={isEmployed} onChange={(e) => setIsEmployed(e.target.value)}
+                        className="h-10 px-3 text-[14px] rounded-lg"
+                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                  <option value="">— Not recorded —</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+
+              {isEmployed === "yes" && (
+                <>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel>Employer</FieldLabel>
+                      <Input value={employer} onChange={(e) => setEmployer(e.target.value)}
+                             placeholder="e.g. Ghana Commercial Bank" className="h-10 text-[14px]"
+                             style={{ borderColor: "var(--brand-border)" }} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel>Occupation</FieldLabel>
+                      <Input value={occupation} onChange={(e) => setOccupation(e.target.value)}
+                             placeholder="e.g. Accountant" className="h-10 text-[14px]"
+                             style={{ borderColor: "var(--brand-border)" }} />
+                    </div>
+                  </div>
+
+                  {canSeeSalary ? (
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel>Salary range (monthly)</FieldLabel>
+                      <select value={salaryRange} onChange={(e) => setSalaryRange(e.target.value)}
+                              className="h-10 px-3 text-[14px] rounded-lg"
+                              style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                        <option value="">— Not recorded —</option>
+                        {Object.entries(SALARY_LABELS).map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  ) : (
+                    <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>
+                      Salary range is only visible to cell shepherds and above.
+                    </p>
+                  )}
+                </>
+              )}
+            </section>
+
+            <div className="h-px" style={{ background: "var(--brand-border)" }} />
+
+            {/* ── Business ── */}
+            <section className="flex flex-col gap-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em]"
+                 style={{ color: "var(--brand-muted)" }}>Business</p>
+
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Owns a business?</FieldLabel>
+                <select value={ownsBusiness} onChange={(e) => setOwnsBusiness(e.target.value)}
+                        className="h-10 px-3 text-[14px] rounded-lg"
+                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                  <option value="">— Not recorded —</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+
+              {ownsBusiness === "yes" && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel>Business name</FieldLabel>
+                    <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)}
+                           placeholder="e.g. Grace Fashions" className="h-10 text-[14px]"
+                           style={{ borderColor: "var(--brand-border)" }} />
+                  </div>
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel>Type / industry</FieldLabel>
+                    <Input value={businessType} onChange={(e) => setBusinessType(e.target.value)}
+                           placeholder="e.g. Fashion & Tailoring" className="h-10 text-[14px]"
+                           style={{ borderColor: "var(--brand-border)" }} />
+                  </div>
+                </div>
+              )}
+            </section>
+
+            <div className="h-px" style={{ background: "var(--brand-border)" }} />
+
+            {/* ── Education ── */}
+            <section className="flex flex-col gap-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em]"
+                 style={{ color: "var(--brand-muted)" }}>Education</p>
+
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Student?</FieldLabel>
+                <select value={isStudent} onChange={(e) => setIsStudent(e.target.value)}
+                        className="h-10 px-3 text-[14px] rounded-lg"
+                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                  <option value="">— Not recorded —</option>
+                  <option value="yes">Yes</option>
+                  <option value="no">No</option>
+                </select>
+              </div>
+
+              {isStudent === "yes" && (
+                <>
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel>School level</FieldLabel>
+                    <select value={schoolLevel} onChange={(e) => setSchoolLevel(e.target.value)}
+                            className="h-10 px-3 text-[14px] rounded-lg"
+                            style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                      <option value="">— None —</option>
+                      {Object.entries(SCHOOL_LEVEL_LABELS).map(([value, label]) => (
+                        <option key={value} value={value}>{label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel>School name</FieldLabel>
+                      <Input value={schoolName} onChange={(e) => setSchoolName(e.target.value)}
+                             placeholder="e.g. KNUST" className="h-10 text-[14px]"
+                             style={{ borderColor: "var(--brand-border)" }} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel>Program of study</FieldLabel>
+                      <Input value={programOfStudy} onChange={(e) => setProgramOfStudy(e.target.value)}
+                             placeholder="e.g. BSc Computer Science" className="h-10 text-[14px]"
+                             style={{ borderColor: "var(--brand-border)" }} />
+                    </div>
+                  </div>
+                </>
+              )}
             </section>
 
             <div className="h-px" style={{ background: "var(--brand-border)" }} />

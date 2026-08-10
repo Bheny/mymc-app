@@ -99,34 +99,58 @@
   border-radius: 6px;
 }
 
-/* Login page star animations (kept from original) */
-.twinkling-stars {
-  width: 100%;
-  height: 100%;
-  background: transparent url('/path-to-star-texture.png') repeat;
-  animation: twinkling 10s infinite;
-  opacity: 0.8;
-}
-@keyframes twinkling {
-  0%   { background-position: 0 0; }
-  100% { background-position: -1000px 1000px; }
-}
-.shooting-stars {
+/* Login page decorative background — soft drifting blobs + dot grid */
+.login-blob {
   position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 100%;
-  overflow: hidden;
-  pointer-events: none;
+  border-radius: 9999px;
+  filter: blur(60px);
+  will-change: transform;
 }
-.shooting-stars::after {
-  content: '';
+.login-blob-a {
+  width: 440px;
+  height: 440px;
+  top: -140px;
+  left: -120px;
+  background: radial-gradient(circle, #3A5A9A 0%, transparent 70%);
+  opacity: 0.45;
+  animation: login-float-a 16s ease-in-out infinite;
+}
+.login-blob-b {
+  width: 380px;
+  height: 380px;
+  bottom: -150px;
+  right: -100px;
+  background: radial-gradient(circle, #1A8C6C 0%, transparent 70%);
+  opacity: 0.25;
+  animation: login-float-b 20s ease-in-out infinite;
+}
+.login-blob-c {
+  width: 260px;
+  height: 260px;
+  top: 22%;
+  right: 6%;
+  background: radial-gradient(circle, #E8EDF5 0%, transparent 70%);
+  opacity: 0.12;
+  animation: login-float-a 24s ease-in-out infinite reverse;
+}
+.login-grid {
   position: absolute;
-  top: -150px; left: 50%;
-  width: 3px; height: 150px;
-  background: linear-gradient(45deg, white, transparent);
-  animation: shooting 5s linear infinite;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(circle at 50% 35%, black, transparent 75%);
+          mask-image: radial-gradient(circle at 50% 35%, black, transparent 75%);
 }
-@keyframes shooting {
-  0%   { transform: translateX(0) translateY(0) scale(0.3); opacity: 1; }
-  100% { transform: translateX(500px) translateY(800px) scale(1.2); opacity: 0; }
+
+@keyframes login-float-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(40px, 30px) scale(1.08); }
+}
+@keyframes login-float-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-30px, -40px) scale(0.94); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-blob { animation: none !important; }
 }

@@ -3,6 +3,12 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveMemberShepherdName } from "@/lib/leadership";
+import { roleRank } from "@/lib/permissions";
+import { Role } from "@prisma/client";
+
+// Salary is sensitive — only cell_shepherd and above may see it
+const canViewSalary = (role: string | null | undefined) =>
+  !!role && roleRank(role as Role) <= roleRank("cell_shepherd");
 
 type Params = { params: { id: string } };
 
@@ -48,7 +54,8 @@ export async function GET(_req: Request, { params }: Params) {
   if (!member) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const effectiveShepherdName = await resolveMemberShepherdName(member);
-  return NextResponse.json({ ...member, effectiveShepherdName });
+  const salaryRange = canViewSalary(session.user.role) ? member.salaryRange : null;
+  return NextResponse.json({ ...member, salaryRange, effectiveShepherdName });
 }
 
 export async function PATCH(request: Request, { params }: Params) {
@@ -63,11 +70,18 @@ export async function PATCH(request: Request, { params }: Params) {
     hometown, previousChurch,
     parentName, parentPhone,
     emergencyName, emergencyPhone, emergencyRelation,
+    isEmployed, employer, occupation, salaryRange,
+    ownsBusiness, businessName, businessType,
+    isStudent, schoolLevel, schoolName, programOfStudy,
     departmentIds,
   } = body;
 
   if (departmentIds !== undefined && (!Array.isArray(departmentIds) || departmentIds.length > 2)) {
     return NextResponse.json({ error: "A member can belong to at most 2 departments" }, { status: 400 });
+  }
+
+  if (salaryRange !== undefined && !canViewSalary(session.user.role)) {
+    return NextResponse.json({ error: "Not permitted to set salary range" }, { status: 403 });
   }
 
   if (departmentIds !== undefined) {
@@ -100,11 +114,25 @@ export async function PATCH(request: Request, { params }: Params) {
       ...(emergencyName     !== undefined && { emergencyName }),
       ...(emergencyPhone    !== undefined && { emergencyPhone }),
       ...(emergencyRelation !== undefined && { emergencyRelation }),
+      // Employment / profession
+      ...(isEmployed  !== undefined && { isEmployed }),
+      ...(employer    !== undefined && { employer }),
+      ...(occupation  !== undefined && { occupation }),
+      ...(salaryRange !== undefined && { salaryRange }),
+      ...(ownsBusiness !== undefined && { ownsBusiness }),
+      ...(businessName !== undefined && { businessName }),
+      ...(businessType !== undefined && { businessType }),
+      ...(isStudent      !== undefined && { isStudent }),
+      ...(schoolLevel    !== undefined && { schoolLevel }),
+      ...(schoolName     !== undefined && { schoolName }),
+      ...(programOfStudy !== undefined && { programOfStudy }),
     },
     include: MEMBER_INCLUDE,
   });
 
-  return NextResponse.json({ ...member, effectiveShepherdName: await resolveMemberShepherdName(member) });
+  const effectiveShepherdName = await resolveMemberShepherdName(member);
+  const responseSalaryRange = canViewSalary(session.user.role) ? member.salaryRange : null;
+  return NextResponse.json({ ...member, salaryRange: responseSalaryRange, effectiveShepherdName });
 }
 
 export async function DELETE(_req: Request, { params }: Params) {
