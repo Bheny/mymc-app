@@ -1,14 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ClipboardList } from "lucide-react";
+import { ClipboardList, Info } from "lucide-react";
 
 type Period = "month" | "year";
 
 type ServiceStats = {
-  avgPresent:     number;
-  attendanceRate: number;
-  serviceCount:   number;
+  serviceCount:      number;
+  medianPresent:     number;
+  avgPresent:        number;
+  attendanceRate:    number; // median-based — the headline %
+  avgAttendanceRate: number; // mean-based — shown for comparison
 };
 
 type AttendanceData = {
@@ -20,6 +22,10 @@ type AttendanceData = {
   specialMeeting:   ServiceStats;
 };
 
+// Below this many services in the period, a single unusual week can swing the
+// number a lot — shown in neutral grey instead of a red/amber/green verdict.
+const LOW_SAMPLE_THRESHOLD = 3;
+
 function StatCard({
   label, stats, activeMembers,
 }: {
@@ -27,9 +33,10 @@ function StatCard({
   stats:         ServiceStats;
   activeMembers: number;
 }) {
-  const hasData = stats.serviceCount > 0;
+  const hasData   = stats.serviceCount > 0;
+  const lowSample = hasData && stats.serviceCount < LOW_SAMPLE_THRESHOLD;
 
-  const rateColor =
+  const rateColor = lowSample ? "var(--brand-muted)" :
     stats.attendanceRate >= 75 ? "var(--brand-success)" :
     stats.attendanceRate >= 50 ? "#854F0B" :
     "var(--brand-danger)";
@@ -53,7 +60,7 @@ function StatCard({
               {stats.attendanceRate}%
             </span>
             <span className="text-[14px] font-medium mb-0.5" style={{ color: "var(--brand-muted)" }}>
-              avg
+              typical
             </span>
           </div>
 
@@ -67,8 +74,27 @@ function StatCard({
 
           {/* Subtitle */}
           <p className="text-[12px] mt-1.5" style={{ color: "var(--brand-muted)" }}>
-            ~{stats.avgPresent} / {activeMembers} present · {stats.serviceCount} service{stats.serviceCount !== 1 ? "s" : ""}
+            {stats.medianPresent} of {activeMembers} present, most weeks · {stats.serviceCount} service{stats.serviceCount !== 1 ? "s" : ""}
           </p>
+
+          {/* Mean, shown small for comparison, or a low-sample caution */}
+          {lowSample ? (
+            <p
+              className="text-[11px] mt-0.5 cursor-help"
+              style={{ color: "var(--brand-muted)" }}
+              title="Fewer than 3 services recorded this period — treat this as a rough signal, not a trend yet."
+            >
+              Not enough services yet to call a trend
+            </p>
+          ) : (
+            <p
+              className="text-[11px] mt-0.5 cursor-help"
+              style={{ color: "var(--brand-muted)" }}
+              title={`Mean present: ${stats.avgPresent} (${stats.avgAttendanceRate}%). Shown here for comparison — the ${stats.attendanceRate}% above is the median, which isn't skewed by any one unusually high or low week.`}
+            >
+              Mean {stats.avgAttendanceRate}%
+            </p>
+          )}
         </>
       ) : (
         <div className="flex flex-col items-start gap-1 mt-2">
@@ -114,11 +140,21 @@ export function AttendanceStatsSection({
     <div className="mb-6">
       {/* Header row */}
       <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           <ClipboardList style={{ width: 15, height: 15, color: "var(--brand-muted)" }} />
           <span className="text-[11px] font-medium uppercase tracking-[0.06em]"
                 style={{ color: "var(--brand-muted)" }}>
-            Attendance Averages
+            Typical Attendance
+          </span>
+          <span
+            className="cursor-help"
+            title={
+              "\"Typical\" is the median share of active members present, so one unusually high or low week doesn't skew the picture.\n\n" +
+              "Green ≥75% · Amber ≥50% · Red below 50%.\n" +
+              "Grey means fewer than 3 services were recorded this period — not enough yet to call a trend."
+            }
+          >
+            <Info style={{ width: 13, height: 13, color: "var(--brand-muted)" }} />
           </span>
         </div>
 

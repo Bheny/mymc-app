@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { authorizeBuscentreView } from "@/lib/view-scope";
+import { calcServiceStats, groupPresentByDate } from "@/lib/attendance-stats";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -45,6 +46,7 @@ export async function GET(request: Request) {
       },
       select: {
         type: true,
+        date: true,
         attendance: {
           where:  { status: "PRESENT" },
           select: { id: true },
@@ -59,14 +61,7 @@ export async function GET(request: Request) {
   const specialSvcs   = services.filter((s) => s.type === "SPECIAL_MEETING");
 
   function calcStats(svcs: typeof lcServices) {
-    const serviceCount = svcs.length;
-    if (serviceCount === 0) return { avgPresent: 0, attendanceRate: 0, serviceCount: 0 };
-    const totalPresent = svcs.reduce((sum, s) => sum + s.attendance.length, 0);
-    const avgPresent   = Math.round((totalPresent / serviceCount) * 10) / 10;
-    const attendanceRate = activeMembers > 0
-      ? Math.round((avgPresent / activeMembers) * 100)
-      : 0;
-    return { avgPresent, attendanceRate, serviceCount };
+    return calcServiceStats(groupPresentByDate(svcs), activeMembers);
   }
 
   return NextResponse.json({

@@ -54,7 +54,7 @@ type ServiceEntry = {
 };
 
 type AnalysisData = {
-  scope:     { type: "cell" | "buscentre" | "mc" | "admin"; name: string; id: string };
+  scope:     { type: "cell" | "buscentre" | "mc" | "branch" | "admin"; name: string; id: string };
   period:    { year: number; month: number | null };
   summary:   Summary;
   monthly:   MonthData[];
@@ -702,8 +702,8 @@ export default function AnalysisPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr style={{ background: "#F9FAFB", borderBottom: "1px solid var(--brand-border)" }}>
-                {/* Buscentre column — only when viewing MC scope without a buscentre filter */}
-                {!isCellScope && (scope.type === "mc") && !filterBuscentreId && (
+                {/* Buscentre column — MC scope, or a chief_shepherd's branch-wide scope, without a buscentre filter */}
+                {!isCellScope && (scope.type === "mc" || scope.type === "branch") && !filterBuscentreId && (
                   <th className="px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-[0.06em] hidden sm:table-cell"
                       style={{ color: "var(--brand-muted)" }}>
                     Buscentre
@@ -778,8 +778,8 @@ export default function AnalysisPage() {
                     <tr key={row.id}
                         style={{ borderBottom: i < breakdown.length - 1 ? "1px solid var(--brand-border)" : "none",
                                  background: i % 2 === 0 ? "#fff" : "#FAFAFA" }}>
-                      {/* Buscentre cell — MC scope only */}
-                      {scope.type === "mc" && !filterBuscentreId && (
+                      {/* Buscentre cell — MC scope, or a chief_shepherd's branch-wide scope */}
+                      {(scope.type === "mc" || scope.type === "branch") && !filterBuscentreId && (
                         <td className="px-4 py-3 hidden sm:table-cell">
                           <span className="text-[12px] font-medium rounded-pill px-2 py-0.5"
                                 style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>

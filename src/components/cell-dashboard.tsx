@@ -18,6 +18,7 @@ import { BreadcrumbTrail } from "@/components/breadcrumb-trail";
 import type { BirthdayEntry } from "@/lib/birthdays";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { RecommendShepherdDialog } from "@/components/recommend-shepherd-dialog";
+import { MemberPreviewSheet } from "@/components/member-preview-sheet";
 import { BUSCENTRE_DASHBOARD_ROLES } from "@/lib/view-permissions";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -39,7 +40,8 @@ type ShepherdMember = {
 
 type ShepherdSlot = {
   id:     string;
-  user:   { id: string; name: string } | null;
+  // member is the Member id backing this user account (present once activated)
+  user:   { id: string; name: string; member: { id: string } | null } | null;
   person: { id: string; firstName: string; lastName: string } | null;
   _count: { members: number };
   members: ShepherdMember[];
@@ -107,11 +109,12 @@ function CandidacyBadge({ status }: { status: string }) {
 }
 
 function MemberRow({
-  member, canRecommend, onChanged,
+  member, canRecommend, onChanged, onPreview,
 }: {
   member:       ShepherdMember;
   canRecommend: boolean;
   onChanged:    () => void;
+  onPreview:    (memberId: string) => void;
 }) {
   return (
     <div
@@ -126,10 +129,15 @@ function MemberRow({
         {member.firstName[0]}{member.lastName[0]}
       </div>
 
-      {/* Name */}
-      <span className="flex-1 text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>
+      {/* Name — click to preview full profile */}
+      <button
+        type="button"
+        onClick={() => onPreview(member.id)}
+        className="flex-1 text-left text-[14px] font-medium hover:underline"
+        style={{ color: "var(--brand-text)" }}
+      >
         {member.firstName} {member.lastName}
-      </span>
+      </button>
 
       {/* Gender */}
       {member.gender && (
@@ -168,7 +176,7 @@ function MemberRow({
 // ─── Unassigned member row — expandable with details + shepherd assign ─────────
 
 function UnassignedMemberRow({
-  member, shepherds, isLast, onAssigned, canRecommend, readOnly,
+  member, shepherds, isLast, onAssigned, canRecommend, readOnly, onPreview,
 }: {
   member:         ShepherdMember;
   shepherds:      ShepherdSlot[];
@@ -177,6 +185,7 @@ function UnassignedMemberRow({
   onAssigned:     () => void;
   canRecommend:   boolean;
   readOnly:       boolean;
+  onPreview:      (memberId: string) => void;
 }) {
   const [open,     setOpen]     = useState(false);
   const [selected, setSelected] = useState("");
@@ -229,10 +238,15 @@ function UnassignedMemberRow({
           {member.firstName[0]}{member.lastName[0]}
         </div>
 
-        {/* Name */}
-        <span className="flex-1 text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>
+        {/* Name — click to preview full profile, without toggling the assign row */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onPreview(member.id); }}
+          className="flex-1 text-left text-[14px] font-medium hover:underline"
+          style={{ color: "var(--brand-text)" }}
+        >
           {member.firstName} {member.lastName}
-        </span>
+        </button>
 
         {/* Gender */}
         {member.gender && (
@@ -357,18 +371,21 @@ function UnassignedMemberRow({
 type MemberOption = { id: string; firstName: string; lastName: string };
 
 function ShepherdCard({
-  slot, index, onAssigned, canRecommend, readOnly,
+  slot, index, onAssigned, canRecommend, readOnly, onPreview,
 }: {
   slot:         ShepherdSlot;
   index:        number;
   onAssigned:   () => void;
   canRecommend: boolean;
   readOnly:     boolean;
+  onPreview:    (memberId: string) => void;
 }) {
   const name        = shepherdName(slot);
   const isAssigned  = !!name;
   const hasLogin    = !!slot.user;
   const memberCount = slot._count.members;
+  // The Member id backing this shepherd — direct link if named, or via their user account if activated
+  const shepherdMemberId = slot.person?.id ?? slot.user?.member?.id ?? null;
 
   const [assigning, setAssigning] = useState(false);
   const [query,     setQuery]     = useState("");
@@ -439,10 +456,21 @@ function ShepherdCard({
         {/* Name + badges */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[14px] font-semibold"
-                  style={{ color: isAssigned ? "#fff" : "var(--brand-muted)", fontStyle: isAssigned ? "normal" : "italic" }}>
-              {name ?? "Unassigned shepherd"}
-            </span>
+            {isAssigned && shepherdMemberId ? (
+              <button
+                type="button"
+                onClick={() => onPreview(shepherdMemberId)}
+                className="text-[14px] font-semibold hover:underline"
+                style={{ color: "#fff" }}
+              >
+                {name}
+              </button>
+            ) : (
+              <span className="text-[14px] font-semibold"
+                    style={{ color: isAssigned ? "#fff" : "var(--brand-muted)", fontStyle: isAssigned ? "normal" : "italic" }}>
+                {name ?? "Unassigned shepherd"}
+              </span>
+            )}
             {isAssigned && !hasLogin && (
               <span className="rounded-pill text-[10px] font-medium px-1.5 py-0.5"
                     style={{ background: "rgba(255,255,255,0.15)", color: "rgba(255,255,255,0.8)" }}>
@@ -558,7 +586,7 @@ function ShepherdCard({
       ) : (
         <div>
           {slot.members.map((m) => (
-            <MemberRow key={m.id} member={m} canRecommend={canRecommend} onChanged={onAssigned} />
+            <MemberRow key={m.id} member={m} canRecommend={canRecommend} onChanged={onAssigned} onPreview={onPreview} />
           ))}
         </div>
       )}
@@ -607,6 +635,7 @@ export function CellDashboard({ cellId }: { cellId?: string }) {
   const [data,    setData]    = useState<CellOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [error,   setError]   = useState("");
+  const [previewMemberId, setPreviewMemberId] = useState<string | null>(null);
 
   const { activeView } = useActiveRole();
   const actingCellId = activeView?.isActing && activeView.cellId ? activeView.cellId : null;
@@ -799,7 +828,7 @@ export function CellDashboard({ cellId }: { cellId?: string }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {shepherds.map((slot, i) => (
-            <ShepherdCard key={slot.id} slot={slot} index={i} onAssigned={load} canRecommend={canRecommend} readOnly={readOnly} />
+            <ShepherdCard key={slot.id} slot={slot} index={i} onAssigned={load} canRecommend={canRecommend} readOnly={readOnly} onPreview={setPreviewMemberId} />
           ))}
         </div>
       )}
@@ -832,6 +861,7 @@ export function CellDashboard({ cellId }: { cellId?: string }) {
                 onAssigned={load}
                 canRecommend={canRecommend}
                 readOnly={readOnly}
+                onPreview={setPreviewMemberId}
               />
             ))}
           </div>
@@ -858,6 +888,12 @@ export function CellDashboard({ cellId }: { cellId?: string }) {
           </Link>
         )}
       </div>
+
+      <MemberPreviewSheet
+        memberId={previewMemberId}
+        onClose={() => setPreviewMemberId(null)}
+        viewerRole={activeView?.role}
+      />
 
     </div>
   );

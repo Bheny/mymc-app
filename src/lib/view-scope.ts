@@ -23,6 +23,17 @@ function buscentreScope(role: string | null | undefined, user: SessionUser): Pri
   }
 }
 
+// Exported (unlike buscentreScope/cellScope) — also used directly by
+// /api/org/mega-churches to scope its list, not just to authorize a single id.
+export function mcScope(role: string | null | undefined, user: SessionUser): Prisma.MegaChurchWhereInput | null {
+  switch (role) {
+    case "mc_pastor":      return user.mcId ? { id: user.mcId } : null;
+    case "chief_shepherd": return user.branchId ? { branchId: user.branchId } : null;
+    case "admin":          return {};
+    default:               return null;
+  }
+}
+
 function cellScope(role: string | null | undefined, user: SessionUser): Prisma.CellWhereInput | null {
   switch (role) {
     case "cell_shepherd":
@@ -46,6 +57,20 @@ export async function authorizeBuscentreView(
   if (!scope) return { id: null, status: 403 };
 
   const match = await prisma.buscentre.findFirst({ where: { AND: [scope, { id: requestedId }] }, select: { id: true } });
+  return match ? { id: requestedId, status: 200 } : { id: null, status: 403 };
+}
+
+export async function authorizeMcView(
+  role: string | null | undefined,
+  user: SessionUser,
+  requestedId: string | null,
+): Promise<AuthorizeResult> {
+  if (!requestedId) return { id: user.mcId ?? null, status: user.mcId ? 200 : 400 };
+
+  const scope = mcScope(role, user);
+  if (!scope) return { id: null, status: 403 };
+
+  const match = await prisma.megaChurch.findFirst({ where: { AND: [scope, { id: requestedId }] }, select: { id: true } });
   return match ? { id: requestedId, status: 200 } : { id: null, status: 403 };
 }
 

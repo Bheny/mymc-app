@@ -60,7 +60,9 @@ export async function GET(request: Request) {
   const shepherds = await prisma.shepherd.findMany({
     where:   { cellId },
     include: {
-      user:   { select: { id: true, name: true } },
+      // member is the reverse link (User.member) — needed to preview an activated
+      // shepherd's profile, since Shepherd.person is only set for named-but-not-activated slots
+      user:   { select: { id: true, name: true, member: { select: { id: true } } } },
       person: { select: { id: true, firstName: true, lastName: true } },
       _count: { select: { members: true } },
       members: {

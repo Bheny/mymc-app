@@ -6,6 +6,7 @@ import Link from "next/link";
 import { SummaryCard } from "@/components/summary-card";
 import { Button } from "@/components/ui/button";
 import { BirthdaySection } from "@/components/birthday-section";
+import { SummarySection } from "@/components/summary-section";
 import type { BirthdayEntry } from "@/lib/birthdays";
 import { useActiveRole } from "@/hooks/use-active-role";
 import {
@@ -245,6 +246,10 @@ function CellShepherdOverview() {
           </div>
         </Link>
       )}
+
+      {/* ── Summary ── */}
+      <SectionDivider label="Summary" />
+      <SummarySection scope="cell" />
 
       {/* KPIs */}
       {stats && (
@@ -500,6 +505,10 @@ function BuscentreHeadOverview() {
         </div>
       )}
 
+      {/* ── Summary ── */}
+      <SectionDivider label="Summary" />
+      <SummarySection scope="buscentre" />
+
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
         <SummaryCard title="Total Members"  value={stats.totalMembers}   icon={<Users className="h-4 w-4" />}
@@ -699,16 +708,24 @@ export default function OverviewPage() {
   const role     = activeView?.role ?? session?.user?.role;
   const isScoped = role === "cell_shepherd" || role === "shepherd";
   const isBuscentreHead = role === "buscentre_head";
+  const isMcPastor      = role === "mc_pastor";
+  const isChiefShepherd = role === "chief_shepherd";
+
+  const actingMcId     = activeView?.isActing && activeView.mcId     ? activeView.mcId     : null;
+  const actingBranchId = activeView?.isActing && activeView.branchId ? activeView.branchId : null;
 
   // Always call hooks before any conditional returns
   useEffect(() => {
     if (!ready) return;          // wait for acting-roles fetch before routing
     if (isScoped || isBuscentreHead) return;
-    fetch("/api/dashboard")
+    const params = new URLSearchParams();
+    if (actingMcId)     params.set("actingMcId", actingMcId);
+    if (actingBranchId) params.set("actingBranchId", actingBranchId);
+    fetch(`/api/dashboard${params.toString() ? `?${params}` : ""}`)
       .then((r) => r.json())
       .then(setData)
       .catch(console.error);
-  }, [ready, isScoped, isBuscentreHead]);
+  }, [ready, isScoped, isBuscentreHead, actingMcId, actingBranchId]);
 
   // Hold at skeleton until acting-roles have settled — prevents the wrong
   // role view flashing in before the correct one is confirmed
@@ -739,6 +756,14 @@ export default function OverviewPage() {
           </span>.
         </p>
       </div>
+
+      {/* ── Summary — MC Pastor / Branch Pastor only ── */}
+      {(isMcPastor || isChiefShepherd) && (
+        <>
+          <SectionDivider label="Summary" />
+          <SummarySection scope={isMcPastor ? "mc" : "branch"} />
+        </>
+      )}
 
       {/* ── KPI cards ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
