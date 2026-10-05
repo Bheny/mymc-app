@@ -4,7 +4,8 @@
  * AssignHeadSheet — slide-in panel for assigning a head to a cell or buscentre.
  *
  * Two modes:
- *   Permanent → links to /org/activate with scope pre-filled (new activation)
+ *   Permanent → reassign an existing user (standing down the current head), or
+ *               link to /org/activate with scope pre-filled (new activation)
  *   Acting    → inline assignment of a higher-level existing user (temporary cover)
  */
 
@@ -102,6 +103,7 @@ export function AssignHeadSheet({
   const [loadingAllUsers, setLoadingAllUsers] = useState(false);
   const [reassignId,      setReassignId]      = useState("");
   const [reassigning,     setReassigning]     = useState(false);
+  const [replacedNames,   setReplacedNames]   = useState<string[]>([]);
 
   // Current head — fetched when sheet opens
   const [currentHead,    setCurrentHead]    = useState<CurrentHead | null>(null);
@@ -173,6 +175,7 @@ export function AssignHeadSheet({
       setMode("permanent");
       setSelectedId("");
       setReassignId("");
+      setReplacedNames([]);
       setError("");
       setSuccess(false);
     }
@@ -223,6 +226,8 @@ export function AssignHeadSheet({
 
     setReassigning(false);
     if (res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setReplacedNames(d.replaced ?? []);
       setSuccess(true);
       setTimeout(() => { onAssigned(); onClose(); }, 1500);
     } else {
@@ -265,7 +270,8 @@ export function AssignHeadSheet({
               </p>
               <p className="text-[13px]" style={{ color: "var(--brand-muted)" }}>
                 {reassignId
-                  ? `${allUsers.find((u) => u.id === reassignId)?.name ?? "User"} is now ${NODE_LABEL[nodeType]} for ${nodeName}.`
+                  ? `${allUsers.find((u) => u.id === reassignId)?.name ?? "User"} is now ${NODE_LABEL[nodeType]} for ${nodeName}.` +
+                    (replacedNames.length ? ` ${replacedNames.join(", ")} has been stood down and can be reassigned.` : "")
                   : selectedUser
                   ? `${selectedUser.name} can now switch to this role via the role switcher.`
                   : "The acting assignment has been cleared."}
@@ -424,6 +430,18 @@ export function AssignHeadSheet({
                         </div>
                       ) : null;
                     })()}
+
+                    {currentHead && reassignId && reassignId !== currentHead.userId && (
+                      <div className="rounded-xl px-4 py-3 flex items-start gap-2"
+                           style={{ background: "#FEF3DC", border: "1px solid #F5D9A0" }}>
+                        <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#854F0B" }} />
+                        <p className="text-[12px]" style={{ color: "#854F0B" }}>
+                          {currentHead.isActing
+                            ? `${currentHead.name ?? currentHead.email}'s acting cover here will end.`
+                            : `${currentHead.name ?? currentHead.email} will be stood down as ${NODE_LABEL[nodeType]}. They keep their login and member record, and you can assign them a new role afterwards.`}
+                        </p>
+                      </div>
+                    )}
 
                     {error && (
                       <p className="text-[13px]" style={{ color: "var(--brand-danger)" }}>{error}</p>

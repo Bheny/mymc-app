@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useCapacityLimits } from "@/hooks/use-capacity-limits";
 import Link from "next/link";
 import {
   Users, UserCheck, UserX, ShieldCheck,
@@ -111,8 +112,9 @@ function CellCard({ cell, viewerRole, readOnly }: { cell: CellInfo; onRefresh: (
   const occupiedSlots   = shepherds.filter((s) => s.isOccupied).length;
   const unassignedSlots = totalShepherds - occupiedSlots;
   const { totalMembers } = cell.stats;
+  const memberMax = useCapacityLimits().member.max;
   const memberCapacityPct = totalShepherds > 0
-    ? Math.min(100, (totalMembers / (totalShepherds * 5)) * 100)
+    ? Math.min(100, (totalMembers / (totalShepherds * memberMax)) * 100)
     : 0;
   const canViewFullDashboard = !!viewerRole && CELL_DASHBOARD_ROLES.includes(viewerRole);
 
@@ -264,7 +266,7 @@ function CellCard({ cell, viewerRole, readOnly }: { cell: CellInfo; onRefresh: (
                 Capacity
               </span>
               <span className="text-[12px]" style={{ color: "var(--brand-muted)" }}>
-                {totalMembers} / {totalShepherds * 5} max
+                {totalMembers} / {totalShepherds * memberMax} max
               </span>
             </div>
             <div className="rounded-pill overflow-hidden" style={{ height: 6, background: "var(--brand-border)" }}>
@@ -368,9 +370,9 @@ function CellCard({ cell, viewerRole, readOnly }: { cell: CellInfo; onRefresh: (
                         )}
                       </span>
                       <span className="text-[12px] font-medium rounded-pill px-2 py-0.5"
-                            style={{ background: sh.memberCount >= 5 ? "#FDECEA" : "var(--brand-border)",
-                                     color: sh.memberCount >= 5 ? "#791F1F" : "var(--brand-muted)" }}>
-                        {sh.memberCount}/5
+                            style={{ background: sh.memberCount >= memberMax ? "#FDECEA" : "var(--brand-border)",
+                                     color: sh.memberCount >= memberMax ? "#791F1F" : "var(--brand-muted)" }}>
+                        {sh.memberCount}/{memberMax}
                       </span>
                       {/* Assign / unassign */}
                       {!readOnly && (sh.isOccupied ? (

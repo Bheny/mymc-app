@@ -39,6 +39,33 @@ export function canCreateCell(
   }
 }
 
+// Moving a cell needs authority over both the source and destination buscentre
+export function canMoveCell(
+  user: ScopeUser,
+  from: { mcId: string; mc: { branchId: string } },
+  to:   { mcId: string; mc: { branchId: string } }
+): boolean {
+  switch (user.role) {
+    case "admin":          return true;
+    case "chief_shepherd": return user.branchId === from.mc.branchId && user.branchId === to.mc.branchId;
+    case "mc_pastor":      return user.mcId === from.mcId && user.mcId === to.mcId;
+    default:               return false;
+  }
+}
+
+// Moving a buscentre between MCs needs authority over both MCs — so not an MC pastor
+export function canMoveBuscentre(
+  user: ScopeUser,
+  from: { branchId: string },
+  to:   { branchId: string }
+): boolean {
+  switch (user.role) {
+    case "admin":          return true;
+    case "chief_shepherd": return user.branchId === from.branchId && user.branchId === to.branchId;
+    default:               return false;
+  }
+}
+
 export function canManageDepartments(user: ScopeUser, branchId: string): boolean {
   switch (user.role) {
     case "admin":          return true;

@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { upcomingBirthdays } from "@/lib/birthdays";
 import { authorizeCellView } from "@/lib/view-scope";
+import { getCapacityLimit } from "@/lib/capacity";
 
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -138,7 +139,8 @@ export async function GET(request: Request) {
   const avgPerShepherd      = occupiedSlots > 0
     ? Math.round((totalMembers / occupiedSlots) * 10) / 10
     : 0;
-  const shepherdsAtCapacity = shepherds.filter((s) => s._count.members >= 5).length;
+  const memberMax           = (await getCapacityLimit("member")).max;
+  const shepherdsAtCapacity = shepherds.filter((s) => s._count.members >= memberMax).length;
   const withoutShepherd     = unassignedMembers.length;
 
   const cellShepherds = cell.userRoles.map((r) => ({

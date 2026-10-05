@@ -161,7 +161,7 @@ model Buscentre {
   location  String?
   createdAt DateTime @default(now()) @map("created_at")
 
-  // MAX 4 per MegaChurch — enforced in application logic
+  // Max per MegaChurch — configurable (CapacityLimit "buscentre")
   mc        MegaChurch @relation(fields: [mcId], references: [id], onDelete: Cascade)
   cells     Cell[]
   userRoles UserRole[]
@@ -177,7 +177,7 @@ model Cell {
   location    String?  @map("location")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  // MAX 4 per Buscentre — enforced in application logic
+  // Max per Buscentre — configurable (CapacityLimit "cell")
   buscentre    Buscentre    @relation(fields: [buscentreId], references: [id], onDelete: Cascade)
   shepherds    Shepherd[]
   members      Member[]
@@ -197,7 +197,7 @@ model Shepherd {
   memberId  String?  @unique @map("member_id") // set when named but not yet activated
   createdAt DateTime @default(now()) @map("created_at")
 
-  // MAX 2 per Cell — enforced in application logic
+  // Max per Cell — configurable (CapacityLimit "shepherd")
   cell      Cell       @relation(fields: [cellId], references: [id], onDelete: Cascade)
   user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
   person    Member?    @relation("ShepherdPerson", fields: [memberId], references: [id], onDelete: SetNull)
@@ -329,6 +329,22 @@ model CapacityWarning {
   createdBy User @relation(fields: [createdById], references: [id])
 
   @@map("capacity_warnings")
+}
+
+// ─── Capacity limits (configurable in Settings) ──────────────────────────────
+
+// One row per level ("buscentre" | "cell" | "shepherd" | "member"). Missing
+// rows fall back to the defaults in src/lib/capacity.ts.
+//   enforce = false → over-limit creations are allowed but log a CapacityWarning
+//   enforce = true  → over-limit creations are rejected
+model CapacityLimit {
+  level       String   @id
+  max         Int
+  enforce     Boolean  @default(false)
+  updatedById String?  @map("updated_by_id")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("capacity_limits")
 }
 
 // ─── Services & Attendance ───────────────────────────────────────────────────
@@ -559,3 +575,4 @@ model DepartmentLeader {
   @@unique([departmentId, memberId])
   @@map("department_leaders")
 }
+

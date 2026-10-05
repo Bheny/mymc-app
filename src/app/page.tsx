@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useCapacityLimits } from "@/hooks/use-capacity-limits";
 import Link from "next/link";
 import { SummaryCard } from "@/components/summary-card";
 import { Button } from "@/components/ui/button";
@@ -703,6 +704,7 @@ export default function OverviewPage() {
   const { data: session }    = useSession();
   const { activeView, ready } = useActiveRole();
   const [data, setData]      = useState<DashboardData | null>(null);
+  const limits               = useCapacityLimits();
 
   // Use the ACTIVE role (may differ from primary if user has switched to an acting view)
   const role     = activeView?.role ?? session?.user?.role;
@@ -974,7 +976,7 @@ export default function OverviewPage() {
                   )}
                 </span>
                 <div className="col-span-2"><CapacityBar count={cell._count.members} max={10} mode="headcount" /></div>
-                <div className="col-span-2"><CapacityBar count={cell._count.shepherds} max={2} /></div>
+                <div className="col-span-2"><CapacityBar count={cell._count.shepherds} max={limits.shepherd.max} /></div>
               </div>
             </Link>
           ))}
@@ -1052,7 +1054,7 @@ export default function OverviewPage() {
                       </p>
                       <div className="flex items-center gap-2 shrink-0">
                         <div className="w-16 sm:w-28">
-                          <CapacityBar count={s._count.members} max={5} />
+                          <CapacityBar count={s._count.members} max={limits.member.max} />
                         </div>
                         <span className="text-[12px] sm:text-[13px] tabular-nums w-8 sm:w-10 text-right"
                               style={{ color: "var(--brand-muted)" }}>

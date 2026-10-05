@@ -33,7 +33,7 @@ const REPORTS: ReportDef[] = [
   },
   {
     id: "shepherd-load", label: "Shepherd Load",
-    description: "Every shepherd ranked by member count vs the 5-member cap.",
+    description: "Every shepherd ranked by member count vs the member cap set in Settings.",
     icon: Users, color: "#B45309", needsDates: false,
   },
   {

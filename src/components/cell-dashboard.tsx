@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useCapacityLimits } from "@/hooks/use-capacity-limits";
 import Link from "next/link";
 import {
   Users, UserPlus, UserCircle, ShieldCheck,
@@ -187,6 +188,7 @@ function UnassignedMemberRow({
   readOnly:       boolean;
   onPreview:      (memberId: string) => void;
 }) {
+  const memberMax = useCapacityLimits().member.max;
   const [open,     setOpen]     = useState(false);
   const [selected, setSelected] = useState("");
   const [saving,   setSaving]   = useState(false);
@@ -329,8 +331,8 @@ function UnassignedMemberRow({
                   {occupiedSlots.length > 0 && (
                     <optgroup label="Named shepherds">
                       {occupiedSlots.map((s) => (
-                        <option key={s.id} value={s.id} disabled={s._count.members >= 5}>
-                          {slotLabel(s)}{s._count.members >= 5 ? " — full" : ""}
+                        <option key={s.id} value={s.id} disabled={s._count.members >= memberMax}>
+                          {slotLabel(s)}{s._count.members >= memberMax ? " — full" : ""}
                         </option>
                       ))}
                     </optgroup>
@@ -338,8 +340,8 @@ function UnassignedMemberRow({
                   {unoccupiedSlots.length > 0 && (
                     <optgroup label="Unassigned slots">
                       {unoccupiedSlots.map((s) => (
-                        <option key={s.id} value={s.id} disabled={s._count.members >= 5}>
-                          {slotLabel(s)}{s._count.members >= 5 ? " — full" : ""}
+                        <option key={s.id} value={s.id} disabled={s._count.members >= memberMax}>
+                          {slotLabel(s)}{s._count.members >= memberMax ? " — full" : ""}
                         </option>
                       ))}
                     </optgroup>
@@ -384,6 +386,7 @@ function ShepherdCard({
   const isAssigned  = !!name;
   const hasLogin    = !!slot.user;
   const memberCount = slot._count.members;
+  const memberMax   = useCapacityLimits().member.max;
   // The Member id backing this shepherd — direct link if named, or via their user account if activated
   const shepherdMemberId = slot.person?.id ?? slot.user?.member?.id ?? null;
 
@@ -522,8 +525,8 @@ function ShepherdCard({
           <div className="w-14">
             <div className="rounded-pill overflow-hidden" style={{ height: 5, background: "rgba(255,255,255,0.2)" }}>
               <div className="h-full rounded-pill"
-                   style={{ width: `${Math.min(100, (memberCount / 5) * 100)}%`,
-                            background: memberCount >= 5 ? "#C0392B" : memberCount >= 4 ? "#F5A623" : "rgba(255,255,255,0.8)" }} />
+                   style={{ width: `${Math.min(100, (memberCount / memberMax) * 100)}%`,
+                            background: memberCount >= memberMax ? "#C0392B" : memberCount >= memberMax * 0.8 ? "#F5A623" : "rgba(255,255,255,0.8)" }} />
             </div>
           </div>
         </div>

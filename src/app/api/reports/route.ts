@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { buildLeadershipIndex, resolveFromIndex } from "@/lib/leadership";
+import { getCapacityLimit } from "@/lib/capacity";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -309,7 +310,7 @@ export async function GET(request: Request) {
   const from        = sp.get("from");
   const to          = sp.get("to");
   const threshold   = parseInt(sp.get("threshold")  ?? "13");
-  const cap         = parseInt(sp.get("cap")         ?? "5");
+  const cap         = sp.get("cap") ? parseInt(sp.get("cap")!) : (await getCapacityLimit("member")).max;
   const minAbsences = parseInt(sp.get("minAbsences") ?? "2");
   const topN        = parseInt(sp.get("topN")        ?? "10");
 

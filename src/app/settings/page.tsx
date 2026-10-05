@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { StructureLimitsSettings } from "@/components/settings/structure-limits-settings";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -288,6 +289,9 @@ export default function SettingsPage() {
               )}
             </div>
           </section>
+
+          {/* ── Structure limits (admin / chief shepherd only) ── */}
+          <StructureLimitsSettings />
 
           {/* ── Security ── */}
           <section>
