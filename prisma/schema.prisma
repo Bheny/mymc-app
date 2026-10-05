@@ -117,6 +117,7 @@ model User {
   firstTimersConverted FirstTimer[] @relation("FirstTimerConvertedBy")
   notifications        Notification[]
   soulsRecorded        Soul[]       @relation("SoulRecordedBy")
+  memberStatusChanges  MemberStatusChange[] @relation("StatusChangedBy")
 
   shepherdCandidatesRecommended ShepherdCandidate[] @relation("CandidateRecommendedBy")
   shepherdCandidatesCertified   ShepherdCandidate[] @relation("CandidateCertifiedBy")
@@ -274,7 +275,30 @@ model Member {
   // Back-relation: this member has been put forward to become a shepherd
   shepherdCandidacy ShepherdCandidate? @relation("CandidateMember")
 
+  // Active ⇄ inactive history (latest row explains the current status)
+  statusChanges MemberStatusChange[]
+
   @@map("members")
+}
+
+// ─── Member status history ────────────────────────────────────────────────────
+
+// Logged whenever a member's isActive flag changes. Deactivation requires a
+// reason + details (enforced in the API); reactivation details are optional.
+model MemberStatusChange {
+  id          String   @id @default(cuid())
+  memberId    String   @map("member_id")
+  isActive    Boolean  @map("is_active")   // the status the member was changed TO
+  reason      String?                       // e.g. "RELOCATED" — see MEMBER_INACTIVE_REASONS
+  details     String?
+  changedById String?  @map("changed_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  member    Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  changedBy User?  @relation("StatusChangedBy", fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([memberId, createdAt])
+  @@map("member_status_changes")
 }
 
 // ─── Roles & scope ───────────────────────────────────────────────────────────

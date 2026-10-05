@@ -23,6 +23,8 @@ import {
 import { AddMemberModal } from "@/components/add-member-modal";
 import { SummaryCard } from "@/components/summary-card";
 import { DepartmentPicker } from "@/components/department-picker";
+import { Textarea } from "@/components/ui/textarea";
+import { MEMBER_INACTIVE_REASONS, STATUS_DETAILS_MIN, inactiveReasonLabel } from "@/lib/member-status";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -195,6 +197,31 @@ function NativeSelect({ value, onChange, disabled, placeholder, options, display
 
 // ─── Member detail sheet ──────────────────────────────────────────────────────
 
+type StatusChange = {
+  isActive:  boolean;
+  reason:    string | null;
+  details:   string | null;
+  createdAt: string;
+  changedBy: { name: string | null } | null;
+};
+
+// "Relocated / moved away — Moved to Kumasi for work · 3 Oct 2026 by Ama"
+function StatusChangeNote({ change }: { change: StatusChange }) {
+  const label = inactiveReasonLabel(change.reason);
+  return (
+    <div className="flex flex-col gap-0.5">
+      {label && <span className="text-[13px] font-medium" style={{ color: "var(--brand-text)" }}>{label}</span>}
+      {change.details && (
+        <span className="text-[13px] whitespace-pre-wrap" style={{ color: "var(--brand-text)" }}>{change.details}</span>
+      )}
+      <span className="text-[11px]" style={{ color: "var(--brand-muted)" }}>
+        {new Date(change.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+        {change.changedBy?.name ? ` · by ${change.changedBy.name}` : ""}
+      </span>
+    </div>
+  );
+}
+
 type MemberDetail = Member & {
   dateOfBirth: string | null;
   createdAt:   string;
@@ -219,6 +246,8 @@ type MemberDetail = Member & {
   schoolName?:      string | null;
   programOfStudy?:  string | null;
   departments?: { department: { id: string; name: string } }[];
+  // Most recent active ⇄ inactive change (why they're inactive)
+  lastStatusChange?: StatusChange | null;
   // Populated if this member IS a shepherd in some cell
   shepherdRole?: {
     id:     string;
@@ -420,6 +449,18 @@ function MemberDetailSheet({
             </div>
           ) : detail ? (
             <div className="flex flex-col gap-0">
+
+              {/* ── Why inactive ── */}
+              {!detail.isActive && detail.lastStatusChange && !detail.lastStatusChange.isActive && (
+                <div className="flex items-start gap-3 py-3"
+                     style={{ borderBottom: "1px solid var(--brand-border)" }}>
+                  <span className="text-[12px] font-medium uppercase tracking-[0.04em] w-24 shrink-0 pt-0.5"
+                        style={{ color: "var(--brand-muted)" }}>
+                    Inactive
+                  </span>
+                  <StatusChangeNote change={detail.lastStatusChange} />
+                </div>
+              )}
 
               {/* ── Position / rank ── */}
               {(() => {
@@ -694,6 +735,13 @@ function EditMemberSheet({
   const [cellId,       setCellId]       = useState("");
   const [shepherdId,   setShepherdId]   = useState("");
 
+  // ── Status change details ──
+  const [statusReason,     setStatusReason]     = useState("");
+  const [statusDetails,    setStatusDetails]    = useState("");
+  const [lastStatusChange, setLastStatusChange] = useState<StatusChange | null>(null);
+  const deactivating = !!member?.isActive && !isActive;
+  const reactivating = !!member && !member.isActive && isActive;
+
   const [busy,  setBusy]  = useState(false);
   const [error, setError] = useState("");
 
@@ -707,6 +755,7 @@ function EditMemberSheet({
     setGender(member.gender ?? "");
     setJoinedDate(member.joinedDate ? member.joinedDate.slice(0, 10) : "");
     setIsActive(member.isActive);
+    setStatusReason(""); setStatusDetails(""); setLastStatusChange(null);
     setReassigning(false);
     setError("");
     // Reset extended fields until detail loads
@@ -741,6 +790,7 @@ function EditMemberSheet({
         setSchoolName(d.schoolName ?? "");
         setProgramOfStudy(d.programOfStudy ?? "");
         setDepartmentIds((d.departments ?? []).map((md) => md.department.id));
+        setLastStatusChange(d.lastStatusChange ?? null);
       })
       .catch(() => {});
 
@@ -782,6 +832,10 @@ function EditMemberSheet({
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!firstName.trim() || !lastName.trim()) { setError("Name is required."); return; }
+    if (deactivating) {
+      if (!statusReason) { setError("Choose a reason for marking this member inactive."); return; }
+      if (statusDetails.trim().length < STATUS_DETAILS_MIN) { setError("Add some details about the status change."); return; }
+    }
     setBusy(true);
 
     // Build reassignment payload if section is open and valid
@@ -812,6 +866,10 @@ function EditMemberSheet({
         dateOfBirth:       dateOfBirth       || null,
         joinedDate:        joinedDate        || null,
         isActive,
+        ...((deactivating || reactivating) && {
+          statusReason:  deactivating ? statusReason : null,
+          statusDetails: statusDetails.trim() || null,
+        }),
         hometown:          hometown          || null,
         previousChurch:    previousChurch    || null,
         parentName:        parentName        || null,
@@ -916,12 +974,62 @@ function EditMemberSheet({
               <div className="flex flex-col gap-1.5">
                 <FieldLabel>Status</FieldLabel>
                 <select value={isActive ? "active" : "inactive"}
-                        onChange={(e) => setIsActive(e.target.value === "active")}
+                        onChange={(e) => { setIsActive(e.target.value === "active"); setError(""); }}
                         className="h-10 px-3 text-[14px] rounded-lg"
                         style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
+
+                {/* Already inactive — show why */}
+                {!member?.isActive && !isActive && lastStatusChange && !lastStatusChange.isActive && (
+                  <div className="rounded-lg px-3 py-2.5 mt-1"
+                       style={{ background: "#FDECEA", border: "1px solid #F5C2C0" }}>
+                    <StatusChangeNote change={lastStatusChange} />
+                  </div>
+                )}
+
+                {/* Going inactive — reason + details required */}
+                {deactivating && (
+                  <div className="flex flex-col gap-3 rounded-lg p-3 mt-1"
+                       style={{ background: "#FEF3DC", border: "1px solid #F5D9A0" }}>
+                    <p className="text-[12px]" style={{ color: "#854F0B" }}>
+                      Tell us why this member is being marked inactive. This is kept on their record.
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel required>Reason</FieldLabel>
+                      <select value={statusReason}
+                              onChange={(e) => { setStatusReason(e.target.value); setError(""); }}
+                              className="h-10 px-3 text-[14px] rounded-lg"
+                              style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                        <option value="">— Select reason —</option>
+                        {Object.entries(MEMBER_INACTIVE_REASONS).map(([key, label]) => (
+                          <option key={key} value={key}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel required>Details</FieldLabel>
+                      <Textarea value={statusDetails}
+                                onChange={(e) => { setStatusDetails(e.target.value); setError(""); }}
+                                placeholder="e.g. Moved to Kumasi for work in September; still reachable on WhatsApp."
+                                rows={3} className="text-[14px] bg-white"
+                                style={{ borderColor: "var(--brand-border)" }} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Coming back — optional note */}
+                {reactivating && (
+                  <div className="flex flex-col gap-1.5 mt-1">
+                    <FieldLabel>Reactivation note</FieldLabel>
+                    <Textarea value={statusDetails}
+                              onChange={(e) => setStatusDetails(e.target.value)}
+                              placeholder="optional, e.g. Back from school, attending again"
+                              rows={2} className="text-[14px]"
+                              style={{ borderColor: "var(--brand-border)" }} />
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col gap-1.5">
