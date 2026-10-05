@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 import {
   Home, Users, Network, TrendingUp, Settings,
   LayoutGrid, ClipboardList, Building2, Heart,
-  BarChart2, Menu, X, UserPlus, ChevronsLeft, ChevronsRight, Trophy,
+  BarChart2, Menu, X, UserPlus, ChevronsLeft, ChevronsRight, Trophy, Library,
 } from 'lucide-react';
 import { useActiveRole, roleLabel as getRoleLabel, type RoleView } from '@/hooks/use-active-role';
 import { useSidebar, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/hooks/use-sidebar';
@@ -30,6 +30,7 @@ const ADMIN_NAV: NavConfig = {
     { name: 'Attendance',  href: '/attendance',  icon: ClipboardList },
     { name: 'Leaderboard', href: '/leaderboard',  icon: Trophy },
     { name: 'Reports',     href: '/reports',     icon: TrendingUp },
+    { name: 'Library',     href: '/library',     icon: Library },
     { name: 'Settings',    href: '/settings',    icon: Settings },
   ],
 };
@@ -44,6 +45,7 @@ const MC_PASTOR_NAV: NavConfig = {
   secondary: [
     { name: 'Attendance',  href: '/attendance',  icon: ClipboardList },
     { name: 'Leaderboard', href: '/leaderboard',  icon: Trophy },
+    { name: 'Library',     href: '/library',     icon: Library },
   ],
 };
 
@@ -59,6 +61,7 @@ const BUSCENTRE_HEAD_NAV: NavConfig = {
     { name: 'Leaderboard', href: '/leaderboard',  icon: Trophy },
     { name: 'Analysis',    href: '/analysis',    icon: BarChart2 },
     { name: 'Org',         href: '/org',         icon: Network },
+    { name: 'Library',     href: '/library',     icon: Library },
     { name: 'Settings',    href: '/settings',    icon: Settings },
   ],
 };
@@ -75,6 +78,7 @@ const CELL_SHEPHERD_NAV: NavConfig = {
     { name: 'Members',     href: '/members',     icon: Users },
     { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
     { name: 'Analysis',    href: '/analysis',    icon: BarChart2 },
+    { name: 'Library',     href: '/library',     icon: Library },
     { name: 'Settings',    href: '/settings',    icon: Settings },
   ],
 };
@@ -88,6 +92,7 @@ const SHEPHERD_NAV: NavConfig = {
   secondary: [
     { name: 'Attendance',  href: '/attendance',  icon: ClipboardList },
     { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+    { name: 'Library',     href: '/library',     icon: Library },
   ],
 };
 

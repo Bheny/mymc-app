@@ -15,8 +15,9 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - login (login page)
+     * - l/ (public library share links)
      */
-    "/((?!api|_next/static|_next/image|favicon.ico|login).*)",
+    "/((?!api|_next/static|_next/image|favicon.ico|login|l/).*)",
   ],
 }
 

@@ -118,6 +118,7 @@ model User {
   notifications        Notification[]
   soulsRecorded        Soul[]       @relation("SoulRecordedBy")
   memberStatusChanges  MemberStatusChange[] @relation("StatusChangedBy")
+  libraryItems         LibraryItem[]        @relation("LibraryItemCreatedBy")
 
   shepherdCandidatesRecommended ShepherdCandidate[] @relation("CandidateRecommendedBy")
   shepherdCandidatesCertified   ShepherdCandidate[] @relation("CandidateCertifiedBy")
@@ -136,6 +137,7 @@ model Branch {
   megaChurches MegaChurch[]
   userRoles    UserRole[]
   departments  Department[]
+  libraryItems LibraryItem[]
 
   @@map("branches")
 }
@@ -151,6 +153,7 @@ model MegaChurch {
   buscentres Buscentre[]
   userRoles  UserRole[]
   members    Member[]    // MC-level members (MC Pastors, etc.)
+  libraryItems LibraryItem[]
 
   @@map("mega_churches")
 }
@@ -600,3 +603,53 @@ model DepartmentLeader {
   @@map("department_leaders")
 }
 
+// ─── Library ──────────────────────────────────────────────────────────────────
+
+enum LibraryItemKind {
+  FILE     // uploaded to Supabase Storage (bucket "library")
+  YOUTUBE
+  PODCAST
+  LINK
+}
+
+// Shared documents and media. Visible to everyone in the branch (mcId null)
+// or in one MC (mcId set). Admins / chief shepherds manage branch-wide items;
+// MC pastors manage their own MC's items.
+model LibraryItem {
+  id          String          @id @default(cuid())
+  kind        LibraryItemKind
+  title       String
+  description String?
+  category    String?
+
+  // Links (YOUTUBE / PODCAST / LINK)
+  url          String?
+  thumbnailUrl String? @map("thumbnail_url")
+
+  // Files
+  storagePath String? @unique @map("storage_path")
+  fileName    String? @map("file_name")
+  mimeType    String? @map("mime_type")
+  sizeBytes   Int?    @map("size_bytes")
+
+  // Audience
+  branchId String  @map("branch_id")
+  mcId     String? @map("mc_id")
+
+  pinned       Boolean @default(false)
+  // Public link /l/{shareToken} — opens without logging in while enabled
+  shareToken   String  @unique @default(cuid()) @map("share_token")
+  shareEnabled Boolean @default(true) @map("share_enabled")
+
+  createdById String    @map("created_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  archivedAt  DateTime? @map("archived_at")
+
+  branch    Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  mc        MegaChurch? @relation(fields: [mcId], references: [id], onDelete: Cascade)
+  createdBy User        @relation("LibraryItemCreatedBy", fields: [createdById], references: [id])
+
+  @@index([branchId, mcId])
+  @@map("library_items")
+}
