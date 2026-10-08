@@ -16,9 +16,9 @@ const INTENT_LABELS: Record<FirstTimerIntent, string> = {
 };
 
 const INTENT_STYLE: Record<FirstTimerIntent, { bg: string; color: string }> = {
-  JUST_VISITING: { bg: "#F9FAFB",  color: "var(--brand-muted)" },
-  UNDECIDED:     { bg: "#FEF3DC",  color: "#854F0B" },
-  WANTS_TO_JOIN: { bg: "#E0F4EC",  color: "#085041" },
+  JUST_VISITING: { bg: "var(--gray-50)",  color: "var(--brand-muted)" },
+  UNDECIDED:     { bg: "var(--tint-warn-bg)",  color: "var(--tint-warn-fg)" },
+  WANTS_TO_JOIN: { bg: "var(--tint-ok-bg)",  color: "var(--tint-ok-fg)" },
 };
 
 type FirstTimer = {
@@ -71,16 +71,16 @@ function StatusButton({
   const isActive = current === value;
   const labels = { PRESENT: "P", ABSENT: "A", EXCUSED: "E" };
   const styles: Record<AttendanceStatus, React.CSSProperties> = {
-    PRESENT: { background: "#E0F4EC", color: "#085041", border: "2px solid #1A8C6C" },
-    ABSENT:  { background: "#FDECEA", color: "#791F1F", border: "2px solid var(--brand-danger)" },
-    EXCUSED: { background: "#FEF3DC", color: "#854F0B", border: "2px solid var(--brand-warning)" },
+    PRESENT: { background: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)", border: "2px solid var(--brand-success)" },
+    ABSENT:  { background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)", border: "2px solid var(--brand-danger)" },
+    EXCUSED: { background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)", border: "2px solid var(--brand-warning)" },
   };
   return (
     <button
       type="button"
       onClick={() => onChange(value)}
       className="w-8 h-8 rounded-lg text-[12px] font-semibold transition-all"
-      style={isActive ? styles[value] : { background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
+      style={isActive ? styles[value] : { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
     >
       {labels[value]}
     </button>
@@ -204,13 +204,13 @@ export default function AttendanceDetailPage() {
         <div className="flex items-center gap-2 flex-wrap mb-1">
           <span
             className="rounded-pill text-[12px] font-semibold px-2.5 py-0.5"
-            style={{ background: service.type === "LC_LIVE" ? "var(--brand-navy)" : "#1A8C6C", color: "#fff" }}
+            style={{ background: service.type === "LC_LIVE" ? "var(--brand-navy)" : "var(--brand-success)", color: "#fff" }}
           >
             {service.type === "LC_LIVE" ? "LC LIVE" : "MGS"}
           </span>
           {service.mode === "ONLINE" && (
             <span className="rounded-pill text-[12px] font-medium px-2 py-0.5"
-                  style={{ background: "#FEF3DC", color: "#854F0B" }}>Online</span>
+                  style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>Online</span>
           )}
           <h1 className="text-[20px] font-semibold" style={{ color: "var(--brand-text)" }}>
             {formatDate(service.date)}
@@ -242,8 +242,8 @@ export default function AttendanceDetailPage() {
       {(service.firstTimers?.length ?? 0) > 0 && (
         <div className="rounded-xl px-4 py-2.5 mb-4 flex items-center gap-2"
              style={{ background: "var(--brand-navy-light)", border: "1px solid var(--brand-border)" }}>
-          <UserPlus className="h-3.5 w-3.5" style={{ color: "var(--brand-navy)" }} />
-          <span className="text-[13px] font-medium" style={{ color: "var(--brand-navy)" }}>
+          <UserPlus className="h-3.5 w-3.5" style={{ color: "var(--brand-link)" }} />
+          <span className="text-[13px] font-medium" style={{ color: "var(--brand-link)" }}>
             {service.firstTimers.length} first timer{service.firstTimers.length !== 1 ? "s" : ""} recorded
           </span>
           <span className="text-[12px] ml-1" style={{ color: "var(--brand-muted)" }}>
@@ -258,7 +258,7 @@ export default function AttendanceDetailPage() {
           <div key={key} className="rounded-xl overflow-hidden"
                style={{ border: "1px solid var(--brand-border)" }}>
             <div className="px-4 py-2.5 flex items-center gap-2"
-                 style={{ background: "#F9FAFB", borderBottom: "1px solid var(--brand-border)" }}>
+                 style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--brand-border)" }}>
               <span className="text-[12px] font-medium uppercase tracking-[0.04em]"
                     style={{ color: "var(--brand-muted)" }}>Shepherd:</span>
               <span className="text-[13px] font-medium" style={{ color: "var(--brand-text)" }}>
@@ -279,7 +279,7 @@ export default function AttendanceDetailPage() {
                     className="flex items-center justify-center rounded-lg text-[12px] font-semibold shrink-0"
                     style={{
                       width: 32, height: 32,
-                      background: status === "PRESENT" ? "#1A8C6C" : status === "ABSENT" ? "#C0392B" : "#B87015",
+                      background: status === "PRESENT" ? "var(--brand-success)" : status === "ABSENT" ? "var(--brand-danger)" : "var(--brand-warning)",
                       color: "#fff",
                     }}
                   >
@@ -319,7 +319,7 @@ export default function AttendanceDetailPage() {
       {/* ── First Timers section ── */}
       <div className="mt-8">
         <div className="flex items-center gap-3 mb-4">
-          <UserPlus className="h-4 w-4" style={{ color: "var(--brand-navy)" }} />
+          <UserPlus className="h-4 w-4" style={{ color: "var(--brand-link)" }} />
           <h2 className="text-[16px] font-semibold flex-1" style={{ color: "var(--brand-text)" }}>
             First Timers
             {(service.firstTimers?.length ?? 0) > 0 && (
@@ -333,7 +333,7 @@ export default function AttendanceDetailPage() {
             <button
               onClick={() => setAddingFT(true)}
               className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium transition-colors"
-              style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)", border: "1px solid var(--brand-border)" }}
+              style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)", border: "1px solid var(--brand-border)" }}
             >
               <Plus className="h-3 w-3" /> Add
             </button>
@@ -347,7 +347,7 @@ export default function AttendanceDetailPage() {
                 style={{ border: "1px solid var(--brand-border)", background: "var(--brand-navy-light)" }}>
             <div className="flex items-center justify-between mb-1">
               <p className="text-[12px] font-semibold uppercase tracking-[0.05em]"
-                 style={{ color: "var(--brand-navy)" }}>New First Timer</p>
+                 style={{ color: "var(--brand-link)" }}>New First Timer</p>
               <button type="button" onClick={() => { setAddingFT(false); setFtError(""); }}
                       className="p-1 rounded hover:opacity-70" style={{ color: "var(--brand-muted)" }}>
                 <X className="h-4 w-4" />
@@ -369,7 +369,7 @@ export default function AttendanceDetailPage() {
                     onChange={(e) => setFtForm((f) => ({ ...f, [key]: e.target.value }))}
                     placeholder={placeholder}
                     className="h-9 px-3 text-[13px] rounded-lg"
-                    style={{ border: "1px solid var(--brand-border)", outline: "none", background: "#fff" }}
+                    style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
                   />
                 </div>
               ))}
@@ -383,7 +383,7 @@ export default function AttendanceDetailPage() {
                 onChange={(e) => setFtForm((f) => ({ ...f, referredBy: e.target.value }))}
                 placeholder="Name of shepherd / member who brought them"
                 className="h-9 px-3 text-[13px] rounded-lg"
-                style={{ border: "1px solid var(--brand-border)", outline: "none", background: "#fff" }}
+                style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
               />
             </div>
 
@@ -395,7 +395,7 @@ export default function AttendanceDetailPage() {
                   className="flex-1 py-1.5 rounded-lg text-[11px] font-medium transition-colors"
                   style={ftForm.intent === intent
                     ? { background: "var(--brand-navy)", color: "#fff" }
-                    : { background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
+                    : { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
                 >
                   {INTENT_LABELS[intent]}
                 </button>
@@ -432,14 +432,14 @@ export default function AttendanceDetailPage() {
               const intentStyle = INTENT_STYLE[ft.intent];
               return (
                 <div key={ft.id} className="rounded-xl overflow-hidden"
-                     style={{ border: `1px solid ${isConverted ? "#A8D5BE" : "var(--brand-border)"}` }}>
+                     style={{ border: `1px solid ${isConverted ? "var(--green-200)" : "var(--brand-border)"}` }}>
                   <div className="px-4 py-3 flex items-center gap-3"
-                       style={{ background: isConverted ? "#E0F4EC" : "#FAFAFA",
+                       style={{ background: isConverted ? "var(--tint-ok-bg)" : "var(--gray-50b)",
                                 borderBottom: "1px solid var(--brand-border)" }}>
                     {/* Avatar */}
                     <div className="flex items-center justify-center rounded-lg shrink-0 text-[12px] font-bold"
                          style={{ width: 34, height: 34,
-                                  background: isConverted ? "#1A8C6C" : "var(--brand-navy)", color: "#fff" }}>
+                                  background: isConverted ? "var(--brand-success)" : "var(--brand-navy)", color: "#fff" }}>
                       {ft.firstName[0]}{ft.lastName[0]}
                     </div>
 
@@ -476,7 +476,7 @@ export default function AttendanceDetailPage() {
                       {/* Convert / converted status */}
                       {isConverted ? (
                         <span className="flex items-center gap-1 rounded-pill text-[11px] font-medium px-2 py-0.5"
-                              style={{ background: "#E0F4EC", color: "#085041" }}>
+                              style={{ background: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)" }}>
                           <UserCheck style={{ width: 11, height: 11 }} /> Member
                         </span>
                       ) : (

@@ -232,18 +232,18 @@ function CellCard({ cell, viewerRole, readOnly }: { cell: CellInfo; onRefresh: (
         {/* Badges */}
         <div className="flex items-center gap-2 shrink-0">
           <span className="text-[12px] font-medium rounded-pill px-2 py-0.5"
-                style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
             {totalMembers} members
           </span>
           {unassignedSlots > 0 && (
             <span className="text-[11px] font-medium rounded-pill px-2 py-0.5"
-                  style={{ background: "#FEF3DC", color: "#854F0B" }}>
+                  style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
               {unassignedSlots} slot{unassignedSlots !== 1 ? "s" : ""} open
             </span>
           )}
           {!cell.cellShepherd && (
             <span className="text-[11px] font-medium rounded-pill px-2 py-0.5"
-                  style={{ background: "#FDECEA", color: "#791F1F" }}>
+                  style={{ background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)" }}>
               No shepherd
             </span>
           )}
@@ -257,7 +257,7 @@ function CellCard({ cell, viewerRole, readOnly }: { cell: CellInfo; onRefresh: (
 
       {/* ── Expanded detail ── */}
       {expanded && (
-        <div className="px-4 py-4 flex flex-col gap-4" style={{ background: "#FAFAFA" }}>
+        <div className="px-4 py-4 flex flex-col gap-4" style={{ background: "var(--gray-50b)" }}>
           {/* Capacity bar */}
           <div>
             <div className="flex items-center justify-between mb-1">
@@ -272,7 +272,7 @@ function CellCard({ cell, viewerRole, readOnly }: { cell: CellInfo; onRefresh: (
             <div className="rounded-pill overflow-hidden" style={{ height: 6, background: "var(--brand-border)" }}>
               <div className="h-full rounded-pill transition-all"
                    style={{ width: `${memberCapacityPct}%`,
-                            background: memberCapacityPct >= 90 ? "#C0392B" : memberCapacityPct >= 70 ? "#F5A623" : "var(--brand-navy)" }} />
+                            background: memberCapacityPct >= 90 ? "var(--brand-danger)" : memberCapacityPct >= 70 ? "var(--amber-400)" : "var(--brand-navy)" }} />
             </div>
           </div>
 
@@ -327,7 +327,7 @@ function CellCard({ cell, viewerRole, readOnly }: { cell: CellInfo; onRefresh: (
                   onClick={handleAddSlot}
                   disabled={addingSlot}
                   className="flex items-center gap-1 text-[12px] font-medium rounded-lg px-2 py-1 transition-colors hover:opacity-80"
-                  style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}
+                  style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}
                 >
                   {addingSlot ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
                   Add slot
@@ -348,7 +348,7 @@ function CellCard({ cell, viewerRole, readOnly }: { cell: CellInfo; onRefresh: (
                 {shepherds.map((sh) => (
                   <div key={sh.id}>
                     <div className="flex items-center gap-3 px-3 py-2 rounded-lg"
-                         style={{ background: sh.isOccupied ? "var(--brand-navy-light)" : "#F9FAFB",
+                         style={{ background: sh.isOccupied ? "var(--brand-navy-light)" : "var(--gray-50)",
                                   border: "1px solid var(--brand-border)" }}>
                       <div className="flex items-center justify-center rounded-md shrink-0 text-[10px] font-bold"
                            style={{ width: 24, height: 24,
@@ -364,21 +364,21 @@ function CellCard({ cell, viewerRole, readOnly }: { cell: CellInfo; onRefresh: (
                         {sh.name ?? "Unassigned"}
                         {sh.isOccupied && !sh.hasLogin && (
                           <span className="ml-1.5 text-[10px] font-medium rounded-pill px-1.5 py-0.5"
-                                style={{ background: "#FEF3DC", color: "#854F0B" }}>
+                                style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
                             no login
                           </span>
                         )}
                       </span>
                       <span className="text-[12px] font-medium rounded-pill px-2 py-0.5"
-                            style={{ background: sh.memberCount >= memberMax ? "#FDECEA" : "var(--brand-border)",
-                                     color: sh.memberCount >= memberMax ? "#791F1F" : "var(--brand-muted)" }}>
+                            style={{ background: sh.memberCount >= memberMax ? "var(--tint-danger-bg)" : "var(--brand-border)",
+                                     color: sh.memberCount >= memberMax ? "var(--tint-danger-fg)" : "var(--brand-muted)" }}>
                         {sh.memberCount}/{memberMax}
                       </span>
                       {/* Assign / unassign */}
                       {!readOnly && (sh.isOccupied ? (
                         <button
                           onClick={() => handleUnassign(sh.id)}
-                          className="p-1 rounded hover:bg-[#FDECEA] transition-colors"
+                          className="p-1 rounded hover:bg-[var(--tint-danger-bg)] transition-colors"
                           title="Unassign shepherd"
                         >
                           <UserMinus className="h-3.5 w-3.5" style={{ color: "var(--brand-danger)" }} />
@@ -397,9 +397,9 @@ function CellCard({ cell, viewerRole, readOnly }: { cell: CellInfo; onRefresh: (
                     {/* Inline assign search */}
                     {!readOnly && assigningId === sh.id && (
                       <div className="mt-1.5 rounded-lg p-3 flex flex-col gap-2"
-                           style={{ background: "#F0F4FA", border: "1px solid var(--brand-border)" }}>
+                           style={{ background: "var(--navy-50)", border: "1px solid var(--brand-border)" }}>
                         <div className="flex items-center gap-2 rounded-lg px-2.5 py-1.5"
-                             style={{ background: "#fff", border: "1px solid var(--brand-border)" }}>
+                             style={{ background: "var(--surface)", border: "1px solid var(--brand-border)" }}>
                           <Search className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--brand-muted)" }} />
                           <input
                             autoFocus
@@ -457,7 +457,7 @@ function CellCard({ cell, viewerRole, readOnly }: { cell: CellInfo; onRefresh: (
             <Link
               href={`/cell/${cell.id}`}
               className="flex items-center gap-1.5 text-[12px] font-medium self-start hover:underline"
-              style={{ color: "var(--brand-navy)" }}
+              style={{ color: "var(--brand-link)" }}
             >
               View full cell dashboard <ArrowUpRight className="h-3.5 w-3.5" />
             </Link>
@@ -489,7 +489,7 @@ function RecentMemberRow({ member }: { member: RecentMember }) {
       <div className="flex items-center gap-1.5 shrink-0">
         {!member.isActive && (
           <span className="rounded-pill text-[10px] font-medium px-2 py-0.5"
-                style={{ background: "#FDECEA", color: "#791F1F" }}>
+                style={{ background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)" }}>
             Inactive
           </span>
         )}
@@ -666,7 +666,7 @@ export function BuscentreDashboard({ buscentreId }: { buscentreId?: string }) {
           <LayoutGrid style={{ width: 36, height: 36, color: "var(--brand-muted)", margin: "0 auto 10px" }} />
           <p className="text-[14px]" style={{ color: "var(--brand-muted)" }}>
             No cells yet.{" "}
-            <Link href="/org" className="font-medium hover:underline" style={{ color: "var(--brand-navy)" }}>
+            <Link href="/org" className="font-medium hover:underline" style={{ color: "var(--brand-link)" }}>
               Create cells from the Org tree →
             </Link>
           </p>

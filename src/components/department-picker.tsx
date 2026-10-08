@@ -35,8 +35,8 @@ export function DepartmentPicker({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] cursor-pointer transition-colors"
               style={{
                 border:     "1px solid " + (checked ? "var(--brand-navy)" : "var(--brand-border)"),
-                background: checked ? "var(--brand-navy-light)" : "#fff",
-                color:      checked ? "var(--brand-navy)" : "var(--brand-text)",
+                background: checked ? "var(--brand-navy-light)" : "var(--surface)",
+                color:      checked ? "var(--brand-link)" : "var(--brand-text)",
                 opacity:    disabled ? 0.45 : 1,
                 cursor:     disabled ? "not-allowed" : "pointer",
               }}

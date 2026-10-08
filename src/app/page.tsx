@@ -122,7 +122,7 @@ function headcountColor(count: number): string {
   if (count < 5)  return "var(--brand-danger)";
   if (count <= 12) return "var(--brand-warning)";
   if (count === 13) return "var(--brand-success)";
-  return "#22C55E";
+  return "var(--green-500)";
 }
 
 function CapacityBar({ count, max, mode = "capacity" }: { count: number; max: number; mode?: "capacity" | "headcount" }) {
@@ -222,7 +222,7 @@ function CellShepherdOverview() {
         </h1>
         <p className="mt-1 text-[14px]" style={{ color: "var(--brand-muted)" }}>
           Welcome back,{" "}
-          <span style={{ color: "var(--brand-navy)", fontWeight: 500 }}>
+          <span style={{ color: "var(--brand-link)", fontWeight: 500 }}>
             {session?.user?.name ?? "—"}
           </span>.
         </p>
@@ -232,18 +232,18 @@ function CellShepherdOverview() {
       {missedServices.length > 0 && (
         <Link href="/attendance">
           <div className="rounded-xl px-4 py-3 mb-4 flex items-center gap-3 hover:opacity-90 transition-opacity"
-               style={{ background: "#FFFBEB", border: "1px solid #FCD34D" }}>
-            <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: "#D97706" }} />
+               style={{ background: "var(--amber-50)", border: "1px solid var(--amber-300)" }}>
+            <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: "var(--amber-600)" }} />
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-semibold" style={{ color: "#92400E" }}>
+              <p className="text-[13px] font-semibold" style={{ color: "var(--amber-800)" }}>
                 {missedServices.length} missed service{missedServices.length !== 1 ? "s" : ""} — tap to fill
               </p>
-              <p className="text-[12px]" style={{ color: "#B45309" }}>
+              <p className="text-[12px]" style={{ color: "var(--amber-700)" }}>
                 {missedServices.slice(0, 2).map((s) => s.label).join(" · ")}
                 {missedServices.length > 2 ? ` · +${missedServices.length - 2} more` : ""}
               </p>
             </div>
-            <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "#D97706" }} />
+            <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "var(--amber-600)" }} />
           </div>
         </Link>
       )}
@@ -311,7 +311,7 @@ function CellShepherdOverview() {
                 >
                   <div
                     className="rounded-lg flex items-center justify-center text-[12px] font-semibold shrink-0"
-                    style={{ width: 32, height: 32, background: name ? "var(--brand-navy)" : "#F3F4F6", color: name ? "#fff" : "var(--brand-muted)" }}
+                    style={{ width: 32, height: 32, background: name ? "var(--brand-navy)" : "var(--gray-100)", color: name ? "#fff" : "var(--brand-muted)" }}
                   >
                     {name ? name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase() : `S${i + 1}`}
                   </div>
@@ -323,7 +323,7 @@ function CellShepherdOverview() {
                   </span>
                   {!s.user && s.person && (
                     <span className="rounded-pill text-[10px] font-medium px-2 py-0.5 ml-1"
-                          style={{ background: "#FEF3DC", color: "#854F0B" }}>no login</span>
+                          style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>no login</span>
                   )}
                 </div>
               );
@@ -346,7 +346,7 @@ function CellShepherdOverview() {
               </p>
             </div>
             <Link href="/first-timers" className="text-[12px] font-medium hover:underline"
-                  style={{ color: "var(--brand-navy)" }}>
+                  style={{ color: "var(--brand-link)" }}>
               View all →
             </Link>
           </div>
@@ -355,7 +355,7 @@ function CellShepherdOverview() {
               <div key={ft.id} className="flex items-center gap-3 px-4 py-2.5"
                    style={{ borderBottom: i < unreachedFTs.length - 1 ? "1px solid var(--brand-border)" : "none" }}>
                 <div className="flex items-center justify-center rounded-lg text-[11px] font-bold shrink-0"
-                     style={{ width: 28, height: 28, background: "#FEF3DC", color: "#854F0B" }}>
+                     style={{ width: 28, height: 28, background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
                   {ft.firstName[0]}{ft.lastName[0]}
                 </div>
                 <span className="flex-1 text-[13px] font-medium" style={{ color: "var(--brand-text)" }}>
@@ -363,7 +363,7 @@ function CellShepherdOverview() {
                 </span>
                 {ft.phone && (
                   <a href={`tel:${ft.phone}`} className="text-[12px] font-medium hover:underline"
-                     style={{ color: "var(--brand-navy)" }}>
+                     style={{ color: "var(--brand-link)" }}>
                     {ft.phone}
                   </a>
                 )}
@@ -372,7 +372,7 @@ function CellShepherdOverview() {
           </div>
           <Link href="/first-timers">
             <div className="mt-2 rounded-xl px-4 py-2.5 text-center text-[13px] font-medium transition-colors hover:bg-[var(--brand-navy-light)]"
-                 style={{ border: "1px solid var(--brand-border)", color: "var(--brand-navy)" }}>
+                 style={{ border: "1px solid var(--brand-border)", color: "var(--brand-link)" }}>
               Open First Timers Focus →
             </div>
           </Link>
@@ -476,29 +476,29 @@ function BuscentreHeadOverview() {
       {/* ── Cells with missed attendance — top priority ── */}
       {cellGaps.length > 0 && (
         <div className="rounded-xl overflow-hidden mb-5"
-             style={{ border: "1px solid #FCD34D", background: "#FFFBEB" }}>
+             style={{ border: "1px solid var(--amber-300)", background: "var(--amber-50)" }}>
           <div className="flex items-center gap-2 px-4 py-3"
-               style={{ borderBottom: "1px solid #FCD34D" }}>
-            <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: "#D97706" }} />
-            <span className="text-[13px] font-semibold" style={{ color: "#92400E" }}>
+               style={{ borderBottom: "1px solid var(--amber-300)" }}>
+            <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: "var(--amber-600)" }} />
+            <span className="text-[13px] font-semibold" style={{ color: "var(--amber-800)" }}>
               {cellGaps.length} cell{cellGaps.length !== 1 ? "s" : ""} with missed attendance — follow up needed
             </span>
           </div>
           {cellGaps.map((cg, i) => (
             <div key={cg.cellId} className="flex items-center gap-3 px-4 py-2.5"
-                 style={{ borderBottom: i < cellGaps.length - 1 ? "1px solid #FEF3DC" : "none" }}>
+                 style={{ borderBottom: i < cellGaps.length - 1 ? "1px solid var(--tint-warn-bg)" : "none" }}>
               <div className="flex-1 min-w-0">
-                <span className="text-[13px] font-semibold" style={{ color: "#92400E" }}>
+                <span className="text-[13px] font-semibold" style={{ color: "var(--amber-800)" }}>
                   {cg.cellName}
                 </span>
                 {cg.cellShepherd && (
-                  <span className="text-[12px] ml-2" style={{ color: "#B45309" }}>
+                  <span className="text-[12px] ml-2" style={{ color: "var(--amber-700)" }}>
                     · {cg.cellShepherd}
                   </span>
                 )}
               </div>
               <span className="rounded-pill text-[11px] font-semibold px-2 py-0.5 shrink-0"
-                    style={{ background: "#FEF3DC", color: "#854F0B" }}>
+                    style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
                 {cg.gapCount} gap{cg.gapCount !== 1 ? "s" : ""}
               </span>
             </div>
@@ -550,7 +550,7 @@ function BuscentreHeadOverview() {
                  style={{ border: "1px solid var(--brand-border)" }}>
               {/* Cell header */}
               <div className="px-4 py-3 flex items-center justify-between"
-                   style={{ background: "#F9FAFB", borderBottom: "1px solid var(--brand-border)" }}>
+                   style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--brand-border)" }}>
                 <div>
                   <p className="text-[14px] font-semibold" style={{ color: "var(--brand-text)" }}>{cell.name}</p>
                   <p className="text-[12px] mt-0.5" style={{ color: cellShepherd ? "var(--brand-muted)" : "var(--brand-warning)" }}>
@@ -579,7 +579,7 @@ function BuscentreHeadOverview() {
                     <div key={s.id} className="flex items-center gap-3 px-4 py-2.5"
                          style={{ borderBottom: i < cell.shepherds.length - 1 ? "1px solid var(--brand-border)" : "none" }}>
                       <div className="flex items-center justify-center rounded-lg text-[11px] font-semibold shrink-0"
-                           style={{ width: 28, height: 28, background: name ? "var(--brand-navy)" : "#F3F4F6",
+                           style={{ width: 28, height: 28, background: name ? "var(--brand-navy)" : "var(--gray-100)",
                                     color: name ? "#fff" : "var(--brand-muted)" }}>
                         {name ? name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase() : "?"}
                       </div>
@@ -624,7 +624,7 @@ function BuscentreHeadOverview() {
             ))}
             <Link href="/members">
               <div className="px-4 py-2.5 text-center text-[13px] font-medium hover:bg-[var(--brand-navy-light)] transition-colors"
-                   style={{ color: "var(--brand-navy)", borderTop: "1px solid var(--brand-border)" }}>
+                   style={{ color: "var(--brand-link)", borderTop: "1px solid var(--brand-border)" }}>
                 View all members →
               </div>
             </Link>
@@ -637,13 +637,13 @@ function BuscentreHeadOverview() {
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "#F59E0B" }} />
+              <span className="w-2 h-2 rounded-full shrink-0" style={{ background: "var(--amber-500)" }} />
               <p className="text-[13px] font-semibold" style={{ color: "var(--brand-text)" }}>
                 {unreachedFTs.length} first timer{unreachedFTs.length !== 1 ? "s" : ""} need a reach-out
               </p>
             </div>
             <Link href="/first-timers" className="text-[12px] font-medium hover:underline"
-                  style={{ color: "var(--brand-navy)" }}>
+                  style={{ color: "var(--brand-link)" }}>
               View all →
             </Link>
           </div>
@@ -652,7 +652,7 @@ function BuscentreHeadOverview() {
               <div key={ft.id} className="flex items-center gap-3 px-4 py-2.5"
                    style={{ borderBottom: i < unreachedFTs.length - 1 ? "1px solid var(--brand-border)" : "none" }}>
                 <div className="flex items-center justify-center rounded-lg text-[11px] font-bold shrink-0"
-                     style={{ width: 28, height: 28, background: "#FEF3DC", color: "#854F0B" }}>
+                     style={{ width: 28, height: 28, background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
                   {ft.firstName[0]}{ft.lastName[0]}
                 </div>
                 <span className="flex-1 text-[13px] font-medium" style={{ color: "var(--brand-text)" }}>
@@ -660,7 +660,7 @@ function BuscentreHeadOverview() {
                 </span>
                 {ft.phone && (
                   <a href={`tel:${ft.phone}`} className="text-[12px] font-medium hover:underline"
-                     style={{ color: "var(--brand-navy)" }}>
+                     style={{ color: "var(--brand-link)" }}>
                     {ft.phone}
                   </a>
                 )}
@@ -669,7 +669,7 @@ function BuscentreHeadOverview() {
           </div>
           <Link href="/first-timers">
             <div className="mt-2 rounded-xl px-4 py-2.5 text-center text-[13px] font-medium transition-colors hover:bg-[var(--brand-navy-light)]"
-                 style={{ border: "1px solid var(--brand-border)", color: "var(--brand-navy)" }}>
+                 style={{ border: "1px solid var(--brand-border)", color: "var(--brand-link)" }}>
               Open First Timers Focus →
             </div>
           </Link>
@@ -753,7 +753,7 @@ export default function OverviewPage() {
         </h1>
         <p className="mt-1 text-[14px]" style={{ color: "var(--brand-muted)" }}>
           Welcome back,{" "}
-          <span style={{ color: "var(--brand-navy)", fontWeight: 500 }}>
+          <span style={{ color: "var(--brand-link)", fontWeight: 500 }}>
             {session?.user?.name ?? "—"}
           </span>.
         </p>
@@ -787,7 +787,7 @@ export default function OverviewPage() {
         ].map(({ icon: Icon, label, value }) => (
           <div key={label} className="flex items-center gap-3">
             <div className="rounded-lg p-2" style={{ background: "var(--brand-navy-light)" }}>
-              <Icon className="h-4 w-4" style={{ color: "var(--brand-navy)" }} />
+              <Icon className="h-4 w-4" style={{ color: "var(--brand-link)" }} />
             </div>
             <div>
               <p className="text-[20px] font-semibold leading-none" style={{ color: "var(--brand-text)" }}>
@@ -803,14 +803,14 @@ export default function OverviewPage() {
       {data.totalOpenWarnings > 0 && (
         <Link href="/org/warnings">
           <div className="rounded-xl px-5 py-3.5 mb-3 flex items-center justify-between hover:opacity-90 transition-opacity"
-               style={{ background: "#FEF3DC", border: "1px solid #F5D9A0" }}>
+               style={{ background: "var(--tint-warn-bg)", border: "1px solid var(--tint-warn-border)" }}>
             <div className="flex items-center gap-3">
-              <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: "#854F0B" }} />
+              <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: "var(--tint-warn-fg)" }} />
               <div>
-                <p className="text-[14px] font-medium" style={{ color: "#854F0B" }}>
+                <p className="text-[14px] font-medium" style={{ color: "var(--tint-warn-fg)" }}>
                   {data.totalOpenWarnings} open warning{data.totalOpenWarnings !== 1 ? "s" : ""}
                 </p>
-                <p className="text-[12px]" style={{ color: "#B87015" }}>
+                <p className="text-[12px]" style={{ color: "var(--brand-warning)" }}>
                   {data.openActingUpFlags > 0 && `${data.openActingUpFlags} acting-up`}
                   {data.openActingUpFlags > 0 && data.openCapacityWarnings > 0 && " · "}
                   {data.openCapacityWarnings > 0 && `${data.openCapacityWarnings} capacity`}
@@ -818,7 +818,7 @@ export default function OverviewPage() {
                 </p>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "#854F0B" }} />
+            <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "var(--tint-warn-fg)" }} />
           </div>
         </Link>
       )}
@@ -826,11 +826,11 @@ export default function OverviewPage() {
       {data.unoccupiedShepherdSlots > 0 && (
         <Link href="/org">
           <div className="rounded-xl px-5 py-3.5 mb-3 flex items-center justify-between hover:opacity-90 transition-opacity"
-               style={{ background: "var(--brand-navy-light)", border: "1px solid #C8D6EC" }}>
+               style={{ background: "var(--brand-navy-light)", border: "1px solid var(--navy-200)" }}>
             <div className="flex items-center gap-3">
-              <UserPlus className="h-4 w-4 shrink-0" style={{ color: "var(--brand-navy)" }} />
+              <UserPlus className="h-4 w-4 shrink-0" style={{ color: "var(--brand-link)" }} />
               <div>
-                <p className="text-[14px] font-medium" style={{ color: "var(--brand-navy)" }}>
+                <p className="text-[14px] font-medium" style={{ color: "var(--brand-link)" }}>
                   {data.unoccupiedShepherdSlots} shepherd slot{data.unoccupiedShepherdSlots !== 1 ? "s" : ""} without an assigned person
                 </p>
                 <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>
@@ -838,7 +838,7 @@ export default function OverviewPage() {
                 </p>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "var(--brand-navy)" }} />
+            <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "var(--brand-link)" }} />
           </div>
         </Link>
       )}
@@ -846,14 +846,14 @@ export default function OverviewPage() {
       {data.inactiveMembers > 0 && (
         <Link href="/members">
           <div className="rounded-xl px-5 py-3.5 mb-3 flex items-center justify-between hover:opacity-90 transition-opacity"
-               style={{ background: "#FDECEA", border: "1px solid #F5C0BC" }}>
+               style={{ background: "var(--tint-danger-bg)", border: "1px solid var(--red-200b)" }}>
             <div className="flex items-center gap-3">
-              <Users className="h-4 w-4 shrink-0" style={{ color: "#791F1F" }} />
-              <p className="text-[14px] font-medium" style={{ color: "#791F1F" }}>
+              <Users className="h-4 w-4 shrink-0" style={{ color: "var(--tint-danger-fg)" }} />
+              <p className="text-[14px] font-medium" style={{ color: "var(--tint-danger-fg)" }}>
                 {data.inactiveMembers} inactive member{data.inactiveMembers !== 1 ? "s" : ""}
               </p>
             </div>
-            <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "#791F1F" }} />
+            <ChevronRight className="h-4 w-4 shrink-0" style={{ color: "var(--tint-danger-fg)" }} />
           </div>
         </Link>
       )}
@@ -875,7 +875,7 @@ export default function OverviewPage() {
             No members yet.
           </p>
           <Link href="/members" className="text-[13px] font-medium mt-2 inline-block hover:underline"
-                style={{ color: "var(--brand-navy)" }}>
+                style={{ color: "var(--brand-link)" }}>
             Add your first member →
           </Link>
         </div>
@@ -897,13 +897,13 @@ export default function OverviewPage() {
                 <div className="flex items-center gap-2 shrink-0">
                   {!m.isActive && (
                     <span className="rounded-pill text-[11px] font-medium px-2 py-0.5"
-                          style={{ background: "#FDECEA", color: "#791F1F" }}>
+                          style={{ background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)" }}>
                       Inactive
                     </span>
                   )}
                   {m.isUser && (
                     <span className="rounded-pill text-[11px] font-medium px-2 py-0.5"
-                          style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                          style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
                       System user
                     </span>
                   )}
@@ -917,7 +917,7 @@ export default function OverviewPage() {
           ))}
           <Link href="/members">
             <div className="px-4 py-2.5 text-center text-[13px] font-medium hover:bg-[var(--brand-navy-light)] transition-colors"
-                 style={{ color: "var(--brand-navy)", borderTop: "1px solid var(--brand-border)" }}>
+                 style={{ color: "var(--brand-link)", borderTop: "1px solid var(--brand-border)" }}>
               View all members →
             </div>
           </Link>
@@ -932,7 +932,7 @@ export default function OverviewPage() {
           <Home style={{ width: 36, height: 36, color: "var(--brand-muted)", margin: "0 auto 10px" }} />
           <p className="text-[14px]" style={{ color: "var(--brand-muted)" }}>
             No cells yet.{" "}
-            <Link href="/org" className="font-medium hover:underline" style={{ color: "var(--brand-navy)" }}>
+            <Link href="/org" className="font-medium hover:underline" style={{ color: "var(--brand-link)" }}>
               Build your org structure →
             </Link>
           </p>
@@ -941,7 +941,7 @@ export default function OverviewPage() {
         <div className="rounded-xl overflow-hidden mb-4" style={{ border: "1px solid var(--brand-border)" }}>
           {/* Header */}
           <div className="grid grid-cols-12 gap-3 px-4 py-2.5"
-               style={{ background: "#F9FAFB", borderBottom: "1px solid var(--brand-border)" }}>
+               style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--brand-border)" }}>
             {[
               { label: "Cell",          cols: "col-span-3" },
               { label: "Buscentre",     cols: "col-span-2" },
@@ -970,7 +970,7 @@ export default function OverviewPage() {
                     <span style={{ color: "var(--brand-text)" }}>{cell.userRoles[0].user.name}</span>
                   ) : (
                     <span className="rounded-pill text-[11px] font-medium px-2 py-0.5"
-                          style={{ background: "#FEF3DC", color: "#854F0B" }}>
+                          style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
                       Unassigned
                     </span>
                   )}
@@ -1013,7 +1013,7 @@ export default function OverviewPage() {
                     </div>
                   ) : (
                     <div className="flex items-center justify-center rounded-lg shrink-0"
-                         style={{ width: 32, height: 32, background: "#F3F4F6" }}>
+                         style={{ width: 32, height: 32, background: "var(--gray-100)" }}>
                       <UserCircle className="h-4 w-4" style={{ color: "var(--brand-muted)" }} />
                     </div>
                   )}
@@ -1029,20 +1029,20 @@ export default function OverviewPage() {
                       {!isAssigned && (
                         <Link href="/org"
                               className="rounded-pill text-[11px] font-medium px-2 py-0.5 hover:opacity-80 transition-opacity"
-                              style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}
+                              style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}
                               onClick={(e) => e.stopPropagation()}>
                           Assign →
                         </Link>
                       )}
                       {isAssigned && !hasLogin && (
                         <span className="rounded-pill text-[11px] font-medium px-2 py-0.5"
-                              style={{ background: "#FEF3DC", color: "#854F0B" }}>
+                              style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
                           no login
                         </span>
                       )}
                       {hasLogin && (
                         <span className="rounded-pill text-[11px] font-medium px-2 py-0.5"
-                              style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                              style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
                           system user
                         </span>
                       )}
@@ -1075,9 +1075,9 @@ export default function OverviewPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-xl p-4 flex items-start gap-3" style={{ border: "1px solid var(--brand-border)" }}>
           <div className="rounded-lg p-2 shrink-0"
-               style={{ background: data.unoccupiedShepherdSlots > 0 ? "#FEF3DC" : "#E0F4EC" }}>
+               style={{ background: data.unoccupiedShepherdSlots > 0 ? "var(--tint-warn-bg)" : "var(--tint-ok-bg)" }}>
             <UserCircle className="h-4 w-4"
-                        style={{ color: data.unoccupiedShepherdSlots > 0 ? "#854F0B" : "#085041" }} />
+                        style={{ color: data.unoccupiedShepherdSlots > 0 ? "var(--tint-warn-fg)" : "var(--tint-ok-fg)" }} />
           </div>
           <div>
             <p className="text-[20px] font-semibold leading-none mb-0.5" style={{ color: "var(--brand-text)" }}>
@@ -1089,7 +1089,7 @@ export default function OverviewPage() {
             {data.unoccupiedShepherdSlots > 0 && (
               <Link href="/org"
                     className="text-[12px] font-medium mt-1 flex items-center gap-0.5 hover:underline"
-                    style={{ color: "var(--brand-navy)" }}>
+                    style={{ color: "var(--brand-link)" }}>
                 Assign from org tree <ChevronRight className="h-3 w-3" />
               </Link>
             )}
@@ -1098,9 +1098,9 @@ export default function OverviewPage() {
 
         <div className="rounded-xl p-4 flex items-start gap-3" style={{ border: "1px solid var(--brand-border)" }}>
           <div className="rounded-lg p-2 shrink-0"
-               style={{ background: data.inactiveMembers > 0 ? "#FDECEA" : "#E0F4EC" }}>
+               style={{ background: data.inactiveMembers > 0 ? "var(--tint-danger-bg)" : "var(--tint-ok-bg)" }}>
             <Users className="h-4 w-4"
-                   style={{ color: data.inactiveMembers > 0 ? "#791F1F" : "#085041" }} />
+                   style={{ color: data.inactiveMembers > 0 ? "var(--tint-danger-fg)" : "var(--tint-ok-fg)" }} />
           </div>
           <div>
             <p className="text-[20px] font-semibold leading-none mb-0.5" style={{ color: "var(--brand-text)" }}>
@@ -1112,7 +1112,7 @@ export default function OverviewPage() {
             {data.inactiveMembers > 0 && (
               <Link href="/members"
                     className="text-[12px] font-medium mt-1 flex items-center gap-0.5 hover:underline"
-                    style={{ color: "var(--brand-navy)" }}>
+                    style={{ color: "var(--brand-link)" }}>
                 View members <ChevronRight className="h-3 w-3" />
               </Link>
             )}
@@ -1121,9 +1121,9 @@ export default function OverviewPage() {
 
         <div className="rounded-xl p-4 flex items-start gap-3" style={{ border: "1px solid var(--brand-border)" }}>
           <div className="rounded-lg p-2 shrink-0"
-               style={{ background: data.totalOpenWarnings > 0 ? "#FEF3DC" : "#E0F4EC" }}>
+               style={{ background: data.totalOpenWarnings > 0 ? "var(--tint-warn-bg)" : "var(--tint-ok-bg)" }}>
             <ShieldAlert className="h-4 w-4"
-                         style={{ color: data.totalOpenWarnings > 0 ? "#854F0B" : "#085041" }} />
+                         style={{ color: data.totalOpenWarnings > 0 ? "var(--tint-warn-fg)" : "var(--tint-ok-fg)" }} />
           </div>
           <div>
             <p className="text-[20px] font-semibold leading-none mb-0.5" style={{ color: "var(--brand-text)" }}>
@@ -1135,7 +1135,7 @@ export default function OverviewPage() {
             {data.totalOpenWarnings > 0 && (
               <Link href="/org/warnings"
                     className="text-[12px] font-medium mt-1 flex items-center gap-0.5 hover:underline"
-                    style={{ color: "var(--brand-navy)" }}>
+                    style={{ color: "var(--brand-link)" }}>
                 View warnings <ChevronRight className="h-3 w-3" />
               </Link>
             )}

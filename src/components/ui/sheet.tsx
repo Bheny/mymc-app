@@ -69,7 +69,7 @@ const SheetContent = React.forwardRef<
       ref={ref}
       className={cn(
         // Position — fixed right panel, full height. z-[70] sits above the mobile bottom nav (z-[60])
-        "fixed inset-y-0 right-0 z-[70] flex flex-col bg-white",
+        "fixed inset-y-0 right-0 z-[70] flex flex-col bg-[var(--surface)]",
         "w-full sm:max-w-none",
         // Slide-in animation
         "data-[state=open]:animate-in  data-[state=open]:slide-in-from-right",

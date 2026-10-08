@@ -30,10 +30,10 @@ type Summary = { total: number; green: number; yellow: number; red: number; unre
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const STATUS_CONFIG: Record<string, { label: string; dot: string; bg: string; color: string }> = {
-  GREEN:    { label: "Committed",   dot: "#059669", bg: "#E0F4EC", color: "#085041" },
-  YELLOW:   { label: "Promising",   dot: "#D97706", bg: "#FEF3DC", color: "#854F0B" },
-  RED:      { label: "Not a fit",   dot: "#DC2626", bg: "#FDECEA", color: "#791F1F" },
-  unreached:{ label: "Not reached", dot: "#9CA3AF", bg: "#F3F4F6", color: "#6B7280" },
+  GREEN:    { label: "Committed",   dot: "var(--green-600)", bg: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)" },
+  YELLOW:   { label: "Promising",   dot: "var(--amber-600)", bg: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" },
+  RED:      { label: "Not a fit",   dot: "var(--red-600)", bg: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)" },
+  unreached:{ label: "Not reached", dot: "var(--gray-400)", bg: "var(--gray-100)", color: "var(--brand-muted)" },
 };
 
 const INTENT_LABEL: Record<string, string> = {
@@ -56,17 +56,17 @@ const OUTCOME_OPTIONS: { status: ReachOutStatus; label: string; sub: string; dot
   {
     status: "GREEN", label: "Committed",
     sub:    "Expressed clear interest — likely to become a member",
-    dot: "#059669", bg: "#E0F4EC", color: "#085041", border: "#86EFAC",
+    dot: "var(--green-600)", bg: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)", border: "var(--green-300)",
   },
   {
     status: "YELLOW", label: "Promising",
     sub:    "Shows potential — needs more follow-up before deciding",
-    dot: "#D97706", bg: "#FEF3DC", color: "#854F0B", border: "#FCD34D",
+    dot: "var(--amber-600)", bg: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)", border: "var(--amber-300)",
   },
   {
     status: "RED", label: "Not a fit",
     sub:    "Not interested or unlikely to become a member right now",
-    dot: "#DC2626", bg: "#FDECEA", color: "#791F1F", border: "#FCA5A5",
+    dot: "var(--red-600)", bg: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)", border: "var(--red-300)",
   },
 ];
 
@@ -99,7 +99,7 @@ function StatusSelector({
         >
           <div
             className="w-full rounded-2xl flex flex-col overflow-hidden"
-            style={{ maxWidth: 420, background: "#fff", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
+            style={{ maxWidth: 420, background: "var(--surface)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
@@ -199,9 +199,9 @@ function FTRow({ ft, onUpdated }: { ft: FirstTimer; onUpdated: (id: string, stat
   }
 
   const rowBg =
-    ft.reachOutStatus === "GREEN"  ? "#F0FDF4" :
-    ft.reachOutStatus === "YELLOW" ? "#FFFBEB" :
-    ft.reachOutStatus === "RED"    ? "#FFF5F5" : "#fff";
+    ft.reachOutStatus === "GREEN"  ? "var(--green-50)" :
+    ft.reachOutStatus === "YELLOW" ? "var(--amber-50)" :
+    ft.reachOutStatus === "RED"    ? "var(--red-50c)" : "#fff";
 
   return (
     <div className="flex flex-col" style={{ borderBottom: "1px solid var(--brand-border)", background: rowBg }}>
@@ -209,7 +209,7 @@ function FTRow({ ft, onUpdated }: { ft: FirstTimer; onUpdated: (id: string, stat
       <div className="flex items-start gap-3 px-4 py-3">
         {/* Colour stripe */}
         <div className="w-1 self-stretch rounded-full shrink-0 mt-0.5"
-             style={{ background: ft.reachOutStatus ? STATUS_CONFIG[ft.reachOutStatus].dot : "#E5E7EB" }} />
+             style={{ background: ft.reachOutStatus ? STATUS_CONFIG[ft.reachOutStatus].dot : "var(--brand-border)" }} />
 
         {/* Details */}
         <div className="flex-1 min-w-0">
@@ -219,10 +219,10 @@ function FTRow({ ft, onUpdated }: { ft: FirstTimer; onUpdated: (id: string, stat
             </span>
             {ft.convertedToMemberId && (
               <span className="rounded-pill text-[10px] font-semibold px-2 py-0.5"
-                    style={{ background: "#E0F4EC", color: "#085041" }}>✓ Member</span>
+                    style={{ background: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)" }}>✓ Member</span>
             )}
             <span className="rounded-pill text-[10px] font-medium px-1.5 py-0.5"
-                  style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                  style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
               {INTENT_LABEL[ft.intent]}
             </span>
           </div>
@@ -261,7 +261,7 @@ function FTRow({ ft, onUpdated }: { ft: FirstTimer; onUpdated: (id: string, stat
                 onChange={(e) => setNote(e.target.value)}
                 placeholder="Add a note about this first timer…"
                 className="flex-1 h-8 px-2 text-[13px] rounded-lg"
-                style={{ border: "1px solid var(--brand-border)", outline: "none", background: "#fff" }}
+                style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
                 onKeyDown={(e) => { if (e.key === "Enter") saveNote(); if (e.key === "Escape") setEditing(false); }}
               />
               <button onClick={saveNote} disabled={saving}
@@ -333,11 +333,11 @@ export default function FirstTimersPage() {
   }
 
   const summaryCards = [
-    { label: "Total",       value: summary.total,     dot: "#6B7280", bg: "#F9FAFB" },
-    { label: "Not Reached", value: summary.unreached,  dot: "#9CA3AF", bg: "#F3F4F6" },
-    { label: "Promising",   value: summary.yellow,     dot: "#D97706", bg: "#FEF3DC" },
-    { label: "Committed",   value: summary.green,      dot: "#059669", bg: "#E0F4EC" },
-    { label: "Not a Fit",   value: summary.red,        dot: "#DC2626", bg: "#FDECEA" },
+    { label: "Total",       value: summary.total,     dot: "var(--brand-muted)", bg: "var(--gray-50)" },
+    { label: "Not Reached", value: summary.unreached,  dot: "var(--gray-400)", bg: "var(--gray-100)" },
+    { label: "Promising",   value: summary.yellow,     dot: "var(--amber-600)", bg: "var(--tint-warn-bg)" },
+    { label: "Committed",   value: summary.green,      dot: "var(--green-600)", bg: "var(--tint-ok-bg)" },
+    { label: "Not a Fit",   value: summary.red,        dot: "var(--red-600)", bg: "var(--tint-danger-bg)" },
   ];
 
   return (
@@ -381,7 +381,7 @@ export default function FirstTimersPage() {
             className="px-3 py-1.5 rounded-pill text-[13px] font-medium transition-colors"
             style={filter === key
               ? { background: "var(--brand-navy)", color: "#fff" }
-              : { background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
+              : { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
           >
             {label}
           </button>
@@ -407,7 +407,7 @@ export default function FirstTimersPage() {
         <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
           {/* Column headers */}
           <div className="px-4 py-2.5 flex items-center"
-               style={{ background: "#F9FAFB", borderBottom: "1px solid var(--brand-border)" }}>
+               style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--brand-border)" }}>
             <span className="flex-1 text-[11px] font-medium uppercase tracking-[0.05em]"
                   style={{ color: "var(--brand-muted)" }}>
               {firstTimers.length} first timer{firstTimers.length !== 1 ? "s" : ""}
@@ -430,10 +430,10 @@ export default function FirstTimersPage() {
           Colour guide
         </p>
         {[
-          { dot: "#059669", label: "Green — Expressed interest, likely to become a member" },
-          { dot: "#D97706", label: "Yellow — Shows promise, needs more follow-up" },
-          { dot: "#DC2626", label: "Red — Not a fit or not interested at this time" },
-          { dot: "#9CA3AF", label: "Grey — Not yet reached out to" },
+          { dot: "var(--green-600)", label: "Green — Expressed interest, likely to become a member" },
+          { dot: "var(--amber-600)", label: "Yellow — Shows promise, needs more follow-up" },
+          { dot: "var(--red-600)", label: "Red — Not a fit or not interested at this time" },
+          { dot: "var(--gray-400)", label: "Grey — Not yet reached out to" },
         ].map(({ dot, label }) => (
           <div key={label} className="flex items-center gap-2 text-[12px]" style={{ color: "var(--brand-muted)" }}>
             <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: dot }} />

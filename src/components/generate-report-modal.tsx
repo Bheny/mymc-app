@@ -24,32 +24,32 @@ const REPORTS: ReportDef[] = [
   {
     id: "cells-ready-to-divide", label: "Cells Ready to Divide",
     description: "Cells at or above the 13-member cap, ranked by count.",
-    icon: LayoutGrid, color: "#7C3AED", needsDates: false,
+    icon: LayoutGrid, color: "var(--violet-600)", needsDates: false,
   },
   {
     id: "consistent-absentees", label: "Consistent Absentees",
     description: "Members absent 2+ times in the selected period — your pastoral follow-up list.",
-    icon: Users, color: "#DC2626", needsDates: true,
+    icon: Users, color: "var(--red-600)", needsDates: true,
   },
   {
     id: "shepherd-load", label: "Shepherd Load",
     description: "Every shepherd ranked by member count vs the member cap set in Settings.",
-    icon: Users, color: "#B45309", needsDates: false,
+    icon: Users, color: "var(--amber-700)", needsDates: false,
   },
   {
     id: "first-timer-conversion", label: "First Timer Conversion",
     description: "How many first timers became members, broken down by cell.",
-    icon: UserPlus, color: "#059669", needsDates: true,
+    icon: UserPlus, color: "var(--green-600)", needsDates: true,
   },
   {
     id: "highest-attendance", label: "Highest Attendance",
     description: "Top 10 services by attendance rate in the selected period.",
-    icon: BarChart2, color: "var(--brand-navy)", needsDates: true,
+    icon: BarChart2, color: "var(--brand-link)", needsDates: true,
   },
   {
     id: "monthly-summary", label: "Monthly / Quarterly Summary",
     description: "Members, attendance averages, first timers, and souls won in one view.",
-    icon: TrendingUp, color: "#1A8C6C", needsDates: true,
+    icon: TrendingUp, color: "var(--brand-success)", needsDates: true,
   },
 ];
 
@@ -174,7 +174,7 @@ export function GenerateReportModal({ onClose }: { onClose: () => void }) {
     >
       <div
         className="relative w-full rounded-2xl flex flex-col overflow-hidden"
-        style={{ maxWidth: 560, maxHeight: "90vh", background: "#fff", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
+        style={{ maxWidth: 560, maxHeight: "90vh", background: "var(--surface)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4"
@@ -188,7 +188,7 @@ export function GenerateReportModal({ onClose }: { onClose: () => void }) {
                 <ChevronRight className="h-4 w-4 rotate-180" style={{ color: "var(--brand-muted)" }} />
               </button>
             )}
-            <FileText className="h-4 w-4" style={{ color: "var(--brand-navy)" }} />
+            <FileText className="h-4 w-4" style={{ color: "var(--brand-link)" }} />
             <h2 className="text-[16px] font-semibold" style={{ color: "var(--brand-text)" }}>
               {step === "select" ? "Generate Report" : selected?.label}
             </h2>
@@ -209,10 +209,10 @@ export function GenerateReportModal({ onClose }: { onClose: () => void }) {
                   key={r.id}
                   onClick={() => handleSelect(r)}
                   className="text-left flex items-start gap-4 rounded-xl px-4 py-3.5 transition-all hover:shadow-sm"
-                  style={{ border: "1px solid var(--brand-border)", background: "#fff" }}
+                  style={{ border: "1px solid var(--brand-border)", background: "var(--surface)" }}
                 >
                   <div className="flex items-center justify-center rounded-xl shrink-0"
-                       style={{ width: 40, height: 40, background: `${r.color}18` }}>
+                       style={{ width: 40, height: 40, background: `color-mix(in srgb, ${r.color} 9%, transparent)` }}>
                     <r.icon className="h-5 w-5" style={{ color: r.color }} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -239,13 +239,13 @@ export function GenerateReportModal({ onClose }: { onClose: () => void }) {
                       <label className="text-[12px]" style={{ color: "var(--brand-muted)" }}>From</label>
                       <input type="date" value={from} onChange={(e) => setFrom(e.target.value)}
                              className="h-10 px-3 text-[14px] rounded-lg"
-                             style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }} />
+                             style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }} />
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-[12px]" style={{ color: "var(--brand-muted)" }}>To</label>
                       <input type="date" value={to} onChange={(e) => setTo(e.target.value)}
                              className="h-10 px-3 text-[14px] rounded-lg"
-                             style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }} />
+                             style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }} />
                     </div>
                   </div>
                 </div>
@@ -261,7 +261,7 @@ export function GenerateReportModal({ onClose }: { onClose: () => void }) {
                   <select value={filterMcId}
                           onChange={(e) => { setFilterMcId(e.target.value); setFilterBuscentreId(""); setFilterCellId(""); }}
                           className="h-10 px-3 text-[14px] rounded-lg"
-                          style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}>
+                          style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}>
                     <option value="">All MCs</option>
                     {mcOptions.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
                   </select>
@@ -273,17 +273,17 @@ export function GenerateReportModal({ onClose }: { onClose: () => void }) {
                           onChange={(e) => { setFilterBuscentreId(e.target.value); setFilterCellId(""); }}
                           disabled={showMcPicker && !filterMcId && !lockedMcId}
                           className="h-10 px-3 text-[14px] rounded-lg disabled:opacity-40"
-                          style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}>
+                          style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}>
                     <option value="">All buscentres</option>
                     {buscentreOptions.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 )}
                 {lockedBuscentreId && (
                   <div className="h-10 px-3 flex items-center rounded-lg text-[14px]"
-                       style={{ border: "1px solid var(--brand-border)", background: "#F9FAFB", color: "var(--brand-text)" }}>
+                       style={{ border: "1px solid var(--brand-border)", background: "var(--gray-50)", color: "var(--brand-text)" }}>
                     {buscentreOptions.find((b) => b.id === lockedBuscentreId)?.name ?? "My Buscentre"}
                     <span className="ml-auto text-[11px] px-2 py-0.5 rounded-pill"
-                          style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>locked</span>
+                          style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>locked</span>
                   </div>
                 )}
 
@@ -292,17 +292,17 @@ export function GenerateReportModal({ onClose }: { onClose: () => void }) {
                   <select value={filterCellId} onChange={(e) => setFilterCellId(e.target.value)}
                           disabled={!filterBuscentreId && !lockedBuscentreId}
                           className="h-10 px-3 text-[14px] rounded-lg disabled:opacity-40"
-                          style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}>
+                          style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}>
                     <option value="">All cells</option>
                     {cellOptions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 )}
                 {lockedCellId && (
                   <div className="h-10 px-3 flex items-center rounded-lg text-[14px]"
-                       style={{ border: "1px solid var(--brand-border)", background: "#F9FAFB", color: "var(--brand-text)" }}>
+                       style={{ border: "1px solid var(--brand-border)", background: "var(--gray-50)", color: "var(--brand-text)" }}>
                     {cellOptions.find((c) => c.id === lockedCellId)?.name ?? "My Cell"}
                     <span className="ml-auto text-[11px] px-2 py-0.5 rounded-pill"
-                          style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>locked</span>
+                          style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>locked</span>
                   </div>
                 )}
 

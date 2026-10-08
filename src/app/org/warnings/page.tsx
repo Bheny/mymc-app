@@ -37,8 +37,8 @@ function SeverityBadge({ severity }: { severity: string }) {
     <span
       className="rounded-pill text-[11px] font-medium px-2 py-0.5"
       style={isRed
-        ? { background: "#FDECEA", color: "#791F1F" }
-        : { background: "#FEF3DC", color: "#854F0B" }}
+        ? { background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)" }
+        : { background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}
     >
       {isRed ? "Red" : "Amber"}
     </span>
@@ -191,7 +191,7 @@ export default function WarningsPage() {
                           </span>
                           <span
                             className="rounded-pill text-[11px] font-medium px-2 py-0.5"
-                            style={{ background: "#FEF3DC", color: "#854F0B" }}
+                            style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}
                           >
                             {w.currentCount}/{w.maxCount} {w.level}s
                           </span>

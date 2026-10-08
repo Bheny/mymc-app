@@ -33,7 +33,7 @@ function ChartTooltip({ active, payload, label }: {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-xl px-4 py-3 text-[13px] shadow-lg"
-         style={{ background: "#fff", border: "1px solid var(--brand-border)" }}>
+         style={{ background: "var(--surface)", border: "1px solid var(--brand-border)" }}>
       <p className="font-semibold mb-1" style={{ color: "var(--brand-text)" }}>{label}</p>
       <p style={{ color: "var(--brand-muted)" }}>
         {payload[0].value} member{payload[0].value !== 1 ? "s" : ""}
@@ -103,15 +103,15 @@ function LeaderSlot({
     return (
       <button onClick={() => setAssigning(true)}
               className="flex items-center gap-1 text-[12px] font-medium self-start"
-              style={{ color: "var(--brand-navy)" }}>
+              style={{ color: "var(--brand-link)" }}>
         <Plus className="h-3 w-3" /> {label}
       </button>
     );
   }
 
   return (
-    <div className="rounded-lg p-3 flex flex-col gap-2" style={{ background: "#F0F4FA", border: "1px solid var(--brand-border)" }}>
-      <div className="flex items-center gap-2 rounded-lg px-2.5 py-1.5" style={{ background: "#fff", border: "1px solid var(--brand-border)" }}>
+    <div className="rounded-lg p-3 flex flex-col gap-2" style={{ background: "var(--navy-50)", border: "1px solid var(--brand-border)" }}>
+      <div className="flex items-center gap-2 rounded-lg px-2.5 py-1.5" style={{ background: "var(--surface)", border: "1px solid var(--brand-border)" }}>
         <Search className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--brand-muted)" }} />
         <input
           autoFocus
@@ -261,7 +261,7 @@ function DepartmentRowItem({
               </span>
             )}
             <span className="text-[12px] font-medium rounded-pill px-2 py-0.5 shrink-0"
-                  style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                  style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
               {department.memberCount} member{department.memberCount !== 1 ? "s" : ""}
             </span>
             <button onClick={(e) => { e.stopPropagation(); setEditing(true); }}
@@ -269,7 +269,7 @@ function DepartmentRowItem({
               <Pencil className="h-3.5 w-3.5" style={{ color: "var(--brand-muted)" }} />
             </button>
             <button onClick={(e) => { e.stopPropagation(); remove(); }} disabled={busy}
-                    className="p-1.5 rounded hover:bg-[#FDECEA] transition-colors shrink-0">
+                    className="p-1.5 rounded hover:bg-[var(--tint-danger-bg)] transition-colors shrink-0">
               <Trash2 className="h-3.5 w-3.5" style={{ color: "var(--brand-danger)" }} />
             </button>
           </>
@@ -277,7 +277,7 @@ function DepartmentRowItem({
       </div>
       {error && <p className="text-[12px] px-4 pb-2" style={{ color: "var(--brand-danger)" }}>{error}</p>}
       {expanded && !editing && (
-        <div className="px-4 pb-4" style={{ background: "#FAFAFA" }}>
+        <div className="px-4 pb-4" style={{ background: "var(--gray-50b)" }}>
           <DepartmentLeadership department={department} onChanged={onChanged} />
         </div>
       )}
@@ -358,7 +358,7 @@ export default function DepartmentsPage() {
 
       {/* ── Breakdown chart ── */}
       {chartData.length > 0 && (
-        <div className="rounded-xl p-5 mb-6" style={{ border: "1px solid var(--brand-border)", background: "#fff" }}>
+        <div className="rounded-xl p-5 mb-6" style={{ border: "1px solid var(--brand-border)", background: "var(--surface)" }}>
           <p className="text-[13px] font-semibold mb-4" style={{ color: "var(--brand-text)" }}>
             Members per department
           </p>

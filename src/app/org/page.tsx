@@ -71,9 +71,9 @@ type Warn  = { parentId: string; level: string; currentCount: number; maxCount: 
 
 function capacityColor(count: number, max: number) {
   const ratio = count / max;
-  if (ratio >= 1)    return { bg: "#FDECEA", color: "#791F1F", label: `${count}/${max}` };
-  if (ratio >= 0.75) return { bg: "#FEF3DC", color: "#854F0B", label: `${count}/${max}` };
-  return               { bg: "#E0F4EC",  color: "#085041", label: `${count}/${max}` };
+  if (ratio >= 1)    return { bg: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)", label: `${count}/${max}` };
+  if (ratio >= 0.75) return { bg: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)", label: `${count}/${max}` };
+  return               { bg: "var(--tint-ok-bg)",  color: "var(--tint-ok-fg)", label: `${count}/${max}` };
 }
 
 function CapacityBadge({ count, max }: { count: number; max: number }) {
@@ -90,7 +90,7 @@ function ActingUpBadge({ severity }: { severity: string }) {
   return (
     <span
       className="flex items-center gap-1 rounded-pill text-[11px] font-medium px-2 py-0.5"
-      style={{ background: isRed ? "#FDECEA" : "#FEF3DC", color: isRed ? "#791F1F" : "#854F0B" }}
+      style={{ background: isRed ? "var(--tint-danger-bg)" : "var(--tint-warn-bg)", color: isRed ? "var(--tint-danger-fg)" : "var(--tint-warn-fg)" }}
     >
       <AlertTriangle style={{ width: 10, height: 10 }} />
       Acting up
@@ -132,7 +132,7 @@ function TreeRow({
             href={href}
             onClick={(e) => e.stopPropagation()}
             className="text-[13px] font-medium flex-1 min-w-0 truncate hover:underline"
-            style={{ color: "var(--brand-navy)" }}
+            style={{ color: "var(--brand-link)" }}
           >
             {label}
           </Link>
@@ -195,7 +195,7 @@ function AddNodeRow({
       <button
         onClick={() => setOpen(true)}
         className="flex items-center gap-1.5 text-[12px] font-medium py-1.5 px-3 rounded-lg transition-colors"
-        style={{ color: "var(--brand-navy)", marginLeft: 14 }}
+        style={{ color: "var(--brand-link)", marginLeft: 14 }}
       >
         <Plus style={{ width: 12, height: 12 }} /> {label}
       </button>
@@ -384,13 +384,13 @@ function ShepherdRow({
           {displayName}
           {shepherd.person && !shepherd.user && (
             <span className="ml-1.5 text-[11px] font-medium rounded-pill px-1.5 py-0.5"
-                  style={{ background: "#FEF3DC", color: "#854F0B" }}>
+                  style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
               no login
             </span>
           )}
           {shepherd.user && (
             <span className="ml-1.5 text-[11px] font-medium rounded-pill px-1.5 py-0.5"
-                  style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                  style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
               system user
             </span>
           )}
@@ -415,7 +415,7 @@ function ShepherdRow({
             <button
               onClick={() => setAssigning(true)}
               className="flex items-center gap-1 text-[12px] font-medium px-2 py-0.5 rounded-lg transition-colors"
-              style={{ color: "var(--brand-navy)", background: "var(--brand-navy-light)" }}
+              style={{ color: "var(--brand-link)", background: "var(--brand-navy-light)" }}
             >
               Assign
             </button>
@@ -432,7 +432,7 @@ function ShepherdRow({
             background: "var(--brand-navy-light)",
           }}
         >
-          <p className="text-[12px] font-medium" style={{ color: "var(--brand-navy)" }}>
+          <p className="text-[12px] font-medium" style={{ color: "var(--brand-link)" }}>
             Search for a member to assign as shepherd:
           </p>
           <div className="relative">
@@ -442,7 +442,7 @@ function ShepherdRow({
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Type a name…"
               className="w-full h-9 px-3 text-[13px] rounded-lg"
-              style={{ border: "1px solid var(--brand-border)", outline: "none", background: "#fff" }}
+              style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
             />
           </div>
 
@@ -538,7 +538,7 @@ function MoveToField({
         onChange={(e) => onChange(e.target.value)}
         disabled={!hasDestinations}
         className="h-10 px-3 text-[14px] rounded-lg"
-        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}
       >
         <option value="">Keep in {currentName}</option>
         {groups.map((g, i) => {
@@ -550,7 +550,7 @@ function MoveToField({
         })}
       </select>
       {picked ? (
-        <p className="text-[12px]" style={{ color: picked.count >= limit.max ? "#854F0B" : "var(--brand-muted)" }}>
+        <p className="text-[12px]" style={{ color: picked.count >= limit.max ? "var(--tint-warn-fg)" : "var(--brand-muted)" }}>
           {picked.count >= limit.max
             ? `${picked.name} is already at its limit of ${limit.max} ${unit}. The move is allowed but will be logged as a capacity warning. `
             : ""}
@@ -894,7 +894,7 @@ export default function OrgPage() {
             <Link href="/org/warnings">
               <button
                 className="flex items-center gap-1.5 rounded-pill text-[12px] font-medium px-3 py-1.5"
-                style={{ background: "#FEF3DC", color: "#854F0B" }}
+                style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}
               >
                 <AlertTriangle style={{ width: 13, height: 13 }} />
                 {openWarnings} warning{openWarnings !== 1 ? "s" : ""}
@@ -938,7 +938,7 @@ export default function OrgPage() {
           <Network style={{ width: 40, height: 40, color: "var(--brand-muted)", margin: "0 auto 12px" }} />
           <p className="text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>No branches yet</p>
           <p className="text-[14px] mt-1" style={{ color: "var(--brand-muted)" }}>
-            Run <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">npm run seed</code> to create the initial structure.
+            Run <code className="text-xs bg-[var(--gray-100)] px-1.5 py-0.5 rounded">npm run seed</code> to create the initial structure.
           </p>
         </div>
       ) : (
@@ -979,7 +979,7 @@ export default function OrgPage() {
                     branchId: branch.id,
                   })}
                   className="flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-medium transition-colors hover:opacity-80"
-                  style={{ background: "#FEF3DC", color: "#854F0B" }}
+                  style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}
                 >
                   <UserPlus style={{ width: 10, height: 10 }} /> Assign Chief Shepherd
                 </button>
@@ -1015,7 +1015,7 @@ export default function OrgPage() {
                             });
                           }}
                           className="flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:opacity-80"
-                          style={{ background: "#FEF3DC", color: "#854F0B" }}
+                          style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}
                           aria-label={`Assign MC Pastor for ${mc.name}`}
                         >
                           <UserPlus style={{ width: 10, height: 10 }} /> Assign head
@@ -1062,7 +1062,7 @@ export default function OrgPage() {
                                 setAssigningHead({ nodeType: "buscentre", nodeId: bc.id, nodeName: bc.name,
                                   branchId: branch.id, mcId: mc.id, buscentreId: bc.id }); }}
                               className="flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:opacity-80"
-                              style={{ background: "#FEF3DC", color: "#854F0B" }}
+                              style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}
                               aria-label={`Assign head for ${bc.name}`}
                             >
                               <UserPlus style={{ width: 10, height: 10 }} /> Assign head
@@ -1114,7 +1114,7 @@ export default function OrgPage() {
                                     setAssigningHead({ nodeType: "cell", nodeId: cell.id, nodeName: cell.name,
                                       branchId: branch.id, mcId: mc.id, buscentreId: bc.id, cellId: cell.id }); }}
                                   className="flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:opacity-80"
-                                  style={{ background: "#FEF3DC", color: "#854F0B" }}
+                                  style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}
                                   aria-label={`Assign shepherd for ${cell.name}`}
                                 >
                                   <UserPlus style={{ width: 10, height: 10 }} /> Assign head

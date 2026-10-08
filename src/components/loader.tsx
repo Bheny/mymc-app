@@ -35,9 +35,9 @@ export default function Loader() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[var(--gray-100)]">
       <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-solid"></div>
-      <p className="mt-4 text-center text-gray-700 text-sm italic">{quote}</p>
+      <p className="mt-4 text-center text-[var(--gray-700)] text-sm italic">{quote}</p>
     </div>
   );
 }

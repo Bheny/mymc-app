@@ -59,13 +59,13 @@ export default async function SharedItemPage({ params }: Params) {
   const isAudio  = item.mimeType?.startsWith("audio/");
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: "var(--brand-navy-light, #F4F6FB)" }}>
+    <div className="min-h-screen px-4 py-8" style={{ background: "var(--brand-navy-light, var(--navy-25))" }}>
       <div className="mx-auto w-full max-w-[720px] flex flex-col gap-4">
         <p className="text-[12px] font-semibold uppercase tracking-[0.07em]" style={{ color: "var(--brand-muted)" }}>
           {item.mc?.name ?? item.branch.name} · Library
         </p>
 
-        <div className="rounded-xl overflow-hidden bg-white" style={{ border: "1px solid var(--brand-border)" }}>
+        <div className="rounded-xl overflow-hidden bg-[var(--surface)]" style={{ border: "1px solid var(--brand-border)" }}>
           {/* ── Media ── */}
           {ytId && (
             <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
@@ -100,7 +100,7 @@ export default async function SharedItemPage({ params }: Params) {
           <div className="p-5 flex flex-col gap-3">
             {item.category && (
               <span className="self-start rounded-pill text-[11px] font-medium px-2.5 py-0.5"
-                    style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                    style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
                 {item.category}
               </span>
             )}

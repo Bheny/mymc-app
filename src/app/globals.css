@@ -8,6 +8,7 @@
     --brand-navy: #0F1F3D;
     --brand-navy-mid: #1A3260;
     --brand-navy-light: #E8EDF5;
+    --brand-link: #0F1F3D;          /* brand-coloured text (links, active labels) */
     --brand-white: #FFFFFF;
     --brand-text: #1A1A2E;
     --brand-muted: #6B7280;
@@ -15,6 +16,87 @@
     --brand-success: #1A8C6C;
     --brand-warning: #B87015;
     --brand-danger: #C0392B;
+
+    /* Surfaces — cards, inputs, sheets; and the page behind them */
+    --surface: #FFFFFF;
+    --page-bg: #FFFFFF;
+    --sidebar-bg: #0F1F3D;  /* desktop sidebar — stays deep navy in both modes */
+
+    /* Status tints (badges, callouts) */
+    --tint-warn-bg: #FEF3DC;
+    --tint-warn-fg: #854F0B;
+    --tint-warn-border: #F5D9A0;
+    --tint-warn-soft: #FFFBF2;
+    --tint-ok-bg: #E0F4EC;
+    --tint-ok-fg: #085041;
+    --tint-danger-bg: #FDECEA;
+    --tint-danger-fg: #791F1F;
+
+    /* Categorical chart series (validated per mode) */
+    --series-1: #2a78d6;
+    --series-2: #eb6834;
+    --series-3: #1baf7a;
+
+    /* Extended palette — each light value is the exact hex it replaced, so
+       light mode is unchanged; dark values are set in .dark below */
+    --gray-50: #F9FAFB;
+    --gray-50b: #FAFAFA;
+    --gray-100: #F3F4F6;
+    --gray-400: #9CA3AF;
+    --gray-700: #374151;
+    --gray-800: #1F2937;
+    --green-600: #059669;
+    --green-800: #065F46;
+    --green-50: #F0FDF4;
+    --green-50b: #EAF3EE;
+    --green-300: #86EFAC;
+    --amber-600: #D97706;
+    --amber-700: #B45309;
+    --amber-800: #92400E;
+    --amber-300: #FCD34D;
+    --amber-50: #FFFBEB;
+    --amber-400: #F5A623;
+    --red-600: #DC2626;
+    --red-50: #FEF2F2;
+    --red-50b: #FFF8F7;
+    --red-200: #F5C2C0;
+    --red-200b: #F5C0BC;
+    --red-300: #FCA5A5;
+    --violet-600: #7C3AED;
+    --violet-800: #5B21B6;
+    --violet-50: #F3EFF9;
+    --indigo-700: #4338CA;
+    --indigo-50: #EEF2FF;
+    --blue-600: #2563EB;
+    --blue-700: #1D4ED8;
+    --blue-500: #3B82F6;
+    --blue-50: #E8F0FE;
+    --blue-50b: #E5EFFD;
+    --navy-50: #F0F4FA;
+    --navy-700: #1E3A5F;
+    --navy-200: #C8D6EC;
+    --navy-25: #F4F6FB;
+    --green-200: #A8D5BE;
+    --green-500: #22C55E;
+    --violet-200: #D4C5F9;
+    --indigo-800: #3730A3;
+    --red-50c: #FFF5F5;
+    --red-200c: #FECACA;
+    --red-800: #991B1B;
+    --amber-900: #854D0E;
+    --amber-200: #FDE68A;
+    --amber-500: #F59E0B;
+    --orange-800: #9A3412;
+    --orange-200: #FED7AA;
+    --bronze-300: #D4B896;
+    --bronze-50: #FEF9EE;
+    --gray-100b: #F1F2F4;
+    --gray-900: #111827;
+
+    /* WhatsApp-style message preview */
+    --wa-bubble-bg: #E7FFDB;
+    --wa-bubble-fg: #111B21;
+    --wa-bubble-border: #CDEBC0;
 
     /* shadcn/ui tokens mapped to brand */
     --background: 0 0% 100%;
@@ -45,6 +127,118 @@
     --chart-4: 214 32% 91%;
     --chart-5: 6 68% 47%;
   }
+
+  /* Dark theme — applied via the `dark` class on <html>, only on pages that
+     have been converted to use the tokens (see THEMED_ROUTES in use-theme). */
+  .dark {
+    color-scheme: dark;
+
+    --brand-navy: #3F6FD6;         /* fills: buttons, active states — white text 4.7:1 */
+    --brand-navy-mid: #3A66C4;
+    --brand-navy-light: #1C2433;   /* subtle fills, hovers */
+    --brand-link: #8AB0F5;         /* brand-coloured text — 7.9:1 on cards */
+    --brand-white: #FFFFFF;
+    --brand-text: #E6E8EE;
+    --brand-muted: #9AA3B2;
+    --brand-border: #2A3140;
+    --brand-success: #4CC79A;
+    --brand-warning: #E5A84B;
+    --brand-danger: #F07B6E;
+
+    --surface: #161B26;
+    --page-bg: #0E121A;
+    --sidebar-bg: #111827;
+
+    --tint-warn-bg: #3A2C10;
+    --tint-warn-fg: #F2C46D;
+    --tint-warn-border: #5A4417;
+    --tint-warn-soft: #241C0D;
+    --tint-ok-bg: #10302A;
+    --tint-ok-fg: #74D8B0;
+    --tint-danger-bg: #3A1818;
+    --tint-danger-fg: #F49A93;
+
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+
+    /* Extended palette, dark steps */
+    --gray-50: #121722;
+    --gray-50b: #121722;
+    --gray-100: #1A2030;
+    --gray-400: #7D8696;
+    --gray-700: #CBD2DC;
+    --gray-800: #E2E6EC;
+    --green-600: #34D399;
+    --green-800: #6EE7B7;
+    --green-50: #0F2A22;
+    --green-50b: #10302A;
+    --green-300: #1F5E46;
+    --amber-600: #F59E0B;
+    --amber-700: #F0B45A;
+    --amber-800: #F5C26B;
+    --amber-300: #6B5216;
+    --amber-50: #241C0D;
+    --amber-400: #E5A84B;
+    --red-600: #F87171;
+    --red-50: #3A1818;
+    --red-50b: #2A1414;
+    --red-200: #5A2626;
+    --red-200b: #5A2626;
+    --red-300: #7A2E2E;
+    --violet-600: #A78BFA;
+    --violet-800: #C4B5FD;
+    --violet-50: #2A1F45;
+    --indigo-700: #A5B4FC;
+    --indigo-50: #1E2140;
+    --blue-600: #60A5FA;
+    --blue-700: #93C5FD;
+    --blue-500: #60A5FA;
+    --blue-50: #1C2433;
+    --blue-50b: #1C2433;
+    --navy-50: #1C2433;
+    --navy-700: #9DB8E8;
+    --navy-200: #2A3650;
+    --navy-25: #0E121A;
+    --green-200: #1F5E46;
+    --green-500: #22C55E;
+    --violet-200: #4C3A80;
+    --indigo-800: #C7D2FE;
+    --red-50c: #2A1414;
+    --red-200c: #5A2626;
+    --red-800: #FCA5A5;
+    --amber-900: #F5C26B;
+    --amber-200: #4A3A10;
+    --amber-500: #F59E0B;
+    --orange-800: #FDBA74;
+    --orange-200: #4A2A12;
+    --bronze-300: #5A4A33;
+    --bronze-50: #241C0D;
+    --gray-100b: #1A2030;
+    --gray-900: #F3F4F6;
+
+    --wa-bubble-bg: #005C4B;
+    --wa-bubble-fg: #E9EDEF;
+    --wa-bubble-border: #0B7A64;
+
+    --background: 222 30% 7%;
+    --foreground: 225 20% 92%;
+    --card: 222 27% 12%;
+    --card-foreground: 225 20% 92%;
+    --popover: 222 27% 12%;
+    --popover-foreground: 225 20% 92%;
+    --primary: 221 69% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 220 26% 16%;
+    --secondary-foreground: 225 20% 92%;
+    --muted: 220 26% 16%;
+    --muted-foreground: 218 13% 65%;
+    --accent: 220 26% 16%;
+    --accent-foreground: 225 20% 92%;
+    --border: 220 21% 21%;
+    --input: 220 21% 21%;
+    --ring: 221 69% 59%;
+  }
 }
 
 @layer base {
@@ -52,7 +246,8 @@
     @apply border-border;
   }
   body {
-    @apply bg-white text-[#1A1A2E];
+    background-color: var(--page-bg);
+    color: var(--brand-text);
     font-family: 'Inter', system-ui, sans-serif;
     font-size: 14px;
     line-height: 1.6;
@@ -61,7 +256,7 @@
   }
   h1, h2, h3, h4, h5, h6 {
     line-height: 1.2;
-    color: #1A1A2E;
+    color: var(--brand-text);
   }
 }
 
@@ -97,6 +292,10 @@
   background-size: 200% 100%;
   animation: shimmer 1.4s ease infinite;
   border-radius: 6px;
+}
+.dark .skeleton {
+  background: linear-gradient(90deg, #1A202C 25%, #222938 50%, #1A202C 75%);
+  background-size: 200% 100%;
 }
 
 /* Login page decorative background — soft drifting blobs + dot grid */

@@ -118,7 +118,7 @@ function ItemCard({
   const openHref = item.kind === "FILE" ? `/api/library/${item.id}/open` : item.url!;
 
   return (
-    <div className="rounded-xl overflow-hidden flex flex-col bg-white"
+    <div className="rounded-xl overflow-hidden flex flex-col bg-[var(--surface)]"
          style={{ border: `1px solid ${item.pinned ? "var(--brand-navy)" : "var(--brand-border)"}` }}>
       {/* Thumbnail / icon */}
       <a href={openHref} target="_blank" rel="noopener noreferrer"
@@ -127,7 +127,7 @@ function ItemCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={item.thumbnailUrl} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
         ) : (
-          <span className="absolute inset-0 flex items-center justify-center" style={{ color: "var(--brand-navy)" }}>
+          <span className="absolute inset-0 flex items-center justify-center" style={{ color: "var(--brand-link)" }}>
             <ItemIcon item={item} size={36} />
           </span>
         )}
@@ -332,7 +332,7 @@ function AddItemSheet({
                         className="flex-1 py-2.5 text-[13px] font-medium transition-colors disabled:opacity-40"
                         style={mode === m
                           ? { background: "var(--brand-navy)", color: "#fff" }
-                          : { background: "#fff", color: "var(--brand-muted)" }}>
+                          : { background: "var(--surface)", color: "var(--brand-muted)" }}>
                   {m === "file" ? "Upload a file" : "Add a link"}
                 </button>
               ))}
@@ -425,7 +425,7 @@ function AddItemSheet({
               <label className={fieldLabel} style={{ color: "var(--brand-muted)" }}>Who can see it</label>
               <select value={mcId} onChange={(e) => setMcId(e.target.value)} disabled={isMcPastor && mcs.length <= 1}
                       className="h-10 px-3 text-[14px] rounded-lg"
-                      style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                      style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
                 {!isMcPastor && <option value="">Whole branch</option>}
                 {mcs.map((m) => <option key={m.id} value={m.id}>{m.name} only</option>)}
               </select>
@@ -635,7 +635,7 @@ export default function LibraryPage() {
                     className="shrink-0 rounded-pill text-[12px] font-medium px-3 py-1.5 transition-colors"
                     style={kind === t.key
                       ? { background: "var(--brand-navy)", color: "#fff" }
-                      : { background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                      : { background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
               {t.label}
             </button>
           ))}

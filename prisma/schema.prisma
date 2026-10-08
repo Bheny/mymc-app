@@ -284,6 +284,19 @@ model Member {
   @@map("members")
 }
 
+// ─── App settings ─────────────────────────────────────────────────────────────
+
+// Generic key/value store for app-wide settings that don't warrant their own
+// table (e.g. "legacy.sheet" → the Google Sheet behind the Legacy dashboard).
+model AppSetting {
+  key         String   @id
+  value       Json
+  updatedById String?  @map("updated_by_id")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}
+
 // ─── Member status history ────────────────────────────────────────────────────
 
 // Logged whenever a member's isActive flag changes. Deactivation requires a

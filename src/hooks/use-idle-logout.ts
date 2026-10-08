@@ -32,7 +32,9 @@ export function useIdleLogout(enabled: boolean) {
       } catch {}
 
       if (Date.now() - last >= IDLE_LIMIT_MS) {
-        signOut({ callbackUrl: "/login" });
+        // Come back to this exact page (path + query) after logging in again
+        const here = `${window.location.pathname}${window.location.search}`;
+        signOut({ callbackUrl: `/login?reason=idle&callbackUrl=${encodeURIComponent(here)}` });
       }
     };
 

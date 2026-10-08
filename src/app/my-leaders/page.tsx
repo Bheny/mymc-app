@@ -22,11 +22,11 @@ type Leader = {
 // ─── Role style map ────────────────────────────────────────────────────────────
 
 const ROLE_STYLE: Record<string, { bg: string; color: string; avatarBg: string }> = {
-  chief_shepherd: { bg: "#FEF3DC", color: "#854F0B", avatarBg: "#D97706" },
-  mc_pastor:      { bg: "#E0F4EC", color: "#085041", avatarBg: "#059669" },
-  buscentre_head: { bg: "var(--brand-navy-light)", color: "var(--brand-navy)", avatarBg: "var(--brand-navy)" },
-  cell_shepherd:  { bg: "#EEF2FF", color: "#4338CA", avatarBg: "#4338CA" },
-  shepherd:       { bg: "#F3EFF9", color: "#7C3AED", avatarBg: "#7C3AED" },
+  chief_shepherd: { bg: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)", avatarBg: "var(--amber-600)" },
+  mc_pastor:      { bg: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)", avatarBg: "var(--green-600)" },
+  buscentre_head: { bg: "var(--brand-navy-light)", color: "var(--brand-link)", avatarBg: "var(--brand-navy)" },
+  cell_shepherd:  { bg: "var(--indigo-50)", color: "var(--indigo-700)", avatarBg: "var(--indigo-700)" },
+  shepherd:       { bg: "var(--violet-50)", color: "var(--violet-600)", avatarBg: "var(--violet-600)" },
 };
 
 const ROLE_LABELS: Record<string, string> = {
@@ -42,22 +42,22 @@ const ROLE_LABELS: Record<string, string> = {
 
 function LeaderCard({ leader, isDirectLeader }: { leader: Leader; isDirectLeader: boolean }) {
   const style = leader.roleKey
-    ? (ROLE_STYLE[leader.roleKey] ?? { bg: "#F9FAFB", color: "#374151", avatarBg: "#6B7280" })
-    : { bg: "#F9FAFB", color: "#374151", avatarBg: "#6B7280" };
+    ? (ROLE_STYLE[leader.roleKey] ?? { bg: "var(--gray-50)", color: "var(--gray-700)", avatarBg: "var(--brand-muted)" })
+    : { bg: "var(--gray-50)", color: "var(--gray-700)", avatarBg: "var(--brand-muted)" };
 
   // Vacant position
   if (leader.vacant) {
     return (
       <div className="rounded-2xl px-5 py-4 flex gap-4 items-center relative"
-           style={{ border: "1.5px dashed var(--brand-border)", background: "#FAFAFA" }}>
+           style={{ border: "1.5px dashed var(--brand-border)", background: "var(--gray-50b)" }}>
         {isDirectLeader && (
           <span className="absolute -top-2.5 left-4 text-[10px] font-bold uppercase tracking-[0.06em] px-2 py-0.5 rounded-pill"
-                style={{ background: "#FAFAFA", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}>
+                style={{ background: "var(--gray-50b)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}>
             Your direct leader
           </span>
         )}
         <div className="flex items-center justify-center rounded-xl shrink-0 text-[18px]"
-             style={{ width: 50, height: 50, background: "#E5E7EB", color: "#9CA3AF" }}>
+             style={{ width: 50, height: 50, background: "var(--brand-border)", color: "var(--gray-400)" }}>
           ?
         </div>
         <div className="flex-1 min-w-0">
@@ -85,10 +85,10 @@ function LeaderCard({ leader, isDirectLeader }: { leader: Leader; isDirectLeader
 
   return (
     <div className="rounded-2xl p-5 flex gap-4 relative"
-         style={{ border: `1.5px solid ${isDirectLeader ? style.color : "var(--brand-border)"}`, background: "#fff" }}>
+         style={{ border: `1.5px solid ${isDirectLeader ? style.color : "var(--brand-border)"}`, background: "var(--surface)" }}>
 
       {isDirectLeader && (
-        <span className="absolute -top-2.5 left-4 text-[10px] font-bold uppercase tracking-[0.06em] px-2 py-0.5 rounded-pill bg-white"
+        <span className="absolute -top-2.5 left-4 text-[10px] font-bold uppercase tracking-[0.06em] px-2 py-0.5 rounded-pill bg-[var(--surface)]"
               style={{ color: style.color, border: `1px solid ${style.color}` }}>
           Your direct leader
         </span>
@@ -130,14 +130,14 @@ function LeaderCard({ leader, isDirectLeader }: { leader: Leader; isDirectLeader
           {leader.phone && (
             <a href={`tel:${leader.phone}`}
                className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium transition-opacity hover:opacity-75"
-               style={{ background: style.bg, color: style.color, border: `1px solid ${style.color}40` }}>
+               style={{ background: style.bg, color: style.color, border: `1px solid color-mix(in srgb, ${style.color} 25%, transparent)` }}>
               <Phone className="h-3.5 w-3.5" /> {leader.phone}
             </a>
           )}
           {leader.email && (
             <a href={`mailto:${leader.email}`}
                className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium transition-opacity hover:opacity-75"
-               style={{ background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}>
+               style={{ background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}>
               <Mail className="h-3.5 w-3.5" /> Email
             </a>
           )}
@@ -246,7 +246,7 @@ export default function MyLeadersPage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <p className="text-[15px] font-semibold" style={{ color: "var(--brand-navy)" }}>
+                <p className="text-[15px] font-semibold" style={{ color: "var(--brand-link)" }}>
                   {myName}
                 </p>
                 <span className="rounded-pill text-[10px] font-bold px-2 py-0.5"
@@ -255,7 +255,7 @@ export default function MyLeadersPage() {
                 </span>
               </div>
               {myRole && (
-                <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--brand-navy)" }}>
+                <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--brand-link)" }}>
                   {ROLE_LABELS[myRole] ?? myRole}
                 </p>
               )}

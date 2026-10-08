@@ -151,11 +151,11 @@ export function EditMemberModal({ member, onSave }: EditMemberModalProps) {
                 />
                 <Search className="absolute right-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 {searchResults.length > 0 && (
-                  <ul className="absolute z-10 w-full bg-white border rounded-md mt-1 max-h-32 overflow-auto">
+                  <ul className="absolute z-10 w-full bg-[var(--surface)] border rounded-md mt-1 max-h-32 overflow-auto">
                     {searchResults.map((result, index) => (
                       <li
                         key={index}
-                        className="px-2 py-1 hover:bg-gray-100 cursor-pointer"
+                        className="px-2 py-1 hover:bg-[var(--gray-100)] cursor-pointer"
                         onClick={() => {
                           handleSearch(result)
                           setSearchResults([])

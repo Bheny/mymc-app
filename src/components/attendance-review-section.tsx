@@ -171,17 +171,17 @@ export function AttendanceReviewSection({
       <div className="flex flex-wrap items-center gap-2 mb-3">
         <button onClick={() => selectCta("all")}
                 className="h-9 px-3 rounded-lg text-[12px] font-medium transition-colors"
-                style={{ background: cta === "all" ? "var(--brand-navy)" : "#fff", color: cta === "all" ? "#fff" : "var(--brand-muted)", border: "1px solid var(--brand-border)" }}>
+                style={{ background: cta === "all" ? "var(--brand-navy)" : "var(--surface)", color: cta === "all" ? "#fff" : "var(--brand-muted)", border: "1px solid var(--brand-border)" }}>
           All cells
         </button>
         <button onClick={() => selectCta("netRevelation")}
                 className="h-9 px-3 rounded-lg text-[12px] font-medium transition-colors flex items-center gap-1.5"
-                style={{ background: cta === "netRevelation" ? "var(--brand-success)" : "#fff", color: cta === "netRevelation" ? "#fff" : "var(--brand-success)", border: "1px solid var(--brand-success)" }}>
+                style={{ background: cta === "netRevelation" ? "var(--brand-success)" : "var(--surface)", color: cta === "netRevelation" ? "#fff" : "var(--brand-success)", border: "1px solid var(--brand-success)" }}>
           <Sparkles className="h-3.5 w-3.5" /> Net Revelation (≥13)
         </button>
         <button onClick={() => selectCta("net2")}
                 className="h-9 px-3 rounded-lg text-[12px] font-medium transition-colors flex items-center gap-1.5"
-                style={{ background: cta === "net2" ? "var(--brand-navy)" : "#fff", color: cta === "net2" ? "#fff" : "var(--brand-navy)", border: "1px solid var(--brand-navy)" }}>
+                style={{ background: cta === "net2" ? "var(--brand-navy)" : "var(--surface)", color: cta === "net2" ? "#fff" : "var(--brand-link)", border: "1px solid var(--brand-navy)" }}>
           <Trophy className="h-3.5 w-3.5" /> Net2 (≥26)
         </button>
 
@@ -195,7 +195,7 @@ export function AttendanceReviewSection({
 
       {/* Results table */}
       <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
-        <div className="px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--brand-border)", background: "#FAFAFA" }}>
+        <div className="px-4 py-2.5 flex items-center justify-between" style={{ borderBottom: "1px solid var(--brand-border)", background: "var(--gray-50b)" }}>
           <span className="text-[11px] font-semibold uppercase tracking-[0.05em]" style={{ color: "var(--brand-muted)" }}>
             {SERVICE_TYPE_LABEL[serviceType]} · {sorted.length} cell{sorted.length !== 1 ? "s" : ""}
           </span>

@@ -101,8 +101,8 @@ function CandidacyBadge({ status }: { status: string }) {
     <span
       className="rounded-pill text-[10px] font-medium px-2 py-0.5 shrink-0"
       style={isCertified
-        ? { background: "#E8F0FE", color: "#1D4ED8" }
-        : { background: "#EAF3EE", color: "#1A8C6C" }}
+        ? { background: "var(--blue-50)", color: "var(--blue-700)" }
+        : { background: "var(--green-50b)", color: "var(--brand-success)" }}
     >
       {isCertified ? "Certified shepherd" : "Recommended"}
     </span>
@@ -151,7 +151,7 @@ function MemberRow({
       <div className="flex items-center gap-1.5 shrink-0">
         {!member.isActive && (
           <span className="rounded-pill text-[10px] font-medium px-2 py-0.5"
-                style={{ background: "#FDECEA", color: "#791F1F" }}>
+                style={{ background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)" }}>
             Inactive
           </span>
         )}
@@ -260,7 +260,7 @@ function UnassignedMemberRow({
         {/* Badges */}
         {!member.isActive && (
           <span className="rounded-pill text-[10px] font-medium px-2 py-0.5"
-                style={{ background: "#FDECEA", color: "#791F1F" }}>
+                style={{ background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)" }}>
             Inactive
           </span>
         )}
@@ -290,7 +290,7 @@ function UnassignedMemberRow({
       {open && (
         <div
           className="px-4 pb-4 flex flex-col gap-3"
-          style={{ borderBottom: isLast ? "none" : "1px solid var(--brand-border)", background: "#FAFAFA" }}
+          style={{ borderBottom: isLast ? "none" : "1px solid var(--brand-border)", background: "var(--gray-50b)" }}
         >
           {/* Detail pills */}
           <div className="flex flex-wrap gap-2 pt-2">
@@ -325,7 +325,7 @@ function UnassignedMemberRow({
                   value={selected}
                   onChange={(e) => { setSelected(e.target.value); setError(""); }}
                   className="flex-1 h-9 px-3 text-[13px] rounded-lg"
-                  style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+                  style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}
                 >
                   <option value="">— Select shepherd —</option>
                   {occupiedSlots.length > 0 && (
@@ -442,7 +442,7 @@ function ShepherdCard({
       {/* ── Card header ── */}
       <div
         className="px-4 py-3 flex items-center gap-3"
-        style={{ background: isAssigned ? "var(--brand-navy)" : "#F9FAFB", borderBottom: "1px solid var(--brand-border)" }}
+        style={{ background: isAssigned ? "var(--brand-navy)" : "var(--gray-50)", borderBottom: "1px solid var(--brand-border)" }}
       >
         {/* Avatar */}
         <div
@@ -526,7 +526,7 @@ function ShepherdCard({
             <div className="rounded-pill overflow-hidden" style={{ height: 5, background: "rgba(255,255,255,0.2)" }}>
               <div className="h-full rounded-pill"
                    style={{ width: `${Math.min(100, (memberCount / memberMax) * 100)}%`,
-                            background: memberCount >= memberMax ? "#C0392B" : memberCount >= memberMax * 0.8 ? "#F5A623" : "rgba(255,255,255,0.8)" }} />
+                            background: memberCount >= memberMax ? "var(--brand-danger)" : memberCount >= memberMax * 0.8 ? "var(--amber-400)" : "rgba(255,255,255,0.8)" }} />
             </div>
           </div>
         </div>
@@ -545,7 +545,7 @@ function ShepherdCard({
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search member by name…"
               className="w-full h-9 pl-8 pr-3 text-[13px] rounded-lg"
-              style={{ border: "1px solid var(--brand-border)", outline: "none", background: "#fff",
+              style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)",
                        color: "var(--brand-text)" }}
             />
             {saving && (
@@ -563,7 +563,7 @@ function ShepherdCard({
                   disabled={saving}
                   onClick={() => assign(m.id)}
                   className="w-full text-left px-3 py-2 text-[13px] hover:bg-white transition-colors"
-                  style={{ borderBottom: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#FAFAFA" }}
+                  style={{ borderBottom: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--gray-50b)" }}
                 >
                   {m.firstName} {m.lastName}
                 </button>
@@ -778,14 +778,14 @@ export function CellDashboard({ cellId }: { cellId?: string }) {
       >
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
-            <UserCircle className="h-4 w-4" style={{ color: "var(--brand-navy)" }} />
-            <span className="text-[14px] font-medium" style={{ color: "var(--brand-navy)" }}>
+            <UserCircle className="h-4 w-4" style={{ color: "var(--brand-link)" }} />
+            <span className="text-[14px] font-medium" style={{ color: "var(--brand-link)" }}>
               {stats.occupiedSlots}/{stats.totalShepherds} shepherd slots filled
             </span>
           </div>
           {stats.unoccupiedSlots > 0 && (
             <span className="rounded-pill text-[12px] font-medium px-2.5 py-1"
-                  style={{ background: "#FEF3DC", color: "#854F0B" }}>
+                  style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
               {stats.unoccupiedSlots} unassigned
             </span>
           )}
@@ -823,7 +823,7 @@ export function CellDashboard({ cellId }: { cellId?: string }) {
           <UserCircle style={{ width: 36, height: 36, color: "var(--brand-muted)", margin: "0 auto 10px" }} />
           <p className="text-[14px]" style={{ color: "var(--brand-muted)" }}>
             No shepherd slots yet.{" "}
-            <Link href="/org" className="font-medium hover:underline" style={{ color: "var(--brand-navy)" }}>
+            <Link href="/org" className="font-medium hover:underline" style={{ color: "var(--brand-link)" }}>
               Create slots from the Org tree →
             </Link>
           </p>
@@ -846,11 +846,11 @@ export function CellDashboard({ cellId }: { cellId?: string }) {
             </span>
             <div className="flex-1 h-px" style={{ background: "var(--brand-border)" }} />
           </div>
-          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid #F5C0BC" }}>
+          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--red-200b)" }}>
             <div className="px-4 py-2.5 flex items-center gap-2"
-                 style={{ background: "#FDECEA", borderBottom: "1px solid #F5C0BC" }}>
-              <ShieldAlert className="h-4 w-4" style={{ color: "#791F1F" }} />
-              <p className="text-[13px] font-medium" style={{ color: "#791F1F" }}>
+                 style={{ background: "var(--tint-danger-bg)", borderBottom: "1px solid var(--red-200b)" }}>
+              <ShieldAlert className="h-4 w-4" style={{ color: "var(--tint-danger-fg)" }} />
+              <p className="text-[13px] font-medium" style={{ color: "var(--tint-danger-fg)" }}>
                 These members have no shepherd assigned — tap to assign
               </p>
             </div>

@@ -42,7 +42,7 @@ export function MemberActivityFeed() {
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center justify-between">
                       <h3 className="text-sm font-medium">{activity.description}</h3>
-                      <p className="text-sm text-gray-500">{activity.date}</p>
+                      <p className="text-sm text-[var(--brand-muted)]">{activity.date}</p>
                     </div>
                   </div>
                 </div>

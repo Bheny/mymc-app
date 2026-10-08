@@ -31,8 +31,8 @@ export function RecentActivity({ activities }: { activities: Activity[] }) {
                   <Icon className="h-5 w-5 text-blue-600" />
                 </div>
                 <div className="flex-1 space-y-1">
-                  <p className="text-sm font-medium text-gray-900">{activity.description}</p>
-                  <p className="text-xs text-gray-500">{activity.date}</p>
+                  <p className="text-sm font-medium text-[var(--brand-text)]">{activity.description}</p>
+                  <p className="text-xs text-[var(--brand-muted)]">{activity.date}</p>
                 </div>
               </li>
             )

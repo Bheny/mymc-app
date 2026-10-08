@@ -112,7 +112,7 @@ export function StructureLimitsSettings() {
                   {!isDefault && (
                     <button onClick={() => setField(l.level, { max: String(l.defaultMax) })}
                             className="inline-flex items-center gap-0.5 hover:underline ml-1"
-                            style={{ color: "var(--brand-navy)" }}>
+                            style={{ color: "var(--brand-link)" }}>
                       <RotateCcw className="h-2.5 w-2.5" /> reset
                     </button>
                   )}

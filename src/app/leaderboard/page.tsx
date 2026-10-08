@@ -31,9 +31,9 @@ const SERVICE_TABS: { key: ServiceType; label: string }[] = [
 ];
 
 const RANK_BADGE: Record<number, { bg: string; color: string }> = {
-  1: { bg: "#FDE68A", color: "#854D0E" },
-  2: { bg: "#E5E7EB", color: "#374151" },
-  3: { bg: "#FED7AA", color: "#9A3412" },
+  1: { bg: "var(--amber-200)", color: "var(--amber-900)" },
+  2: { bg: "var(--brand-border)", color: "var(--gray-700)" },
+  3: { bg: "var(--orange-200)", color: "var(--orange-800)" },
 };
 
 function formatDate(iso: string | null) {
@@ -48,8 +48,8 @@ function RankBadge({ rank }: { rank: number }) {
       className="flex items-center justify-center rounded-full text-[13px] font-semibold shrink-0"
       style={{
         width: 32, height: 32,
-        background: medal?.bg ?? (rank <= 10 ? "var(--brand-navy-light)" : "#F3F4F6"),
-        color:      medal?.color ?? (rank <= 10 ? "var(--brand-navy)" : "var(--brand-muted)"),
+        background: medal?.bg ?? (rank <= 10 ? "var(--brand-navy-light)" : "var(--gray-100)"),
+        color:      medal?.color ?? (rank <= 10 ? "var(--brand-link)" : "var(--brand-muted)"),
       }}
     >
       {rank}
@@ -107,7 +107,7 @@ export default function LeaderboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-[24px] font-semibold flex items-center gap-2" style={{ color: "var(--brand-text)" }}>
-          <Trophy className="h-6 w-6" style={{ color: "#D97706" }} /> Leaderboard
+          <Trophy className="h-6 w-6" style={{ color: "var(--amber-600)" }} /> Leaderboard
         </h1>
       </div>
       <p className="text-[14px] mb-5" style={{ color: "var(--brand-muted)" }}>
@@ -122,7 +122,7 @@ export default function LeaderboardPage() {
             onClick={() => setServiceType(key)}
             className="px-3.5 py-1.5 text-[12.5px] font-medium transition-colors"
             style={{
-              background:  serviceType === key ? "var(--brand-navy)" : "#fff",
+              background:  serviceType === key ? "var(--brand-navy)" : "var(--surface)",
               color:       serviceType === key ? "#fff" : "var(--brand-muted)",
               borderRight: i < SERVICE_TABS.length - 1 ? "1px solid var(--brand-border)" : "none",
             }}

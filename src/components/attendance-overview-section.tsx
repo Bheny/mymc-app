@@ -37,7 +37,7 @@ function formatDate(iso: string) {
 function LatestCard({ label, snapshot }: { label: string; snapshot: Snapshot }) {
   return (
     <div className="rounded-xl px-5 py-4 flex flex-col gap-1"
-         style={{ border: "1px solid var(--brand-border)", background: "#fff" }}>
+         style={{ border: "1px solid var(--brand-border)", background: "var(--surface)" }}>
       <p className="text-[11px] font-medium uppercase tracking-[0.06em]" style={{ color: "var(--brand-muted)" }}>
         {label}
       </p>
@@ -61,7 +61,7 @@ function LatestCard({ label, snapshot }: { label: string; snapshot: Snapshot }) 
             {snapshot.excused > 0 ? ` · ${snapshot.excused} excused` : ""}
           </p>
           {snapshot.firstTimers > 0 && (
-            <p className="text-[12px] font-medium" style={{ color: "var(--brand-navy)" }}>
+            <p className="text-[12px] font-medium" style={{ color: "var(--brand-link)" }}>
               + {snapshot.firstTimers} first timer{snapshot.firstTimers !== 1 ? "s" : ""}
             </p>
           )}
@@ -178,7 +178,7 @@ export function AttendanceOverviewSection({
                   </span>
                   {firstTimers > 0 && (
                     <span className="rounded-pill text-[10px] font-semibold px-1.5 py-0.5 shrink-0"
-                          style={{ background: "var(--brand-navy-light, #EEF2FF)", color: "var(--brand-navy)" }}>
+                          style={{ background: "var(--brand-navy-light, var(--indigo-50))", color: "var(--brand-link)" }}>
                       +{firstTimers} 1st time{firstTimers !== 1 ? "rs" : "r"}
                     </span>
                   )}

@@ -58,7 +58,7 @@ const TYPE_LABEL: Record<string, string> = {
   LC_LIVE: "LC Live", MGS: "MGS", SHEPHERDS_MEETING: "Shepherds Mtg", SPECIAL_MEETING: "Special Meeting",
 };
 const TYPE_COLOR: Record<string, string> = {
-  LC_LIVE: "var(--brand-navy)", MGS: "#1A8C6C", SHEPHERDS_MEETING: "#7C3AED", SPECIAL_MEETING: "#B45309",
+  LC_LIVE: "var(--brand-navy)", MGS: "var(--brand-success)", SHEPHERDS_MEETING: "var(--violet-600)", SPECIAL_MEETING: "var(--amber-700)",
 };
 
 // Build a de-duplicated {id, name} option list from breakdown rows, keyed by
@@ -85,7 +85,7 @@ function KpiCard({
 }) {
   return (
     <div className="rounded-xl px-5 py-4 flex flex-col gap-1"
-         style={{ border: "1px solid var(--brand-border)", background: "#fff" }}>
+         style={{ border: "1px solid var(--brand-border)", background: "var(--surface)" }}>
       <div className="flex items-center gap-2 mb-1">
         <span style={{ color: "var(--brand-muted)" }}>{icon}</span>
         <span className="text-[11px] font-medium uppercase tracking-[0.06em]"
@@ -93,7 +93,7 @@ function KpiCard({
           {label}
         </span>
       </div>
-      <span className="text-[28px] font-bold leading-none" style={{ color: "var(--brand-navy)" }}>
+      <span className="text-[28px] font-bold leading-none" style={{ color: "var(--brand-link)" }}>
         {value}
       </span>
       {sub && <span className="text-[12px] mt-1" style={{ color: "var(--brand-muted)" }}>{sub}</span>}
@@ -238,7 +238,7 @@ export function SummarySection({ scope }: { scope: Scope }) {
             className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
             style={month === null
               ? { background: "var(--brand-navy)", color: "#fff" }
-              : { background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
+              : { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
           >
             Full Year
           </button>
@@ -249,7 +249,7 @@ export function SummarySection({ scope }: { scope: Scope }) {
               className="px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
               style={month === i + 1
                 ? { background: "var(--brand-navy)", color: "#fff" }
-                : { background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
+                : { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
             >
               {name}
             </button>
@@ -265,7 +265,7 @@ export function SummarySection({ scope }: { scope: Scope }) {
               value={filterMcId}
               onChange={(e) => { setFilterMcId(e.target.value); setFilterBuscentreId(""); setCellId(""); }}
               className="h-9 px-3 text-[13px] rounded-lg"
-              style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}
+              style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
             >
               <option value="">All MCs (cumulative)</option>
               {mcOptions.map((mc) => <option key={mc.id} value={mc.id}>{mc.name}</option>)}
@@ -278,7 +278,7 @@ export function SummarySection({ scope }: { scope: Scope }) {
               value={filterBuscentreId}
               onChange={(e) => { setFilterBuscentreId(e.target.value); setCellId(""); }}
               className="h-9 px-3 text-[13px] rounded-lg"
-              style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}
+              style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
             >
               <option value="">All buscentres (cumulative)</option>
               {buscentreOptions.map((bc) => <option key={bc.id} value={bc.id}>{bc.name}</option>)}
@@ -291,7 +291,7 @@ export function SummarySection({ scope }: { scope: Scope }) {
               value={cellId}
               onChange={(e) => setCellId(e.target.value)}
               className="h-9 px-3 text-[13px] rounded-lg"
-              style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}
+              style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
             >
               <option value="">All cells (cumulative)</option>
               {cellOptions.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -306,7 +306,7 @@ export function SummarySection({ scope }: { scope: Scope }) {
                 onClick={() => setUseMedian(opt === "median")}
                 className="px-3 py-1.5 text-[12px] font-medium capitalize transition-colors"
                 style={{
-                  background: (opt === "median") === useMedian ? "var(--brand-navy)" : "#fff",
+                  background: (opt === "median") === useMedian ? "var(--brand-navy)" : "var(--surface)",
                   color:      (opt === "median") === useMedian ? "#fff" : "var(--brand-muted)",
                   borderRight: opt === "median" ? "1px solid var(--brand-border)" : "none",
                 }}
@@ -363,7 +363,7 @@ export function SummarySection({ scope }: { scope: Scope }) {
             <div className="overflow-x-auto max-h-[560px] overflow-y-auto">
               <Table>
                 <TableHeader>
-                  <TableRow style={{ background: "#F9FAFB", position: "sticky", top: 0, zIndex: 1 }}>
+                  <TableRow style={{ background: "var(--gray-50)", position: "sticky", top: 0, zIndex: 1 }}>
                     {showCellColumn && (
                       <TableHead className="text-[11px] font-medium uppercase tracking-[0.04em] px-4 py-2.5 whitespace-nowrap"
                                  style={{ color: "var(--brand-muted)" }}>Cell</TableHead>
@@ -414,14 +414,14 @@ export function SummarySection({ scope }: { scope: Scope }) {
                           {svc.firstTimersCount ?? 0}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-[13px] text-right"
-                                   style={{ color: (svc.firstTimersRetained ?? 0) > 0 ? "#085041" : "var(--brand-text)" }}>
+                                   style={{ color: (svc.firstTimersRetained ?? 0) > 0 ? "var(--tint-ok-fg)" : "var(--brand-text)" }}>
                           {svc.firstTimersRetained ?? 0}
                         </TableCell>
-                        <TableCell className="px-4 py-3 text-[13px] text-right font-semibold" style={{ color: "var(--brand-navy)" }}>
+                        <TableCell className="px-4 py-3 text-[13px] text-right font-semibold" style={{ color: "var(--brand-link)" }}>
                           {svc.totalAttendance ?? 0}
                         </TableCell>
                         <TableCell className="px-4 py-3 text-[13px] text-right"
-                                   style={{ color: (svc.soulsWonCount ?? 0) > 0 ? "#854F0B" : "var(--brand-text)" }}>
+                                   style={{ color: (svc.soulsWonCount ?? 0) > 0 ? "var(--tint-warn-fg)" : "var(--brand-text)" }}>
                           {svc.soulsWonCount ?? 0}
                         </TableCell>
                       </TableRow>

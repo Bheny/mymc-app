@@ -25,11 +25,11 @@ const REPORT_LABELS: Record<string, string> = {
 };
 
 const STATUS_COLORS: Record<string, string> = {
-  ready:      "#DC2626",
-  approaching:"#D97706",
-  ok:         "#059669",
-  overloaded: "#DC2626",
-  "near-cap": "#D97706",
+  ready:      "var(--red-600)",
+  approaching:"var(--amber-600)",
+  ok:         "var(--green-600)",
+  overloaded: "var(--red-600)",
+  "near-cap": "var(--amber-600)",
 };
 
 function fmt(iso: string | null | undefined) {
@@ -39,10 +39,10 @@ function fmt(iso: string | null | undefined) {
 
 function pct(n: number) { return `${n}%`; }
 
-function RateBar({ rate, color = "#1A8C6C" }: { rate: number; color?: string }) {
+function RateBar({ rate, color = "var(--brand-success)" }: { rate: number; color?: string }) {
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <div style={{ flex: 1, height: 6, background: "#E5E7EB", borderRadius: 999, overflow: "hidden" }}>
+      <div style={{ flex: 1, height: 6, background: "var(--brand-border)", borderRadius: 999, overflow: "hidden" }}>
         <div style={{ width: `${Math.min(100, rate)}%`, height: "100%", background: color, borderRadius: 999 }} />
       </div>
       <span style={{ fontSize: 12, fontWeight: 600, color, minWidth: 36, textAlign: "right" }}>{pct(rate)}</span>
@@ -60,7 +60,7 @@ function Pill({ label, color, bg }: { label: string; color: string; bg: string }
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9CA3AF", marginBottom: 12, marginTop: 28 }}>
+    <p style={{ fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--gray-400)", marginBottom: 12, marginTop: 28 }}>
       {children}
     </p>
   );
@@ -68,7 +68,7 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
 
 function Th({ children, right }: { children: React.ReactNode; right?: boolean }) {
   return (
-    <th style={{ padding: "8px 12px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "#6B7280", textAlign: right ? "right" : "left", borderBottom: "1px solid #E5E7EB", background: "#F9FAFB" }}>
+    <th style={{ padding: "8px 12px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--brand-muted)", textAlign: right ? "right" : "left", borderBottom: "1px solid var(--brand-border)", background: "var(--gray-50)" }}>
       {children}
     </th>
   );
@@ -76,7 +76,7 @@ function Th({ children, right }: { children: React.ReactNode; right?: boolean })
 
 function Td({ children, right, style }: { children: React.ReactNode; right?: boolean; style?: React.CSSProperties }) {
   return (
-    <td style={{ padding: "10px 12px", fontSize: 13, color: "#1F2937", textAlign: right ? "right" : "left", borderBottom: "1px solid #F3F4F6", ...style }}>
+    <td style={{ padding: "10px 12px", fontSize: 13, color: "var(--gray-800)", textAlign: right ? "right" : "left", borderBottom: "1px solid var(--gray-100)", ...style }}>
       {children}
     </td>
   );
@@ -94,29 +94,29 @@ function CellsReadyToDivide({ data }: { data: Record<string, unknown> }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
         {[
           { label: "Cells Checked",       value: rows.length },
-          { label: "Ready to Divide",      value: readyCount,                                  color: readyCount > 0 ? "#DC2626" : "#059669" },
-          { label: "Approaching Capacity", value: rows.filter((r) => r.status === "approaching").length, color: "#D97706" },
+          { label: "Ready to Divide",      value: readyCount,                                  color: readyCount > 0 ? "var(--red-600)" : "var(--green-600)" },
+          { label: "Approaching Capacity", value: rows.filter((r) => r.status === "approaching").length, color: "var(--amber-600)" },
         ].map(({ label, value, color }) => (
-          <div key={label} style={{ padding: "16px 20px", border: "1px solid #E5E7EB", borderRadius: 12, background: "#fff" }}>
-            <p style={{ fontSize: 28, fontWeight: 700, color: color ?? "#1F2937" }}>{value}</p>
-            <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>{label}</p>
+          <div key={label} style={{ padding: "16px 20px", border: "1px solid var(--brand-border)", borderRadius: 12, background: "var(--surface)" }}>
+            <p style={{ fontSize: 28, fontWeight: 700, color: color ?? "var(--gray-800)" }}>{value}</p>
+            <p style={{ fontSize: 12, color: "var(--gray-400)", marginTop: 2 }}>{label}</p>
           </div>
         ))}
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", borderRadius: 12, overflow: "hidden", border: "1px solid #E5E7EB" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--surface)", borderRadius: 12, overflow: "hidden", border: "1px solid var(--brand-border)" }}>
         <thead>
           <tr><Th>Cell</Th><Th>Buscentre</Th><Th>Cell Shepherd</Th><Th right>Members</Th><Th right>Over Cap By</Th><Th>Status</Th></tr>
         </thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.id} style={{ background: r.status === "ready" ? "#FEF2F2" : r.status === "approaching" ? "#FFFBEB" : "#fff" }}>
+            <tr key={r.id} style={{ background: r.status === "ready" ? "var(--red-50)" : r.status === "approaching" ? "var(--amber-50)" : "var(--surface)" }}>
               <Td><strong>{r.name}</strong></Td>
               <Td>{r.buscentre}</Td>
-              <Td>{r.cellShepherd ?? <em style={{ color: "#9CA3AF" }}>Unassigned</em>}</Td>
+              <Td>{r.cellShepherd ?? <em style={{ color: "var(--gray-400)" }}>Unassigned</em>}</Td>
               <Td right><strong>{r.memberCount}</strong> / {threshold}</Td>
-              <Td right>{r.overBy > 0 ? <span style={{ color: "#DC2626", fontWeight: 600 }}>+{r.overBy}</span> : "—"}</Td>
-              <Td><Pill label={r.status} color="#fff" bg={STATUS_COLORS[r.status] ?? "#6B7280"} /></Td>
+              <Td right>{r.overBy > 0 ? <span style={{ color: "var(--red-600)", fontWeight: 600 }}>+{r.overBy}</span> : "—"}</Td>
+              <Td><Pill label={r.status} color="#fff" bg={STATUS_COLORS[r.status] ?? "var(--brand-muted)"} /></Td>
             </tr>
           ))}
         </tbody>
@@ -131,13 +131,13 @@ function ConsistentAbsentees({ data }: { data: Record<string, unknown> }) {
 
   return (
     <>
-      <div style={{ padding: "12px 16px", borderRadius: 10, background: "#FEF2F2", border: "1px solid #FECACA", marginBottom: 20 }}>
-        <p style={{ fontSize: 13, color: "#991B1B", fontWeight: 500 }}>
+      <div style={{ padding: "12px 16px", borderRadius: 10, background: "var(--red-50)", border: "1px solid var(--red-200c)", marginBottom: 20 }}>
+        <p style={{ fontSize: 13, color: "var(--red-800)", fontWeight: 500 }}>
           {rows.length} member{rows.length !== 1 ? "s" : ""} absent {minAbs}+ times — follow up with their shepherd
         </p>
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--surface)", border: "1px solid var(--brand-border)", borderRadius: 12, overflow: "hidden" }}>
         <thead>
           <tr><Th>Member</Th><Th>Phone</Th><Th>Shepherd</Th><Th>Cell</Th><Th right>Absences</Th></tr>
         </thead>
@@ -148,7 +148,7 @@ function ConsistentAbsentees({ data }: { data: Record<string, unknown> }) {
               <Td>{r.phone ?? "—"}</Td>
               <Td>{r.shepherd}</Td>
               <Td>{r.cell}</Td>
-              <Td right><span style={{ color: "#DC2626", fontWeight: 700 }}>{r.absentCount}</span></Td>
+              <Td right><span style={{ color: "var(--red-600)", fontWeight: 700 }}>{r.absentCount}</span></Td>
             </tr>
           ))}
         </tbody>
@@ -168,29 +168,29 @@ function ShepherdLoad({ data }: { data: Record<string, unknown> }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, marginBottom: 24 }}>
         {[
           { label: "Total Slots",     value: rows.length },
-          { label: "Overloaded",      value: overloaded, color: overloaded > 0 ? "#DC2626" : "#059669" },
-          { label: "Unfilled Slots",  value: unassigned, color: unassigned > 0 ? "#D97706" : "#059669" },
+          { label: "Overloaded",      value: overloaded, color: overloaded > 0 ? "var(--red-600)" : "var(--green-600)" },
+          { label: "Unfilled Slots",  value: unassigned, color: unassigned > 0 ? "var(--amber-600)" : "var(--green-600)" },
         ].map(({ label, value, color }) => (
-          <div key={label} style={{ padding: "16px 20px", border: "1px solid #E5E7EB", borderRadius: 12, background: "#fff" }}>
-            <p style={{ fontSize: 28, fontWeight: 700, color: color ?? "#1F2937" }}>{value}</p>
-            <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>{label}</p>
+          <div key={label} style={{ padding: "16px 20px", border: "1px solid var(--brand-border)", borderRadius: 12, background: "var(--surface)" }}>
+            <p style={{ fontSize: 28, fontWeight: 700, color: color ?? "var(--gray-800)" }}>{value}</p>
+            <p style={{ fontSize: 12, color: "var(--gray-400)", marginTop: 2 }}>{label}</p>
           </div>
         ))}
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--surface)", border: "1px solid var(--brand-border)", borderRadius: 12, overflow: "hidden" }}>
         <thead>
           <tr><Th>Shepherd</Th><Th>Cell</Th><Th>Buscentre</Th><Th right>Members</Th><Th>Load</Th><Th>Status</Th></tr>
         </thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.id} style={{ background: r.status === "overloaded" ? "#FEF2F2" : r.status === "near-cap" ? "#FFFBEB" : "#fff" }}>
-              <Td>{r.name ?? <em style={{ color: "#9CA3AF" }}>Unassigned</em>}</Td>
+            <tr key={r.id} style={{ background: r.status === "overloaded" ? "var(--red-50)" : r.status === "near-cap" ? "var(--amber-50)" : "var(--surface)" }}>
+              <Td>{r.name ?? <em style={{ color: "var(--gray-400)" }}>Unassigned</em>}</Td>
               <Td>{r.cell}</Td>
               <Td>{r.buscentre}</Td>
               <Td right><strong>{r.memberCount}</strong> / {cap}</Td>
-              <Td><RateBar rate={Math.round((r.memberCount / cap) * 100)} color={STATUS_COLORS[r.status] ?? "#059669"} /></Td>
-              <Td><Pill label={r.status} color="#fff" bg={STATUS_COLORS[r.status] ?? "#6B7280"} /></Td>
+              <Td><RateBar rate={Math.round((r.memberCount / cap) * 100)} color={STATUS_COLORS[r.status] ?? "var(--green-600)"} /></Td>
+              <Td><Pill label={r.status} color="#fff" bg={STATUS_COLORS[r.status] ?? "var(--brand-muted)"} /></Td>
             </tr>
           ))}
         </tbody>
@@ -211,18 +211,18 @@ function FirstTimerConversion({ data }: { data: Record<string, unknown> }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 16, marginBottom: 24 }}>
         {[
           { label: "First Timers",   value: total },
-          { label: "Converted",      value: converted,  color: "#059669" },
-          { label: "Conversion Rate",value: `${rate}%`, color: rate >= 50 ? "#059669" : "#D97706" },
-          { label: "Wants to Join",  value: wantsJoin,  color: "#7C3AED" },
+          { label: "Converted",      value: converted,  color: "var(--green-600)" },
+          { label: "Conversion Rate",value: `${rate}%`, color: rate >= 50 ? "var(--green-600)" : "var(--amber-600)" },
+          { label: "Wants to Join",  value: wantsJoin,  color: "var(--violet-600)" },
         ].map(({ label, value, color }) => (
-          <div key={label} style={{ padding: "16px 20px", border: "1px solid #E5E7EB", borderRadius: 12, background: "#fff" }}>
-            <p style={{ fontSize: 28, fontWeight: 700, color: color ?? "#1F2937" }}>{value}</p>
-            <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>{label}</p>
+          <div key={label} style={{ padding: "16px 20px", border: "1px solid var(--brand-border)", borderRadius: 12, background: "var(--surface)" }}>
+            <p style={{ fontSize: 28, fontWeight: 700, color: color ?? "var(--gray-800)" }}>{value}</p>
+            <p style={{ fontSize: 12, color: "var(--gray-400)", marginTop: 2 }}>{label}</p>
           </div>
         ))}
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--surface)", border: "1px solid var(--brand-border)", borderRadius: 12, overflow: "hidden" }}>
         <thead>
           <tr><Th>Cell</Th><Th>Buscentre</Th><Th right>First Timers</Th><Th right>Converted</Th><Th>Rate</Th></tr>
         </thead>
@@ -233,7 +233,7 @@ function FirstTimerConversion({ data }: { data: Record<string, unknown> }) {
               <Td>{r.buscentre}</Td>
               <Td right>{r.total}</Td>
               <Td right>{r.converted}</Td>
-              <Td style={{ minWidth: 140 }}><RateBar rate={r.rate} color={r.rate >= 50 ? "#059669" : "#D97706"} /></Td>
+              <Td style={{ minWidth: 140 }}><RateBar rate={r.rate} color={r.rate >= 50 ? "var(--green-600)" : "var(--amber-600)"} /></Td>
             </tr>
           ))}
         </tbody>
@@ -250,34 +250,34 @@ function HighestAttendance({ data }: { data: Record<string, unknown> }) {
     LC_LIVE: "LC Live", MGS: "MGS", SHEPHERDS_MEETING: "Shepherds Mtg", SPECIAL_MEETING: "Special Mtg",
   };
   const TYPE_COLOR: Record<string, string> = {
-    LC_LIVE: "#1E3A5F", MGS: "#065F46", SHEPHERDS_MEETING: "#5B21B6", SPECIAL_MEETING: "#92400E",
+    LC_LIVE: "var(--navy-700)", MGS: "var(--green-800)", SHEPHERDS_MEETING: "var(--violet-800)", SPECIAL_MEETING: "var(--amber-800)",
   };
 
   return (
     <>
-      <p style={{ fontSize: 13, color: "#6B7280", marginBottom: 20 }}>
+      <p style={{ fontSize: 13, color: "var(--brand-muted)", marginBottom: 20 }}>
         Top {rows.length} of {total} services in the selected period, ranked by attendance rate.
       </p>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--surface)", border: "1px solid var(--brand-border)", borderRadius: 12, overflow: "hidden" }}>
         <thead>
           <tr><Th>#</Th><Th>Service</Th><Th>Date</Th><Th>Cell</Th><Th>Buscentre</Th><Th right>Present</Th><Th>Rate</Th></tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={r.id} style={{ background: i === 0 ? "#F0FDF4" : "#fff" }}>
-              <Td><span style={{ fontWeight: 700, color: i === 0 ? "#059669" : "#9CA3AF" }}>#{i + 1}</span></Td>
+            <tr key={r.id} style={{ background: i === 0 ? "var(--green-50)" : "var(--surface)" }}>
+              <Td><span style={{ fontWeight: 700, color: i === 0 ? "var(--green-600)" : "var(--gray-400)" }}>#{i + 1}</span></Td>
               <Td>
-                <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 999, background: TYPE_COLOR[r.type] ?? "#1E3A5F", color: "#fff" }}>
+                <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 999, background: TYPE_COLOR[r.type] ?? "var(--navy-700)", color: "#fff" }}>
                   {TYPE_LABEL[r.type] ?? r.type}
                 </span>
-                {r.speaker && <span style={{ marginLeft: 6, fontSize: 12, color: "#6B7280" }}>{r.speaker}</span>}
+                {r.speaker && <span style={{ marginLeft: 6, fontSize: 12, color: "var(--brand-muted)" }}>{r.speaker}</span>}
               </Td>
               <Td>{fmt(r.date)}</Td>
               <Td>{r.cell}</Td>
               <Td>{r.buscentre}</Td>
               <Td right>{r.presentCount} / {r.totalMarked}</Td>
-              <Td style={{ minWidth: 130 }}><RateBar rate={r.rate} color={r.rate >= 75 ? "#059669" : r.rate >= 50 ? "#D97706" : "#DC2626"} /></Td>
+              <Td style={{ minWidth: 130 }}><RateBar rate={r.rate} color={r.rate >= 75 ? "var(--green-600)" : r.rate >= 50 ? "var(--amber-600)" : "var(--red-600)"} /></Td>
             </tr>
           ))}
         </tbody>
@@ -292,7 +292,7 @@ function MonthlySummary({ data }: { data: Record<string, unknown> }) {
   const growth     = data.growth as { firstTimers: number; converted: number; conversionRate: number; soulsWon: number };
 
   const SVC_LABEL: Record<string, string> = { lcLive: "LC Live (Wed)", mgs: "MGS (Sun)", shepherdsMeeting: "Shepherds Mtg (Fri)", specialMeeting: "Special Meetings" };
-  const SVC_COLOR: Record<string, string> = { lcLive: "#1E3A5F", mgs: "#065F46", shepherdsMeeting: "#5B21B6", specialMeeting: "#92400E" };
+  const SVC_COLOR: Record<string, string> = { lcLive: "var(--navy-700)", mgs: "var(--green-800)", shepherdsMeeting: "var(--violet-800)", specialMeeting: "var(--amber-800)" };
 
   return (
     <>
@@ -301,32 +301,32 @@ function MonthlySummary({ data }: { data: Record<string, unknown> }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
         {[
           { label: "Total",      value: members.total },
-          { label: "Active",     value: members.active,      color: "#059669" },
-          { label: "Inactive",   value: members.inactive,    color: members.inactive > 0 ? "#DC2626" : "#6B7280" },
-          { label: "New in Period", value: members.newInPeriod, color: "#7C3AED" },
+          { label: "Active",     value: members.active,      color: "var(--green-600)" },
+          { label: "Inactive",   value: members.inactive,    color: members.inactive > 0 ? "var(--red-600)" : "var(--brand-muted)" },
+          { label: "New in Period", value: members.newInPeriod, color: "var(--violet-600)" },
         ].map(({ label, value, color }) => (
-          <div key={label} style={{ padding: "14px 16px", border: "1px solid #E5E7EB", borderRadius: 10, background: "#fff" }}>
-            <p style={{ fontSize: 24, fontWeight: 700, color: color ?? "#1F2937" }}>{value}</p>
-            <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>{label}</p>
+          <div key={label} style={{ padding: "14px 16px", border: "1px solid var(--brand-border)", borderRadius: 10, background: "var(--surface)" }}>
+            <p style={{ fontSize: 24, fontWeight: 700, color: color ?? "var(--gray-800)" }}>{value}</p>
+            <p style={{ fontSize: 12, color: "var(--gray-400)", marginTop: 2 }}>{label}</p>
           </div>
         ))}
       </div>
 
       {/* Attendance */}
       <SectionTitle>Attendance Averages</SectionTitle>
-      <table style={{ width: "100%", borderCollapse: "collapse", background: "#fff", border: "1px solid #E5E7EB", borderRadius: 12, overflow: "hidden" }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--surface)", border: "1px solid var(--brand-border)", borderRadius: 12, overflow: "hidden" }}>
         <thead><tr><Th>Service</Th><Th right>Sessions</Th><Th right>Avg Present</Th><Th>Rate</Th></tr></thead>
         <tbody>
           {Object.entries(attendance).filter(([, v]) => v.sessions > 0).map(([key, v]) => (
             <tr key={key}>
               <Td>
-                <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 999, background: SVC_COLOR[key] ?? "#1E3A5F", color: "#fff" }}>
+                <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 7px", borderRadius: 999, background: SVC_COLOR[key] ?? "var(--navy-700)", color: "#fff" }}>
                   {SVC_LABEL[key] ?? key}
                 </span>
               </Td>
               <Td right>{v.sessions}</Td>
               <Td right>{v.avgPresent}</Td>
-              <Td style={{ minWidth: 140 }}><RateBar rate={v.rate} color={v.rate >= 75 ? "#059669" : v.rate >= 50 ? "#D97706" : "#DC2626"} /></Td>
+              <Td style={{ minWidth: 140 }}><RateBar rate={v.rate} color={v.rate >= 75 ? "var(--green-600)" : v.rate >= 50 ? "var(--amber-600)" : "var(--red-600)"} /></Td>
             </tr>
           ))}
         </tbody>
@@ -337,13 +337,13 @@ function MonthlySummary({ data }: { data: Record<string, unknown> }) {
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14 }}>
         {[
           { label: "First Timers",      value: growth.firstTimers },
-          { label: "Converted",         value: growth.converted,       color: "#059669" },
-          { label: "Conversion Rate",   value: `${growth.conversionRate}%`, color: growth.conversionRate >= 50 ? "#059669" : "#D97706" },
-          { label: "Souls Won",         value: growth.soulsWon,        color: "#7C3AED" },
+          { label: "Converted",         value: growth.converted,       color: "var(--green-600)" },
+          { label: "Conversion Rate",   value: `${growth.conversionRate}%`, color: growth.conversionRate >= 50 ? "var(--green-600)" : "var(--amber-600)" },
+          { label: "Souls Won",         value: growth.soulsWon,        color: "var(--violet-600)" },
         ].map(({ label, value, color }) => (
-          <div key={label} style={{ padding: "14px 16px", border: "1px solid #E5E7EB", borderRadius: 10, background: "#fff" }}>
-            <p style={{ fontSize: 24, fontWeight: 700, color: color ?? "#1F2937" }}>{value}</p>
-            <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 2 }}>{label}</p>
+          <div key={label} style={{ padding: "14px 16px", border: "1px solid var(--brand-border)", borderRadius: 10, background: "var(--surface)" }}>
+            <p style={{ fontSize: 24, fontWeight: 700, color: color ?? "var(--gray-800)" }}>{value}</p>
+            <p style={{ fontSize: 12, color: "var(--gray-400)", marginTop: 2 }}>{label}</p>
           </div>
         ))}
       </div>
@@ -400,9 +400,9 @@ function ReportContent() {
   const summary = (report?.data as Record<string, unknown>)?.summary as string | undefined;
 
   return (
-    <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "#F9FAFB", minHeight: "100vh" }}>
+    <div style={{ fontFamily: "'Inter', 'Segoe UI', sans-serif", background: "var(--gray-50)", minHeight: "100vh" }}>
       {/* Print / download bar */}
-      <div className="no-print" style={{ background: "#1E3A5F", padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+      <div className="no-print" style={{ background: "var(--navy-700)", padding: "12px 24px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <Icon style={{ width: 18, height: 18, color: "rgba(255,255,255,0.8)" }} />
           <span style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>{title}</span>
@@ -414,7 +414,7 @@ function ReportContent() {
         </div>
         <button
           onClick={() => window.print()}
-          style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 16px", background: "#fff", color: "#1E3A5F", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
+          style={{ display: "flex", alignItems: "center", gap: 6, padding: "6px 16px", background: "var(--surface)", color: "var(--navy-700)", border: "none", borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: "pointer" }}
         >
           <Printer style={{ width: 16, height: 16 }} /> Download / Print PDF
         </button>
@@ -426,18 +426,18 @@ function ReportContent() {
         {/* Report header */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 12, background: "#EEF2FF", display: "flex", alignItems: "center", justifyContent: "center" }}>
-              <Icon style={{ width: 22, height: 22, color: "#4338CA" }} />
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: "var(--indigo-50)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon style={{ width: 22, height: 22, color: "var(--indigo-700)" }} />
             </div>
-            <h1 style={{ fontSize: 26, fontWeight: 700, color: "#111827", margin: 0 }}>{title}</h1>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: "var(--gray-900)", margin: 0 }}>{title}</h1>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: 13, color: "#6B7280" }}>
-            <span>Scope: <strong style={{ color: "#374151" }}>{report?.scope.name ?? "—"}</strong></span>
-            {dateRangeStr && <span>Period: <strong style={{ color: "#374151" }}>{dateRangeStr}</strong></span>}
-            {report && <span>Generated: <strong style={{ color: "#374151" }}>{new Date(report.generatedAt).toLocaleString("en-GB")}</strong></span>}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16, fontSize: 13, color: "var(--brand-muted)" }}>
+            <span>Scope: <strong style={{ color: "var(--gray-700)" }}>{report?.scope.name ?? "—"}</strong></span>
+            {dateRangeStr && <span>Period: <strong style={{ color: "var(--gray-700)" }}>{dateRangeStr}</strong></span>}
+            {report && <span>Generated: <strong style={{ color: "var(--gray-700)" }}>{new Date(report.generatedAt).toLocaleString("en-GB")}</strong></span>}
           </div>
           {summary && (
-            <div style={{ marginTop: 12, padding: "10px 14px", background: "#EEF2FF", borderRadius: 8, fontSize: 13, color: "#3730A3", fontWeight: 500 }}>
+            <div style={{ marginTop: 12, padding: "10px 14px", background: "var(--indigo-50)", borderRadius: 8, fontSize: 13, color: "var(--indigo-800)", fontWeight: 500 }}>
               {summary}
             </div>
           )}
@@ -445,11 +445,11 @@ function ReportContent() {
 
         {/* Content */}
         {loading ? (
-          <div style={{ textAlign: "center", padding: "60px 0", color: "#9CA3AF", fontSize: 14 }}>
+          <div style={{ textAlign: "center", padding: "60px 0", color: "var(--gray-400)", fontSize: 14 }}>
             Generating report…
           </div>
         ) : error ? (
-          <div style={{ textAlign: "center", padding: "60px 0", color: "#DC2626", fontSize: 14 }}>{error}</div>
+          <div style={{ textAlign: "center", padding: "60px 0", color: "var(--red-600)", fontSize: 14 }}>{error}</div>
         ) : report ? (
           <>
             {type === "cells-ready-to-divide"  && <CellsReadyToDivide  data={report.data} />}
@@ -476,7 +476,7 @@ function ReportContent() {
 
 export default function ReportPage() {
   return (
-    <Suspense fallback={<div style={{ padding: 40, textAlign: "center", color: "#9CA3AF" }}>Loading…</div>}>
+    <Suspense fallback={<div style={{ padding: 40, textAlign: "center", color: "var(--gray-400)" }}>Loading…</div>}>
       <ReportContent />
     </Suspense>
   );
