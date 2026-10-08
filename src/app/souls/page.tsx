@@ -81,7 +81,7 @@ function SoulForm({
                    style={{ color: "var(--brand-muted)" }}>{label}</label>
             <input value={form[k]} onChange={set(k)} placeholder={placeholder}
                    className="h-10 px-3 text-[14px] rounded-lg"
-                   style={{ border: "1px solid var(--brand-border)", background: "#fff", outline: "none" }} />
+                   style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", outline: "none" }} />
           </div>
         ))}
       </div>
@@ -100,7 +100,7 @@ function SoulForm({
                     style={{ color: "var(--brand-muted)" }} />
               <input value={form[k]} onChange={set(k)} placeholder={placeholder}
                      className="h-10 pl-8 pr-3 text-[14px] rounded-lg w-full"
-                     style={{ border: "1px solid var(--brand-border)", background: "#fff", outline: "none" }} />
+                     style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", outline: "none" }} />
             </div>
           </div>
         ))}
@@ -112,7 +112,7 @@ function SoulForm({
                       style={{ color: "var(--brand-muted)" }} />
             <input type="date" value={form.date} onChange={set("date")}
                    className="h-10 pl-8 pr-3 text-[14px] rounded-lg w-full"
-                   style={{ border: "1px solid var(--brand-border)", background: "#fff", outline: "none" }} />
+                   style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", outline: "none" }} />
           </div>
         </div>
       </div>
@@ -128,7 +128,7 @@ function SoulForm({
                     placeholder="How did the interaction go? Any follow-up needed?"
                     rows={3}
                     className="w-full pl-8 pr-3 py-2.5 text-[14px] rounded-lg resize-none"
-                    style={{ border: "1px solid var(--brand-border)", background: "#fff", outline: "none" }} />
+                    style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", outline: "none" }} />
         </div>
       </div>
 
@@ -224,7 +224,7 @@ function SoulRow({
           </button>
           <button onClick={() => onDelete(soul.id)}
                   disabled={deleting === soul.id}
-                  className="p-1.5 rounded-lg hover:bg-[#FDECEA] transition-colors disabled:opacity-40"
+                  className="p-1.5 rounded-lg hover:bg-[var(--tint-danger-bg)] transition-colors disabled:opacity-40"
                   title="Delete">
             {deleting === soul.id
               ? <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "var(--brand-danger)" }} />
@@ -375,7 +375,7 @@ export default function SoulTrackerPage() {
             onChange={(e) => setQ(e.target.value)}
             placeholder="Search by name, phone or location…"
             className="w-full h-10 pl-9 pr-4 text-[14px] rounded-lg"
-            style={{ border: "1px solid var(--brand-border)", outline: "none", background: "#fff" }}
+            style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
           />
           {q && (
             <button onClick={() => setQ("")}
@@ -394,7 +394,7 @@ export default function SoulTrackerPage() {
             value={month}
             onChange={(e) => setMonth(e.target.value)}
             className="h-10 pl-9 pr-4 text-[14px] rounded-lg"
-            style={{ border: "1px solid var(--brand-border)", outline: "none", background: "#fff",
+            style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)",
                      color: month ? "var(--brand-text)" : "var(--brand-muted)" }}
           />
           {month && (
@@ -410,7 +410,7 @@ export default function SoulTrackerPage() {
       {!loading && (
         <div className="mb-4 flex items-center gap-2">
           <span className="rounded-pill text-[12px] font-medium px-3 py-1"
-                style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
             {souls.length} record{souls.length !== 1 ? "s" : ""}
             {month ? ` in ${new Date(month + "-01").toLocaleDateString("en-GB", { month: "long", year: "numeric" })}` : ""}
           </span>
@@ -439,7 +439,7 @@ export default function SoulTrackerPage() {
         <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
           <table className="w-full border-collapse">
             <thead>
-              <tr style={{ background: "#F9FAFB", borderBottom: "1px solid var(--brand-border)" }}>
+              <tr style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--brand-border)" }}>
                 {[
                   { label: "Name",     cls: "" },
                   { label: "Phone",    cls: "hidden sm:table-cell" },

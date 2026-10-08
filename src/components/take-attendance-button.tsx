@@ -42,7 +42,7 @@ export function TakeAttendanceButton() {
       case 'on-leave':
         return 'bg-yellow-100 text-yellow-800'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-[var(--gray-100)] text-[var(--gray-800)]'
     }
   }
 
@@ -56,7 +56,7 @@ export function TakeAttendanceButton() {
           </DialogHeader>
           <div className="py-4">
             <div className="mb-4 relative">
-              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-[var(--gray-400)]" size={20} />
               <Input
                 type="text"
                 placeholder="Search members..."
@@ -77,7 +77,7 @@ export function TakeAttendanceButton() {
                   <TableRow key={member.id}>
                     <TableCell className="font-medium">
                       <div className="flex items-center">
-                        <UserCircle className="mr-2 h-5 w-5 text-gray-400" />
+                        <UserCircle className="mr-2 h-5 w-5 text-[var(--gray-400)]" />
                         {member.name}
                       </div>
                     </TableCell>

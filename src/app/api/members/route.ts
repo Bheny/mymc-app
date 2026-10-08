@@ -111,6 +111,12 @@ export async function POST(request: Request) {
     if (!shepherd) return NextResponse.json({ error: "Shepherd not found" }, { status: 404 });
 
     const cap = await checkCapacity("member", shepherdId);
+    if (cap.blocked) {
+      return NextResponse.json(
+        { error: `This shepherd already has the maximum of ${cap.max} members` },
+        { status: 409 }
+      );
+    }
     if (cap.atCapacity) {
       const cell = await prisma.cell.findUnique({ where: { id: cellId }, select: { name: true } });
       await logCapacityWarning({

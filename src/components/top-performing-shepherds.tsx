@@ -28,7 +28,7 @@ export function TopPerformingShepherds({ shepherds }: { shepherds: Shepherd[] })
               </div>
               <div className="flex-1">
                 <h3 className="text-sm font-medium">{shepherd.name}</h3>
-                <p className="text-xs text-gray-500">{shepherd.cellName}</p>
+                <p className="text-xs text-[var(--brand-muted)]">{shepherd.cellName}</p>
               </div>
               <div className="flex items-center space-x-2 text-sm">
                 <div className="flex items-center space-x-1">

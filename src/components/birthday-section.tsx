@@ -8,10 +8,10 @@ import {
 import type { BirthdayEntry } from "@/lib/birthdays";
 
 function dayLabel(daysUntil: number): { text: string; style: React.CSSProperties } {
-  if (daysUntil === 0) return { text: "Today 🎂",  style: { background: "#E0F4EC", color: "#085041" } };
-  if (daysUntil === 1) return { text: "Tomorrow",  style: { background: "#FEF3DC", color: "#854F0B" } };
-  if (daysUntil <= 7)  return { text: `In ${daysUntil} days`, style: { background: "var(--brand-navy-light)", color: "var(--brand-navy)" } };
-  return                      { text: `In ${daysUntil} days`, style: { background: "#F3F4F6",              color: "var(--brand-muted)" } };
+  if (daysUntil === 0) return { text: "Today 🎂",  style: { background: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)" } };
+  if (daysUntil === 1) return { text: "Tomorrow",  style: { background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" } };
+  if (daysUntil <= 7)  return { text: `In ${daysUntil} days`, style: { background: "var(--brand-navy-light)", color: "var(--brand-link)" } };
+  return                      { text: `In ${daysUntil} days`, style: { background: "var(--gray-100)",              color: "var(--brand-muted)" } };
 }
 
 // wa.me needs digits only (no "+", spaces or dashes)
@@ -41,7 +41,7 @@ function BirthdayDetailDialog({ entry, onClose }: { entry: BirthdayEntry | null;
         <DialogHeader>
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center rounded-xl text-[16px] font-semibold shrink-0"
-                 style={{ width: 48, height: 48, background: entry.daysUntil === 0 ? "#1A8C6C" : "var(--brand-navy)", color: "#fff" }}>
+                 style={{ width: 48, height: 48, background: entry.daysUntil === 0 ? "var(--brand-success)" : "var(--brand-navy)", color: "#fff" }}>
               {initials}
             </div>
             <div className="min-w-0">
@@ -80,7 +80,7 @@ function BirthdayDetailDialog({ entry, onClose }: { entry: BirthdayEntry | null;
               href={`https://wa.me/${whatsappDigits(entry.phone)}`}
               target="_blank" rel="noopener noreferrer"
               className="flex-1 flex items-center justify-center gap-1.5 h-10 rounded-lg text-[13px] font-medium transition-opacity hover:opacity-85"
-              style={{ background: "#1A8C6C", color: "#fff" }}
+              style={{ background: "var(--brand-success)", color: "#fff" }}
             >
               <MessageCircle className="h-4 w-4" /> WhatsApp
             </a>
@@ -108,7 +108,7 @@ export function BirthdaySection({ birthdays }: { birthdays: BirthdayEntry[] }) {
       {/* Section header */}
       <div className="flex items-center gap-3 mb-3">
         <div className="flex items-center gap-2">
-          <Gift className="h-4 w-4" style={{ color: "var(--brand-navy)" }} />
+          <Gift className="h-4 w-4" style={{ color: "var(--brand-link)" }} />
           <span className="text-[12px] font-medium uppercase tracking-[0.06em]"
                 style={{ color: "var(--brand-muted)" }}>
             Upcoming Birthdays
@@ -138,7 +138,7 @@ export function BirthdaySection({ birthdays }: { birthdays: BirthdayEntry[] }) {
                 className="flex items-center justify-center rounded-lg text-[12px] font-semibold shrink-0"
                 style={{
                   width: 36, height: 36,
-                  background: b.daysUntil === 0 ? "#1A8C6C" : "var(--brand-navy)",
+                  background: b.daysUntil === 0 ? "var(--brand-success)" : "var(--brand-navy)",
                   color: "#fff",
                 }}
               >

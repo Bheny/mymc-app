@@ -49,8 +49,8 @@ function StatusBadge({ status }: { status: Candidate["status"] }) {
     <span
       className="rounded-pill text-[11px] font-medium px-2.5 py-1 inline-flex items-center gap-1"
       style={isCertified
-        ? { background: "#E8F0FE", color: "#1D4ED8" }
-        : { background: "#EAF3EE", color: "#1A8C6C" }}
+        ? { background: "var(--blue-50)", color: "var(--blue-700)" }
+        : { background: "var(--green-50b)", color: "var(--brand-success)" }}
     >
       {isCertified ? <ShieldCheck className="h-3 w-3" /> : <Award className="h-3 w-3" />}
       {isCertified ? "Certified" : "Recommended"}
@@ -59,10 +59,10 @@ function StatusBadge({ status }: { status: Candidate["status"] }) {
 }
 
 const WTGF_BADGE_STYLE: Record<Candidate["wtgfStatus"], { bg: string; fg: string; label: string }> = {
-  NOT_TAKEN: { bg: "#F1F2F4", fg: "var(--brand-muted)", label: "WTGF: not taken" },
-  SCHEDULED: { bg: "#FEF3DC", fg: "#854F0B",            label: "WTGF: scheduled" },
-  PASSED:    { bg: "#EAF3EE", fg: "#1A8C6C",            label: "WTGF: passed" },
-  FAILED:    { bg: "#FDECEA", fg: "#791F1F",            label: "WTGF: failed" },
+  NOT_TAKEN: { bg: "var(--gray-100b)", fg: "var(--brand-muted)", label: "WTGF: not taken" },
+  SCHEDULED: { bg: "var(--tint-warn-bg)", fg: "var(--tint-warn-fg)",            label: "WTGF: scheduled" },
+  PASSED:    { bg: "var(--green-50b)", fg: "var(--brand-success)",            label: "WTGF: passed" },
+  FAILED:    { bg: "var(--tint-danger-bg)", fg: "var(--tint-danger-fg)",            label: "WTGF: failed" },
 };
 
 function WtgfBadge({ status }: { status: Candidate["wtgfStatus"] }) {
@@ -161,20 +161,20 @@ function WtgfEditor({ candidate, onUpdated }: { candidate: Candidate; onUpdated:
         type="button"
         onClick={toggle}
         className="self-start flex items-center gap-1.5 text-[12px] font-medium hover:underline"
-        style={{ color: "var(--brand-navy)" }}
+        style={{ color: "var(--brand-link)" }}
       >
         <GraduationCap className="h-3.5 w-3.5" />
         {open ? "Cancel WTGF update" : "Update WTGF status"}
       </button>
 
       {open && (
-        <div className="flex flex-col gap-2 rounded-lg p-3" style={{ background: "#FAFAFA", border: "1px solid var(--brand-border)" }}>
+        <div className="flex flex-col gap-2 rounded-lg p-3" style={{ background: "var(--gray-50b)", border: "1px solid var(--brand-border)" }}>
           <div className="flex flex-wrap gap-2">
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value as Candidate["wtgfStatus"])}
               className="h-9 px-3 text-[13px] rounded-lg"
-              style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+              style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}
             >
               {WTGF_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
@@ -183,7 +183,7 @@ function WtgfEditor({ candidate, onUpdated }: { candidate: Candidate; onUpdated:
               value={date}
               onChange={(e) => setDate(e.target.value)}
               className="h-9 px-3 text-[13px] rounded-lg"
-              style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+              style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}
             />
             <button
               onClick={save}

@@ -89,7 +89,7 @@ export function LeaderboardCellSheet({
           ) : (
             <>
               {/* Summary */}
-              <div className="rounded-xl p-4 mb-5" style={{ border: "1px solid var(--brand-border)", background: "#FAFAFA" }}>
+              <div className="rounded-xl p-4 mb-5" style={{ border: "1px solid var(--brand-border)", background: "var(--gray-50b)" }}>
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[12px] font-semibold uppercase tracking-[0.05em]" style={{ color: "var(--brand-muted)" }}>
                     {SERVICE_LABEL[data.serviceType] ?? data.serviceType}

@@ -55,7 +55,7 @@ function ScopeSelect({
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled || options.length === 0}
         className="h-10 px-3 text-[14px] rounded-lg disabled:opacity-40"
-        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}
       >
         <option value="">— Select {label} —</option>
         {options.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
@@ -310,7 +310,7 @@ export default function ActivatePage() {
               value={role}
               onChange={(e) => { setRole(e.target.value as Role); setShepherdId(""); }}
               className="h-10 px-3 text-[14px] rounded-lg"
-              style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+              style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}
             >
               {ROLE_OPTIONS.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -321,8 +321,8 @@ export default function ActivatePage() {
             {selectedRole && (
               <div className="flex items-start gap-2 rounded-lg px-3 py-2 mt-1"
                    style={{ background: "var(--brand-navy-light)" }}>
-                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: "var(--brand-navy)" }} />
-                <p className="text-[12px]" style={{ color: "var(--brand-navy)" }}>
+                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: "var(--brand-link)" }} />
+                <p className="text-[12px]" style={{ color: "var(--brand-link)" }}>
                   {selectedRole.description}
                 </p>
               </div>
@@ -358,7 +358,7 @@ export default function ActivatePage() {
 
               {shepherds.length === 0 ? (
                 <div className="rounded-lg px-3 py-2.5 text-[13px]"
-                     style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                     style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
                   No shepherd slots in this cell yet — one will be created automatically on activation.
                 </div>
               ) : (
@@ -366,7 +366,7 @@ export default function ActivatePage() {
                   value={shepherdId}
                   onChange={(e) => setShepherdId(e.target.value)}
                   className="h-10 px-3 text-[14px] rounded-lg"
-                  style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+                  style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}
                 >
                   <option value="">— Create new slot automatically —</option>
 

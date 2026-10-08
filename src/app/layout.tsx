@@ -8,6 +8,7 @@ import { BottomNavbar } from '@/components/bottom-navbar'
 import { MainContentArea } from '@/components/main-content-area'
 import { Toaster } from "@/components/ui/toaster"
 import { Header } from '@/components/header'
+import { ThemeProvider, themeInitScript } from "@/hooks/use-theme"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -24,9 +25,14 @@ export default async function RootLayout({
   const session = await getServerSession()
 
   return (
-    <html lang="en">
-      <body className={inter.className} style={{ backgroundColor: '#FFFFFF' }}>
+    // suppressHydrationWarning: the theme script may add the `dark` class before React hydrates
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
+      <body className={inter.className}>
         <SessionProvider session={session}>
+          <ThemeProvider>
           <ActiveRoleProvider>
             {session ? (
               <SidebarProvider>
@@ -49,6 +55,7 @@ export default async function RootLayout({
             )}
             <Toaster />
           </ActiveRoleProvider>
+          </ThemeProvider>
         </SessionProvider>
       </body>
     </html>

@@ -96,7 +96,7 @@ export function RoleSwitcher({ collapsed = false }: { collapsed?: boolean }) { /
           className="absolute left-3 right-3 rounded-xl overflow-hidden z-50 py-1"
           style={{
             bottom: "calc(100% + 4px)",   // open upward — avoids sidebar clipping
-            background: "#fff",
+            background: "var(--surface)",
             boxShadow: "0 -4px 24px rgba(0,0,0,0.15)",
             border: "1px solid var(--brand-border)",
           }}
@@ -111,7 +111,7 @@ export function RoleSwitcher({ collapsed = false }: { collapsed?: boolean }) { /
               >
                 {/* Check or spacer */}
                 <span style={{ width: 16, flexShrink: 0 }}>
-                  {isActive && <Check style={{ width: 14, height: 14, color: "var(--brand-navy)" }} />}
+                  {isActive && <Check style={{ width: 14, height: 14, color: "var(--brand-link)" }} />}
                 </span>
 
                 <div className="flex-1 min-w-0">
@@ -129,7 +129,7 @@ export function RoleSwitcher({ collapsed = false }: { collapsed?: boolean }) { /
                   <div className="flex items-center gap-1 shrink-0">
                     <span
                       className="rounded-pill text-[10px] font-medium px-1.5 py-0.5"
-                      style={{ background: "#FEF3DC", color: "#854F0B" }}
+                      style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}
                     >
                       acting
                     </span>

@@ -10,6 +10,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { StructureLimitsSettings } from "@/components/settings/structure-limits-settings";
+import { LegacySheetSettings } from "@/components/settings/legacy-sheet-settings";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -174,7 +176,7 @@ export default function SettingsPage() {
                 <button
                   onClick={() => { startEditName(); }}
                   className="flex items-center gap-1.5 text-[12px] font-medium rounded-lg px-2.5 py-1 transition-colors hover:bg-[var(--brand-navy-light)]"
-                  style={{ color: "var(--brand-navy)" }}
+                  style={{ color: "var(--brand-link)" }}
                 >
                   <Pencil className="h-3 w-3" /> Edit
                 </button>
@@ -198,7 +200,7 @@ export default function SettingsPage() {
                     <button onClick={saveName} disabled={savingName}
                             className="p-1.5 rounded-lg hover:bg-[var(--brand-navy-light)] transition-colors">
                       {savingName
-                        ? <Loader2 className="h-4 w-4 animate-spin" style={{ color: "var(--brand-navy)" }} />
+                        ? <Loader2 className="h-4 w-4 animate-spin" style={{ color: "var(--brand-link)" }} />
                         : <Check className="h-4 w-4" style={{ color: "var(--brand-success)" }} />}
                     </button>
                     <button onClick={() => setEditingName(false)}
@@ -231,7 +233,7 @@ export default function SettingsPage() {
                       onChange={(e) => saveRank(e.target.value as Rank || null)}
                       onBlur={() => setEditingRank(false)}
                       className="flex-1 h-8 px-2 text-[14px] rounded-lg mr-2"
-                      style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}
+                      style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
                     >
                       <option value="">— Not set —</option>
                       {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
@@ -253,7 +255,7 @@ export default function SettingsPage() {
                 ) : (
                   <button onClick={() => setEditingRank(true)}
                           className="text-[13px] font-medium hover:underline"
-                          style={{ color: "var(--brand-navy)" }}>
+                          style={{ color: "var(--brand-link)" }}>
                     Set rank
                   </button>
                 )}
@@ -262,7 +264,7 @@ export default function SettingsPage() {
               {/* Role */}
               <Row icon={Briefcase} label="Role">
                 <span className="rounded-pill text-[12px] font-medium px-2.5 py-0.5"
-                      style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                      style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
                   {roleName}
                 </span>
               </Row>
@@ -288,6 +290,12 @@ export default function SettingsPage() {
               )}
             </div>
           </section>
+
+          {/* ── Structure limits (admin / chief shepherd only) ── */}
+          <StructureLimitsSettings />
+
+          {/* ── Legacy dashboard data source (admin / chief shepherd only) ── */}
+          <LegacySheetSettings />
 
           {/* ── Security ── */}
           <section>

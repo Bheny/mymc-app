@@ -72,9 +72,9 @@ const TYPE_LABEL: Record<string, string> = {
 };
 const TYPE_COLOR: Record<string, string> = {
   LC_LIVE:           "var(--brand-navy)",
-  MGS:               "#1A8C6C",
-  SHEPHERDS_MEETING: "#7C3AED",
-  SPECIAL_MEETING:   "#B45309",
+  MGS:               "var(--brand-success)",
+  SHEPHERDS_MEETING: "var(--violet-600)",
+  SPECIAL_MEETING:   "var(--amber-700)",
 };
 
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -92,7 +92,7 @@ function KpiCard({
 }) {
   return (
     <div className="rounded-xl px-5 py-4 flex flex-col gap-1"
-         style={{ border: "1px solid var(--brand-border)", background: "#fff" }}>
+         style={{ border: "1px solid var(--brand-border)", background: "var(--surface)" }}>
       <div className="flex items-center gap-2 mb-1">
         <span style={{ color: "var(--brand-muted)" }}>{icon}</span>
         <span className="text-[11px] font-medium uppercase tracking-[0.06em]"
@@ -101,7 +101,7 @@ function KpiCard({
         </span>
       </div>
       <span className="text-[32px] font-bold leading-none"
-            style={{ color: highlight ? "var(--brand-navy)" : "var(--brand-text)" }}>
+            style={{ color: highlight ? "var(--brand-link)" : "var(--brand-text)" }}>
         {value}
       </span>
       {sub && (
@@ -119,7 +119,7 @@ function ChartTooltip({ active, payload, label }: {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-xl px-4 py-3 text-[13px] shadow-lg"
-         style={{ background: "#fff", border: "1px solid var(--brand-border)" }}>
+         style={{ background: "var(--surface)", border: "1px solid var(--brand-border)" }}>
       <p className="font-semibold mb-2" style={{ color: "var(--brand-text)" }}>{label}</p>
       {payload.map((p) => (
         <div key={p.name} className="flex items-center gap-2">
@@ -142,7 +142,7 @@ function ServiceTooltip({ active, payload, label }: {
   const rate    = total > 0 ? Math.round((present / total) * 100) : 0;
   return (
     <div className="rounded-xl px-4 py-3 text-[13px] shadow-lg"
-         style={{ background: "#fff", border: "1px solid var(--brand-border)" }}>
+         style={{ background: "var(--surface)", border: "1px solid var(--brand-border)" }}>
       <p className="font-semibold mb-2" style={{ color: "var(--brand-text)" }}>{label}</p>
       <div className="flex items-center gap-2">
         <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: "var(--brand-success)" }} />
@@ -150,12 +150,12 @@ function ServiceTooltip({ active, payload, label }: {
         <span className="font-medium ml-auto pl-4" style={{ color: "var(--brand-text)" }}>{present}</span>
       </div>
       <div className="flex items-center gap-2">
-        <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: "#E5E7EB" }} />
+        <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: "var(--brand-border)" }} />
         <span style={{ color: "var(--brand-muted)" }}>Absent:</span>
         <span className="font-medium ml-auto pl-4" style={{ color: "var(--brand-text)" }}>{absent}</span>
       </div>
       <div className="mt-1.5 pt-1.5" style={{ borderTop: "1px solid var(--brand-border)" }}>
-        <span className="font-semibold" style={{ color: rate >= 75 ? "var(--brand-success)" : rate >= 50 ? "#854F0B" : "var(--brand-danger)" }}>
+        <span className="font-semibold" style={{ color: rate >= 75 ? "var(--brand-success)" : rate >= 50 ? "var(--tint-warn-fg)" : "var(--brand-danger)" }}>
           {rate}% attendance
         </span>
       </div>
@@ -316,7 +316,7 @@ export default function AnalysisPage() {
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <BarChart2 className="h-5 w-5" style={{ color: "var(--brand-navy)" }} />
+            <BarChart2 className="h-5 w-5" style={{ color: "var(--brand-link)" }} />
             <h1 className="text-[24px] font-semibold" style={{ color: "var(--brand-text)" }}>
               Analysis
             </h1>
@@ -363,7 +363,7 @@ export default function AnalysisPage() {
             className="px-3 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
             style={month === null
               ? { background: "var(--brand-navy)", color: "#fff" }
-              : { background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
+              : { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
           >
             Full Year
           </button>
@@ -374,7 +374,7 @@ export default function AnalysisPage() {
               className="px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
               style={month === i + 1
                 ? { background: "var(--brand-navy)", color: "#fff" }
-                : { background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
+                : { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
             >
               {name}
             </button>
@@ -394,7 +394,7 @@ export default function AnalysisPage() {
                 value={filterMcId}
                 onChange={(e) => { setFilterMcId(e.target.value); setFilterBuscentreId(""); setFilterId(""); setBuscentreOptions([]); setDropdownOptions([]); }}
                 className="h-9 px-3 text-[13px] rounded-lg"
-                style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}
+                style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
               >
                 <option value="">— Select MC —</option>
                 {mcOptions.map((mc) => <option key={mc.id} value={mc.id}>{mc.name}</option>)}
@@ -404,7 +404,7 @@ export default function AnalysisPage() {
                   value={filterBuscentreId}
                   onChange={(e) => { setFilterBuscentreId(e.target.value); setFilterId(""); setDropdownOptions([]); }}
                   className="h-9 px-3 text-[13px] rounded-lg"
-                  style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}
+                  style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
                 >
                   <option value="">All buscentres</option>
                   {buscentreOptions.map((bc) => <option key={bc.id} value={bc.id}>{bc.name}</option>)}
@@ -415,7 +415,7 @@ export default function AnalysisPage() {
                   value={filterId}
                   onChange={(e) => setFilterId(e.target.value)}
                   className="h-9 px-3 text-[13px] rounded-lg"
-                  style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}
+                  style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
                 >
                   <option value="">All cells</option>
                   {dropdownOptions.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -431,7 +431,7 @@ export default function AnalysisPage() {
                 value={filterBuscentreId}
                 onChange={(e) => { setFilterBuscentreId(e.target.value); setFilterId(""); setDropdownOptions([]); }}
                 className="h-9 px-3 text-[13px] rounded-lg"
-                style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}
+                style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
               >
                 <option value="">All buscentres</option>
                 {buscentreOptions.map((bc) => <option key={bc.id} value={bc.id}>{bc.name}</option>)}
@@ -441,7 +441,7 @@ export default function AnalysisPage() {
                   value={filterId}
                   onChange={(e) => setFilterId(e.target.value)}
                   className="h-9 px-3 text-[13px] rounded-lg"
-                  style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}
+                  style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
                 >
                   <option value="">All cells</option>
                   {dropdownOptions.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -456,7 +456,7 @@ export default function AnalysisPage() {
               value={filterId}
               onChange={(e) => setFilterId(e.target.value)}
               className="h-9 px-3 text-[13px] rounded-lg"
-              style={{ border: "1px solid var(--brand-border)", background: "#fff", color: "var(--brand-text)" }}
+              style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
             >
               <option value="">All cells</option>
               {dropdownOptions.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -512,7 +512,7 @@ export default function AnalysisPage() {
       </div>
 
       {/* ── Chart ── */}
-      <div className="rounded-xl p-5 mb-6" style={{ border: "1px solid var(--brand-border)", background: "#fff" }}>
+      <div className="rounded-xl p-5 mb-6" style={{ border: "1px solid var(--brand-border)", background: "var(--surface)" }}>
         <p className="text-[13px] font-semibold mb-4" style={{ color: "var(--brand-text)" }}>
           {month === null
             ? `Monthly Trend — ${year}`
@@ -536,12 +536,12 @@ export default function AnalysisPage() {
               </Bar>
               <Bar dataKey="mgsAvg" name="MGS Avg" radius={[3, 3, 0, 0]}>
                 {chartData.map((entry, i) => (
-                  <Cell key={i} fill={entry._active ? "#1A8C6C" : "rgba(26,140,108,0.25)"} />
+                  <Cell key={i} fill={entry._active ? "var(--brand-success)" : "rgba(26,140,108,0.25)"} />
                 ))}
               </Bar>
               <Bar dataKey="soulsWon" name="Souls Won" radius={[3, 3, 0, 0]}>
                 {chartData.map((entry, i) => (
-                  <Cell key={i} fill={entry._active ? "#F5A623" : "rgba(245,166,35,0.25)"} />
+                  <Cell key={i} fill={entry._active ? "var(--amber-400)" : "rgba(245,166,35,0.25)"} />
                 ))}
               </Bar>
             </BarChart>
@@ -579,7 +579,7 @@ export default function AnalysisPage() {
                 ))}
               </Bar>
               {/* Absent — light grey on top */}
-              <Bar dataKey="absent" name="Absent" stackId="a" radius={[3, 3, 0, 0]} fill="#E5E7EB" />
+              <Bar dataKey="absent" name="Absent" stackId="a" radius={[3, 3, 0, 0]} fill="var(--brand-border)" />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -612,7 +612,7 @@ export default function AnalysisPage() {
               const rate     = svc.totalMarked > 0 ? Math.round((svc.presentCount / svc.totalMarked) * 100) : 0;
               const absent   = svc.totalMarked - svc.presentCount;
               const color    = TYPE_COLOR[svc.type] ?? "var(--brand-navy)";
-              const rateColor = rate >= 75 ? "var(--brand-success)" : rate >= 50 ? "#854F0B" : "var(--brand-danger)";
+              const rateColor = rate >= 75 ? "var(--brand-success)" : rate >= 50 ? "var(--tint-warn-fg)" : "var(--brand-danger)";
               const dateStr  = new Date(svc.date).toLocaleDateString("en-GB", {
                 weekday: "short", day: "numeric", month: "short",
               });
@@ -634,13 +634,13 @@ export default function AnalysisPage() {
                     </span>
                     {svc.cellName && (
                       <span className="text-[12px] rounded-pill px-2 py-0.5"
-                            style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                            style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
                         {svc.cellName}
                       </span>
                     )}
                     {svc.mode === "ONLINE" && (
                       <span className="text-[11px] font-medium rounded-pill px-2 py-0.5"
-                            style={{ background: "#FEF3DC", color: "#854F0B" }}>Online</span>
+                            style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>Online</span>
                     )}
                     {svc.speaker && (
                       <span className="text-[12px]" style={{ color: "var(--brand-muted)" }}>
@@ -701,7 +701,7 @@ export default function AnalysisPage() {
 
           <table className="w-full border-collapse">
             <thead>
-              <tr style={{ background: "#F9FAFB", borderBottom: "1px solid var(--brand-border)" }}>
+              <tr style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--brand-border)" }}>
                 {/* Buscentre column — MC scope, or a chief_shepherd's branch-wide scope, without a buscentre filter */}
                 {!isCellScope && (scope.type === "mc" || scope.type === "branch") && !filterBuscentreId && (
                   <th className="px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-[0.06em] hidden sm:table-cell"
@@ -742,7 +742,7 @@ export default function AnalysisPage() {
                 ? (breakdown as ShepherdBreakdown[]).map((row, i) => (
                     <tr key={row.id}
                         style={{ borderBottom: i < breakdown.length - 1 ? "1px solid var(--brand-border)" : "none",
-                                 background: i % 2 === 0 ? "#fff" : "#FAFAFA" }}>
+                                 background: i % 2 === 0 ? "var(--surface)" : "var(--gray-50b)" }}>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2.5">
                           <div className="flex items-center justify-center rounded-lg shrink-0 text-[10px] font-bold"
@@ -756,19 +756,19 @@ export default function AnalysisPage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="text-[13px] font-medium rounded-pill px-2 py-0.5"
-                              style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                              style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
                           {row.memberCount}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="text-[14px] font-semibold"
-                              style={{ color: row.lcLiveAvg > 0 ? "#085041" : "var(--brand-muted)" }}>
+                              style={{ color: row.lcLiveAvg > 0 ? "var(--tint-ok-fg)" : "var(--brand-muted)" }}>
                           {row.lcLiveAvg || "—"}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="text-[14px] font-semibold"
-                              style={{ color: row.mgsAvg > 0 ? "#085041" : "var(--brand-muted)" }}>
+                              style={{ color: row.mgsAvg > 0 ? "var(--tint-ok-fg)" : "var(--brand-muted)" }}>
                           {row.mgsAvg || "—"}
                         </span>
                       </td>
@@ -777,12 +777,12 @@ export default function AnalysisPage() {
                 : (breakdown as CellBreakdown[]).map((row, i) => (
                     <tr key={row.id}
                         style={{ borderBottom: i < breakdown.length - 1 ? "1px solid var(--brand-border)" : "none",
-                                 background: i % 2 === 0 ? "#fff" : "#FAFAFA" }}>
+                                 background: i % 2 === 0 ? "var(--surface)" : "var(--gray-50b)" }}>
                       {/* Buscentre cell — MC scope, or a chief_shepherd's branch-wide scope */}
                       {(scope.type === "mc" || scope.type === "branch") && !filterBuscentreId && (
                         <td className="px-4 py-3 hidden sm:table-cell">
                           <span className="text-[12px] font-medium rounded-pill px-2 py-0.5"
-                                style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                                style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
                             {(row as CellBreakdown).buscentreName ?? "—"}
                           </span>
                         </td>
@@ -799,19 +799,19 @@ export default function AnalysisPage() {
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="text-[13px] font-medium rounded-pill px-2 py-0.5"
-                              style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                              style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
                           {row.memberCount}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="text-[14px] font-semibold"
-                              style={{ color: row.lcLiveAvg > 0 ? "#085041" : "var(--brand-muted)" }}>
+                              style={{ color: row.lcLiveAvg > 0 ? "var(--tint-ok-fg)" : "var(--brand-muted)" }}>
                           {row.lcLiveAvg || "—"}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <span className="text-[14px] font-semibold"
-                              style={{ color: row.mgsAvg > 0 ? "#085041" : "var(--brand-muted)" }}>
+                              style={{ color: row.mgsAvg > 0 ? "var(--tint-ok-fg)" : "var(--brand-muted)" }}>
                           {row.mgsAvg || "—"}
                         </span>
                       </td>
@@ -822,13 +822,13 @@ export default function AnalysisPage() {
                       </td>
                       <td className="px-4 py-3 text-right hidden md:table-cell">
                         <span className="text-[13px]"
-                              style={{ color: row.retained > 0 ? "#085041" : "var(--brand-text)" }}>
+                              style={{ color: row.retained > 0 ? "var(--tint-ok-fg)" : "var(--brand-text)" }}>
                           {row.retained || "—"}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right hidden lg:table-cell">
                         <span className="text-[13px]"
-                              style={{ color: row.soulsWon > 0 ? "#854F0B" : "var(--brand-text)" }}>
+                              style={{ color: row.soulsWon > 0 ? "var(--tint-warn-fg)" : "var(--brand-text)" }}>
                           {row.soulsWon || "—"}
                         </span>
                       </td>

@@ -4,7 +4,8 @@
  * AssignHeadSheet — slide-in panel for assigning a head to a cell or buscentre.
  *
  * Two modes:
- *   Permanent → links to /org/activate with scope pre-filled (new activation)
+ *   Permanent → reassign an existing user (standing down the current head), or
+ *               link to /org/activate with scope pre-filled (new activation)
  *   Acting    → inline assignment of a higher-level existing user (temporary cover)
  */
 
@@ -102,6 +103,7 @@ export function AssignHeadSheet({
   const [loadingAllUsers, setLoadingAllUsers] = useState(false);
   const [reassignId,      setReassignId]      = useState("");
   const [reassigning,     setReassigning]     = useState(false);
+  const [replacedNames,   setReplacedNames]   = useState<string[]>([]);
 
   // Current head — fetched when sheet opens
   const [currentHead,    setCurrentHead]    = useState<CurrentHead | null>(null);
@@ -173,6 +175,7 @@ export function AssignHeadSheet({
       setMode("permanent");
       setSelectedId("");
       setReassignId("");
+      setReplacedNames([]);
       setError("");
       setSuccess(false);
     }
@@ -223,6 +226,8 @@ export function AssignHeadSheet({
 
     setReassigning(false);
     if (res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setReplacedNames(d.replaced ?? []);
       setSuccess(true);
       setTimeout(() => { onAssigned(); onClose(); }, 1500);
     } else {
@@ -265,7 +270,8 @@ export function AssignHeadSheet({
               </p>
               <p className="text-[13px]" style={{ color: "var(--brand-muted)" }}>
                 {reassignId
-                  ? `${allUsers.find((u) => u.id === reassignId)?.name ?? "User"} is now ${NODE_LABEL[nodeType]} for ${nodeName}.`
+                  ? `${allUsers.find((u) => u.id === reassignId)?.name ?? "User"} is now ${NODE_LABEL[nodeType]} for ${nodeName}.` +
+                    (replacedNames.length ? ` ${replacedNames.join(", ")} has been stood down and can be reassigned.` : "")
                   : selectedUser
                   ? `${selectedUser.name} can now switch to this role via the role switcher.`
                   : "The acting assignment has been cleared."}
@@ -286,14 +292,14 @@ export function AssignHeadSheet({
                      style={{ border: "1px solid var(--brand-border)" }}>
                   {/* Header */}
                   <div className="px-4 py-2.5 flex items-center gap-2"
-                       style={{ background: "#F9FAFB", borderBottom: "1px solid var(--brand-border)" }}>
+                       style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--brand-border)" }}>
                     <span className="text-[11px] font-semibold uppercase tracking-[0.05em]"
                           style={{ color: "var(--brand-muted)" }}>
                       Currently serving
                     </span>
                     {currentHead.isActing && (
                       <span className="rounded-pill text-[10px] font-bold px-2 py-0.5"
-                            style={{ background: "#FEF3DC", color: "#854F0B" }}>
+                            style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
                         acting
                       </span>
                     )}
@@ -328,7 +334,7 @@ export function AssignHeadSheet({
                         onClick={handleRemoveActing}
                         disabled={removingActing}
                         className="flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium transition-colors hover:opacity-80 disabled:opacity-50"
-                        style={{ background: "#FDECEA", color: "#791F1F", border: "1px solid #FCA5A5" }}
+                        style={{ background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)", border: "1px solid var(--red-300)" }}
                       >
                         {removingActing
                           ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -340,9 +346,9 @@ export function AssignHeadSheet({
                 </div>
               ) : !currentHead && !loadingHead ? (
                 <div className="flex items-center gap-2 rounded-xl px-4 py-3"
-                     style={{ background: "#F0FDF4", border: "1px solid #86EFAC" }}>
-                  <UserCircle className="h-4 w-4 shrink-0" style={{ color: "#059669" }} />
-                  <span className="text-[13px]" style={{ color: "#065F46" }}>
+                     style={{ background: "var(--green-50)", border: "1px solid var(--green-300)" }}>
+                  <UserCircle className="h-4 w-4 shrink-0" style={{ color: "var(--green-600)" }} />
+                  <span className="text-[13px]" style={{ color: "var(--green-800)" }}>
                     No one currently assigned — set one below
                   </span>
                 </div>
@@ -362,7 +368,7 @@ export function AssignHeadSheet({
                     className="flex-1 py-2.5 text-[13px] font-medium transition-colors"
                     style={mode === m
                       ? { background: "var(--brand-navy)", color: "#fff" }
-                      : { background: "#fff", color: "var(--brand-muted)" }}
+                      : { background: "var(--surface)", color: "var(--brand-muted)" }}
                   >
                     {m === "permanent" ? "Permanent" : "Acting (temporary)"}
                   </button>
@@ -388,7 +394,7 @@ export function AssignHeadSheet({
                           value={reassignId}
                           onChange={(e) => { setReassignId(e.target.value); setError(""); }}
                           className="h-10 px-3 text-[14px] rounded-lg"
-                          style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+                          style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}
                         >
                           <option value="">— Select person —</option>
                           {allUsers.map((u) => (
@@ -417,13 +423,25 @@ export function AssignHeadSheet({
                             <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>
                               Current role: {u.role ? (ROLE_LABEL[u.role.role] ?? u.role.role) : "none"}
                             </p>
-                            <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--brand-navy)" }}>
+                            <p className="text-[12px] mt-0.5 font-medium" style={{ color: "var(--brand-link)" }}>
                               New role: {NODE_LABEL[nodeType]} · {nodeName}
                             </p>
                           </div>
                         </div>
                       ) : null;
                     })()}
+
+                    {currentHead && reassignId && reassignId !== currentHead.userId && (
+                      <div className="rounded-xl px-4 py-3 flex items-start gap-2"
+                           style={{ background: "var(--tint-warn-bg)", border: "1px solid var(--tint-warn-border)" }}>
+                        <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "var(--tint-warn-fg)" }} />
+                        <p className="text-[12px]" style={{ color: "var(--tint-warn-fg)" }}>
+                          {currentHead.isActing
+                            ? `${currentHead.name ?? currentHead.email}'s acting cover here will end.`
+                            : `${currentHead.name ?? currentHead.email} will be stood down as ${NODE_LABEL[nodeType]}. They keep their login and member record, and you can assign them a new role afterwards.`}
+                        </p>
+                      </div>
+                    )}
 
                     {error && (
                       <p className="text-[13px]" style={{ color: "var(--brand-danger)" }}>{error}</p>
@@ -469,14 +487,14 @@ export function AssignHeadSheet({
               {mode === "acting" && (
                 <div className="flex flex-col gap-4">
                   <div className="rounded-xl p-4"
-                       style={{ background: "#FEF3DC", border: "1px solid #F5D9A0" }}>
+                       style={{ background: "var(--tint-warn-bg)", border: "1px solid var(--tint-warn-border)" }}>
                     <div className="flex items-start gap-2">
-                      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "#854F0B" }} />
+                      <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" style={{ color: "var(--tint-warn-fg)" }} />
                       <div>
-                        <p className="text-[13px] font-medium" style={{ color: "#854F0B" }}>
+                        <p className="text-[13px] font-medium" style={{ color: "var(--tint-warn-fg)" }}>
                           Temporary coverage
                         </p>
-                        <p className="text-[12px] mt-0.5" style={{ color: "#B87015" }}>
+                        <p className="text-[12px] mt-0.5" style={{ color: "var(--brand-warning)" }}>
                           The assigned person keeps their primary role. They can switch between roles
                           via the role switcher. An acting-up flag will be logged.
                         </p>
@@ -495,7 +513,7 @@ export function AssignHeadSheet({
                            style={{ background: "var(--brand-border)" }} />
                     ) : users.length === 0 ? (
                       <div className="rounded-lg px-3 py-2.5 text-[13px]"
-                           style={{ background: "#FDECEA", color: "#791F1F" }}>
+                           style={{ background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)" }}>
                         No eligible users found. Only {eligibleRoles.map((r) => ROLE_LABEL[r] ?? r).join(", ")} can act as {NODE_LABEL[nodeType]}.
                       </div>
                     ) : (
@@ -503,7 +521,7 @@ export function AssignHeadSheet({
                         value={selectedId}
                         onChange={(e) => { setSelectedId(e.target.value); setError(""); }}
                         className="h-10 px-3 text-[14px] rounded-lg"
-                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}
                       >
                         <option value="">— Select person —</option>
                         {users.map((u) => (

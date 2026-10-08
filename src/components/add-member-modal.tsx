@@ -62,7 +62,7 @@ function NativeSelect({
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}
       className="h-10 px-3 text-[14px] rounded-lg disabled:opacity-40"
-      style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+      style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
       <option value="">{placeholder}</option>
       {options.map((o) => <option key={o.id} value={o.id}>{displayFn(o)}</option>)}
     </select>
@@ -73,7 +73,7 @@ function NativeSelect({
 function LockedField({ name }: { name: string }) {
   return (
     <div className="h-10 px-3 flex items-center justify-between rounded-lg text-[14px]"
-         style={{ border: "1px solid var(--brand-border)", background: "#F9FAFB", color: "var(--brand-text)" }}>
+         style={{ border: "1px solid var(--brand-border)", background: "var(--gray-50)", color: "var(--brand-text)" }}>
       <span>{name}</span>
       <Lock className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--brand-muted)" }} />
     </div>
@@ -308,7 +308,7 @@ export function AddMemberModal({ onAdded }: { onAdded?: () => void }) {
                   className="text-left px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors"
                   style={level === l.value
                     ? { background: "var(--brand-navy)", color: "#fff", border: "1px solid var(--brand-navy)" }
-                    : { background: "#fff", color: "var(--brand-text)", border: "1px solid var(--brand-border)" }}
+                    : { background: "var(--surface)", color: "var(--brand-text)", border: "1px solid var(--brand-border)" }}
                 >
                   {l.label}
                 </button>
@@ -409,7 +409,7 @@ export function AddMemberModal({ onAdded }: { onAdded?: () => void }) {
                   )}
                   <button type="button" onClick={createShepherd} disabled={creatingShepherd}
                     className="flex items-center gap-1.5 text-[12px] font-medium self-start"
-                    style={{ color: "var(--brand-navy)" }}>
+                    style={{ color: "var(--brand-link)" }}>
                     {creatingShepherd ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
                     Add another shepherd slot
                   </button>

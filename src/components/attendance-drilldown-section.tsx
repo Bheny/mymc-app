@@ -4,12 +4,12 @@ import { useEffect, useState } from "react";
 import { ClipboardList, CheckCircle2, XCircle, List, PieChart as PieChartIcon } from "lucide-react";
 import { ResponsiveContainer, PieChart, Pie, Cell as PieSlice, Tooltip, Legend } from "recharts";
 
-const SUCCESS = "#1A8C6C";
-const DANGER  = "#C0392B";
+const SUCCESS = "var(--brand-success)";
+const DANGER  = "var(--brand-danger)";
 
 const PIE_COLORS = [
-  "#1A8C6C", "#0F1F3D", "#B87015", "#7C3AED",
-  "#2563EB", "#C0392B", "#0E9594", "#D97706",
+  "var(--brand-success)", "var(--brand-navy)", "var(--brand-warning)", "var(--violet-600)",
+  "var(--blue-600)", "var(--brand-danger)", "#0E9594", "var(--amber-600)",
   "#9333EA", "#16A34A",
 ];
 
@@ -44,7 +44,7 @@ function formatDate(iso: string) {
 function TotalCard({ label, snapshot }: { label: string; snapshot: Snapshot }) {
   return (
     <div className="rounded-xl px-5 py-4 flex flex-col gap-1"
-         style={{ border: "1px solid var(--brand-border)", background: "#fff" }}>
+         style={{ border: "1px solid var(--brand-border)", background: "var(--surface)" }}>
       <p className="text-[11px] font-medium uppercase tracking-[0.06em]" style={{ color: "var(--brand-muted)" }}>
         {label}
       </p>
@@ -73,7 +73,7 @@ function TotalCard({ label, snapshot }: { label: string; snapshot: Snapshot }) {
             </span>
           </div>
           {snapshot.firstTimers > 0 && (
-            <p className="text-[12px] font-medium mt-0.5" style={{ color: "var(--brand-navy)" }}>
+            <p className="text-[12px] font-medium mt-0.5" style={{ color: "var(--brand-link)" }}>
               + {snapshot.firstTimers} first timer{snapshot.firstTimers !== 1 ? "s" : ""}
             </p>
           )}
@@ -93,7 +93,7 @@ function TotalCard({ label, snapshot }: { label: string; snapshot: Snapshot }) {
 function FiguresTable({ rows, snapKey, title }: { rows: LevelRow[]; snapKey: SnapKey; title: string }) {
   return (
     <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
-      <div className="px-4 py-2.5" style={{ borderBottom: "1px solid var(--brand-border)", background: "#FAFAFA" }}>
+      <div className="px-4 py-2.5" style={{ borderBottom: "1px solid var(--brand-border)", background: "var(--gray-50b)" }}>
         <span className="text-[11px] font-semibold uppercase tracking-[0.05em]" style={{ color: "var(--brand-muted)" }}>
           {title}
         </span>
@@ -111,7 +111,7 @@ function FiguresTable({ rows, snapKey, title }: { rows: LevelRow[]; snapKey: Sna
                 </span>
                 {firstTimers > 0 && (
                   <span className="rounded-pill text-[10px] font-semibold px-1.5 py-0.5 shrink-0"
-                        style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                        style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
                     +{firstTimers} 1st time{firstTimers !== 1 ? "rs" : "r"}
                   </span>
                 )}
@@ -257,7 +257,7 @@ export function AttendanceDrilldownSection({
               onClick={() => setView(key)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium transition-colors"
               style={{
-                background:  view === key ? "var(--brand-navy)" : "#fff",
+                background:  view === key ? "var(--brand-navy)" : "var(--surface)",
                 color:       view === key ? "#fff" : "var(--brand-muted)",
                 borderRight: key === "figures" ? "1px solid var(--brand-border)" : "none",
               }}

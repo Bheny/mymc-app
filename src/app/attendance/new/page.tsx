@@ -61,10 +61,10 @@ const SERVICE_CONFIG: Record<ServiceType, {
   color: string;
   description: string;
 }> = {
-  LC_LIVE:           { label: "LC Live",          day: "Wednesday", color: "var(--brand-navy)", description: "Wednesday cell service" },
-  MGS:               { label: "MGS",              day: "Sunday",    color: "#1A8C6C",           description: "Sunday Mega Gospel Service" },
-  SHEPHERDS_MEETING: { label: "Shepherds Meeting",day: "Friday",    color: "#7C3AED",           description: "Weekly Friday shepherds meeting" },
-  SPECIAL_MEETING:   { label: "Special Meeting",  day: "Any day",   color: "#B45309",           description: "Guest minister / special program" },
+  LC_LIVE:           { label: "LC Live",          day: "Wednesday", color: "var(--brand-link)", description: "Wednesday cell service" },
+  MGS:               { label: "MGS",              day: "Sunday",    color: "var(--brand-success)",           description: "Sunday Mega Gospel Service" },
+  SHEPHERDS_MEETING: { label: "Shepherds Meeting",day: "Friday",    color: "var(--violet-600)",           description: "Weekly Friday shepherds meeting" },
+  SPECIAL_MEETING:   { label: "Special Meeting",  day: "Any day",   color: "var(--amber-700)",           description: "Guest minister / special program" },
 };
 
 // Suggest based on day of week
@@ -97,18 +97,18 @@ function StatusButton({
   const config: Record<AttendanceStatus, { label: string; active: React.CSSProperties; inactive: React.CSSProperties }> = {
     PRESENT: {
       label: "P",
-      active:   { background: "#E0F4EC", color: "#085041", border: "2px solid #1A8C6C" },
-      inactive: { background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" },
+      active:   { background: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)", border: "2px solid var(--brand-success)" },
+      inactive: { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" },
     },
     ABSENT: {
       label: "A",
-      active:   { background: "#FDECEA", color: "#791F1F", border: "2px solid var(--brand-danger)" },
-      inactive: { background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" },
+      active:   { background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)", border: "2px solid var(--brand-danger)" },
+      inactive: { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" },
     },
     EXCUSED: {
       label: "E",
-      active:   { background: "#FEF3DC", color: "#854F0B", border: "2px solid var(--brand-warning)" },
-      inactive: { background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" },
+      active:   { background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)", border: "2px solid var(--brand-warning)" },
+      inactive: { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" },
     },
   };
 
@@ -329,7 +329,7 @@ export default function NewAttendancePage() {
                 className="text-left px-3 py-2.5 rounded-lg transition-colors"
                 style={serviceType === t
                   ? { background: cfg.color, color: "#fff", border: `1px solid ${cfg.color}` }
-                  : { background: "#fff", color: "var(--brand-text)", border: "1px solid var(--brand-border)" }}
+                  : { background: "var(--surface)", color: "var(--brand-text)", border: "1px solid var(--brand-border)" }}
               >
                 <p className="text-[13px] font-semibold">{cfg.label}</p>
                 <p className="text-[11px] mt-0.5 opacity-75">{cfg.day}</p>
@@ -349,7 +349,7 @@ export default function NewAttendancePage() {
             value={serviceDate}
             onChange={(e) => setServiceDate(e.target.value)}
             className="h-10 px-3 text-[14px] rounded-lg"
-            style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+            style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}
           />
         </div>
 
@@ -366,7 +366,7 @@ export default function NewAttendancePage() {
                   className="flex-1 py-2 rounded-lg text-[13px] font-medium transition-colors"
                   style={serviceMode === m
                     ? { background: "var(--brand-navy)", color: "#fff" }
-                    : { background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
+                    : { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
                 >
                   {m === "IN_PERSON" ? "In-person" : "Online"}
                 </button>
@@ -382,7 +382,7 @@ export default function NewAttendancePage() {
               Minister / Speaker
             </label>
             <div className="flex items-center gap-2 rounded-lg px-3"
-                 style={{ border: "1px solid var(--brand-border)", background: "#fff" }}>
+                 style={{ border: "1px solid var(--brand-border)", background: "var(--surface)" }}>
               <Mic2 className="h-4 w-4 shrink-0" style={{ color: "var(--brand-muted)" }} />
               <input
                 type="text"
@@ -405,14 +405,14 @@ export default function NewAttendancePage() {
             onChange={(e) => setNotes(e.target.value)}
             placeholder={serviceType === "SPECIAL_MEETING" ? "e.g. Held at HTU Park, theme: Revival" : "e.g. Held at HTU Park"}
             className="h-10 px-3 text-[14px] rounded-lg"
-            style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+            style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}
           />
         </div>
 
         {/* Shepherds Meeting info banner */}
         {isShepherdsMeeting && (
           <div className="rounded-lg px-4 py-3 text-[13px]"
-               style={{ background: "#F3EFF9", border: "1px solid #D4C5F9", color: "#5B21B6" }}>
+               style={{ background: "var(--violet-50)", border: "1px solid var(--violet-200)", color: "var(--violet-800)" }}>
             Attendance is recorded for shepherds only. Regular members are excluded from this list.
           </div>
         )}
@@ -426,7 +426,7 @@ export default function NewAttendancePage() {
         {/* Top row: marked count + status icons */}
         <div className="flex items-center justify-between gap-2 mb-2">
           <div className="flex items-center gap-3 flex-wrap text-[13px]">
-            <span style={{ color: "var(--brand-navy)", fontWeight: 600 }}>{marked}/{total} marked</span>
+            <span style={{ color: "var(--brand-link)", fontWeight: 600 }}>{marked}/{total} marked</span>
             {present > 0 && (
               <span className="flex items-center gap-1" style={{ color: "var(--brand-success)" }}>
                 <CheckCircle2 className="h-3.5 w-3.5" /> {present}
@@ -443,7 +443,7 @@ export default function NewAttendancePage() {
               </span>
             )}
           </div>
-          <span className="text-[12px] font-semibold shrink-0" style={{ color: "var(--brand-navy)" }}>
+          <span className="text-[12px] font-semibold shrink-0" style={{ color: "var(--brand-link)" }}>
             {total > 0 ? Math.round((marked / total) * 100) : 0}%
           </span>
         </div>
@@ -459,7 +459,7 @@ export default function NewAttendancePage() {
       {loadingMembers ? (
         <div className="rounded-xl p-8 flex flex-col items-center gap-3 text-center"
              style={{ border: "1px solid var(--brand-border)" }}>
-          <Loader2 className="h-7 w-7 animate-spin" style={{ color: "var(--brand-navy)" }} />
+          <Loader2 className="h-7 w-7 animate-spin" style={{ color: "var(--brand-link)" }} />
           <div>
             <p className="text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>
               {!ready ? "Checking your role…" : isShepherdsMeeting ? "Loading shepherds…" : "Loading members…"}
@@ -491,7 +491,7 @@ export default function NewAttendancePage() {
                  style={{ border: "1px solid var(--brand-border)" }}>
               {!isShepherdsMeeting && (
                 <div className="px-4 py-2.5 flex items-center gap-2"
-                     style={{ background: "#F9FAFB", borderBottom: "1px solid var(--brand-border)" }}>
+                     style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--brand-border)" }}>
                   <span className="text-[12px] font-medium uppercase tracking-[0.04em]"
                         style={{ color: "var(--brand-muted)" }}>Shepherd:</span>
                   <span className="text-[13px] font-medium" style={{ color: "var(--brand-text)" }}>
@@ -502,7 +502,7 @@ export default function NewAttendancePage() {
                   </span>
                   {key === "__none__" && (
                     <span className="text-[10px] font-semibold rounded-pill px-1.5 py-0.5"
-                          style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+                          style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
                       you
                     </span>
                   )}
@@ -527,7 +527,7 @@ export default function NewAttendancePage() {
                       className="hidden xs:flex items-center justify-center rounded-lg text-[12px] font-semibold shrink-0"
                       style={{
                         width: 32, height: 32,
-                        background: status === "PRESENT" ? "#1A8C6C" : status === "ABSENT" ? "#C0392B" : status === "EXCUSED" ? "#B87015" : "var(--brand-navy)",
+                        background: status === "PRESENT" ? "var(--brand-success)" : status === "ABSENT" ? "var(--brand-danger)" : status === "EXCUSED" ? "var(--brand-warning)" : "var(--brand-navy)",
                         color: "#fff",
                       }}
                     >
@@ -569,7 +569,7 @@ export default function NewAttendancePage() {
               type="button"
               onClick={addFirstTimer}
               className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-[13px] font-medium transition-colors shrink-0"
-              style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)", border: "1px solid var(--brand-border)" }}
+              style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)", border: "1px solid var(--brand-border)" }}
             >
               <Plus className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Add first timer</span>
@@ -596,7 +596,7 @@ export default function NewAttendancePage() {
                      style={{ border: "1px solid var(--brand-border)" }}>
                   <div className="flex items-center justify-between">
                     <span className="text-[12px] font-semibold uppercase tracking-[0.05em]"
-                          style={{ color: "var(--brand-navy)" }}>
+                          style={{ color: "var(--brand-link)" }}>
                       First Timer #{idx + 1}
                     </span>
                     <button type="button" onClick={() => removeFT(ft._key)}
@@ -621,7 +621,7 @@ export default function NewAttendancePage() {
                           onChange={(e) => updateFT(ft._key, { [field]: e.target.value })}
                           placeholder={placeholder}
                           className="h-9 px-3 text-[13px] rounded-lg"
-                          style={{ border: "1px solid var(--brand-border)", outline: "none", background: "#fff" }}
+                          style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
                         />
                       </div>
                     ))}
@@ -642,7 +642,7 @@ export default function NewAttendancePage() {
                           onChange={(e) => updateFT(ft._key, { [field]: e.target.value })}
                           placeholder={placeholder}
                           className="h-9 px-3 text-[13px] rounded-lg"
-                          style={{ border: "1px solid var(--brand-border)", outline: "none", background: "#fff" }}
+                          style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
                         />
                       </div>
                     ))}
@@ -658,7 +658,7 @@ export default function NewAttendancePage() {
                       onChange={(e) => updateFT(ft._key, { referredBy: e.target.value })}
                       placeholder="e.g. Kwame Asante"
                       className="h-9 px-3 text-[13px] rounded-lg"
-                      style={{ border: "1px solid var(--brand-border)", outline: "none", background: "#fff" }}
+                      style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
                     />
                   </div>
 
@@ -676,7 +676,7 @@ export default function NewAttendancePage() {
                           className="flex-1 py-2 rounded-lg text-[12px] font-medium transition-colors"
                           style={ft.intent === intent
                             ? { background: "var(--brand-navy)", color: "#fff" }
-                            : { background: "#fff", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
+                            : { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
                         >
                           {INTENT_LABELS[intent]}
                         </button>

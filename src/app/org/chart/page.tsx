@@ -51,11 +51,11 @@ function ActingDot({ severity }: { severity: string }) {
 
 const TREE_CSS = `
 .org-branch { display:flex; flex-direction:column; align-items:center; }
-.org-connector { width:1px; background:#E5E7EB; flex-shrink:0; }
+.org-connector { width:1px; background:var(--brand-border); flex-shrink:0; }
 .org-row { display:flex; gap:0; }
 .org-child { display:flex; flex-direction:column; align-items:center; padding:0 10px; position:relative; }
-.org-child::before { content:''; position:absolute; top:0; right:50%; width:50%; height:1px; background:#E5E7EB; }
-.org-child::after  { content:''; position:absolute; top:0; left:50%;  width:50%; height:1px; background:#E5E7EB; }
+.org-child::before { content:''; position:absolute; top:0; right:50%; width:50%; height:1px; background:var(--brand-border); }
+.org-child::after  { content:''; position:absolute; top:0; left:50%;  width:50%; height:1px; background:var(--brand-border); }
 .org-child:first-child::before,
 .org-child:only-child::before,
 .org-child:only-child::after { display:none; }
@@ -84,7 +84,7 @@ function BranchCard({ name, count, expanded, onToggle }: { name: string; count: 
 function MCCard({ mc, flag, expanded, onToggle }: { mc: MCNode; flag?: Flag; expanded: boolean; onToggle: () => void }) {
   return (
     <div className="rounded-xl px-4 py-3 text-center cursor-pointer select-none hover:opacity-90 transition-opacity"
-         style={{ background: "#1A3260", color: "#fff", minWidth: 148, boxShadow: "0 2px 6px rgba(15,31,61,.15)" }}
+         style={{ background: "var(--brand-navy-mid)", color: "#fff", minWidth: 148, boxShadow: "0 2px 6px rgba(15,31,61,.15)" }}
          onClick={onToggle}>
       <p className="text-[10px] font-medium uppercase tracking-[0.07em] mb-1 opacity-50">MC</p>
       <p className="text-[14px] font-semibold">{mc.name}{flag && <ActingDot severity={flag.severity} />}</p>
@@ -100,7 +100,7 @@ function MCCard({ mc, flag, expanded, onToggle }: { mc: MCNode; flag?: Flag; exp
 function BuscentreCard({ bc, flag, expanded, onToggle }: { bc: BuscentreNode; flag?: Flag; expanded: boolean; onToggle: () => void }) {
   return (
     <div className="rounded-xl px-4 py-3 text-center cursor-pointer select-none hover:shadow-sm transition-shadow"
-         style={{ background: "#fff", border: "2px solid var(--brand-navy)", minWidth: 136 }}
+         style={{ background: "var(--surface)", border: "2px solid var(--brand-navy)", minWidth: 136 }}
          onClick={onToggle}>
       <p className="text-[10px] font-medium uppercase tracking-[0.07em] mb-1" style={{ color: "var(--brand-muted)" }}>Buscentre</p>
       <p className="text-[13px] font-semibold" style={{ color: "var(--brand-text)" }}>{bc.name}{flag && <ActingDot severity={flag.severity} />}</p>
@@ -116,9 +116,9 @@ function BuscentreCard({ bc, flag, expanded, onToggle }: { bc: BuscentreNode; fl
 function CellCard({ cell, flag, open, onToggle }: { cell: CellNode; flag?: Flag; open: boolean; onToggle: () => void }) {
   return (
     <div className="rounded-xl px-4 py-3 text-center cursor-pointer select-none hover:shadow-sm transition-shadow"
-         style={{ background: "#fff", border: "1px solid #1A8C6C", borderLeft: "4px solid #1A8C6C", minWidth: 128 }}
+         style={{ background: "var(--surface)", border: "1px solid var(--brand-success)", borderLeft: "4px solid var(--brand-success)", minWidth: 128 }}
          onClick={onToggle}>
-      <p className="text-[10px] font-medium uppercase tracking-[0.07em] mb-1" style={{ color: "#1A8C6C" }}>Cell</p>
+      <p className="text-[10px] font-medium uppercase tracking-[0.07em] mb-1" style={{ color: "var(--brand-success)" }}>Cell</p>
       <p className="text-[13px] font-semibold" style={{ color: "var(--brand-text)" }}>{cell.name}{flag && <ActingDot severity={flag.severity} />}</p>
       <p className="text-[11px] mt-0.5" style={{ color: "var(--brand-muted)" }}>{cell.userRoles[0]?.user?.name ?? "No shepherd"}</p>
       <div className="flex items-center justify-center gap-2 mt-1.5">
@@ -135,12 +135,12 @@ function ShepherdCard({ shepherd, flag }: { shepherd: ShepherdNode; flag?: Flag 
   const assigned = !!(shepherd.user || shepherd.person);
   return (
     <div className="rounded-xl px-3 py-2.5 text-center"
-         style={{ background: "#FEF9EE", border: assigned ? "1px solid #B87015" : "1px dashed #D4B896", minWidth: 112 }}>
-      <p className="text-[10px] font-medium uppercase tracking-[0.07em] mb-1" style={{ color: "#B87015" }}>Shepherd</p>
+         style={{ background: "var(--bronze-50)", border: assigned ? "1px solid var(--brand-warning)" : "1px dashed var(--bronze-300)", minWidth: 112 }}>
+      <p className="text-[10px] font-medium uppercase tracking-[0.07em] mb-1" style={{ color: "var(--brand-warning)" }}>Shepherd</p>
       <p className="text-[12px] font-medium" style={{ color: assigned ? "var(--brand-text)" : "var(--brand-muted)", fontStyle: assigned ? "normal" : "italic" }}>
         {name}{flag && <ActingDot severity={flag.severity} />}
       </p>
-      {!shepherd.user && shepherd.person && <p className="text-[9px] mt-0.5" style={{ color: "#B87015" }}>no login</p>}
+      {!shepherd.user && shepherd.person && <p className="text-[9px] mt-0.5" style={{ color: "var(--brand-warning)" }}>no login</p>}
       <p className="text-[10px] mt-1" style={{ color: "var(--brand-muted)" }}>{shepherd._count.members}/5 members</p>
     </div>
   );
@@ -234,11 +234,11 @@ function TreeView({ branches, flags, expandedBranches, expandedMCs, expandedBusc
 // ══════════════════════════════════════════════════════════════════════════════
 
 const LEVEL_CFG = {
-  branch:    { label: "Branch",    color: "#0F1F3D", dark: true,  indent: 0 },
-  mc:        { label: "MC",        color: "#1A3260", dark: true,  indent: 1 },
-  buscentre: { label: "Buscentre", color: "var(--brand-navy)", dark: false, indent: 2 },
-  cell:      { label: "Cell",      color: "#1A8C6C", dark: false, indent: 3 },
-  shepherd:  { label: "Shepherd",  color: "#B87015", dark: false, indent: 4 },
+  branch:    { label: "Branch",    color: "var(--brand-link)", dark: true,  indent: 0 },
+  mc:        { label: "MC",        color: "var(--brand-navy-mid)", dark: true,  indent: 1 },
+  buscentre: { label: "Buscentre", color: "var(--brand-link)", dark: false, indent: 2 },
+  cell:      { label: "Cell",      color: "var(--brand-success)", dark: false, indent: 3 },
+  shepherd:  { label: "Shepherd",  color: "var(--brand-warning)", dark: false, indent: 4 },
 };
 
 function ListRow({ level, title, subtitle, meta, flag, expandable, expanded, onToggle, children }: {
@@ -254,14 +254,14 @@ function ListRow({ level, title, subtitle, meta, flag, expandable, expanded, onT
               style={{
                 paddingLeft: 16 + cfg.indent * 16, paddingRight: 16,
                 paddingTop: 12, paddingBottom: 12,
-                background: cfg.dark ? cfg.color : "#fff",
+                background: cfg.dark ? cfg.color : "var(--surface)",
                 borderLeft: `4px solid ${cfg.color}`,
                 borderBottom: "1px solid rgba(0,0,0,0.06)",
                 cursor: expandable ? "pointer" : "default",
               }}>
         <span className="text-[9px] font-bold uppercase tracking-[0.08em] rounded px-1.5 py-0.5 shrink-0"
               style={{
-                background: cfg.dark ? "rgba(255,255,255,0.15)" : `${cfg.color}18`,
+                background: cfg.dark ? "rgba(255,255,255,0.15)" : `color-mix(in srgb, ${cfg.color} 9%, transparent)`,
                 color:      cfg.dark ? "rgba(255,255,255,0.75)" : cfg.color,
               }}>
           {cfg.label}
@@ -422,14 +422,14 @@ export default function OrgChartPage() {
               <button
                 onClick={() => setView("tree")}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium transition-colors"
-                style={{ background: view === "tree" ? "var(--brand-navy)" : "#fff",
+                style={{ background: view === "tree" ? "var(--brand-navy)" : "var(--surface)",
                          color:      view === "tree" ? "#fff" : "var(--brand-muted)" }}>
                 <Network className="h-3.5 w-3.5" /> Tree
               </button>
               <button
                 onClick={() => setView("list")}
                 className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium transition-colors"
-                style={{ background: view === "list" ? "var(--brand-navy)" : "#fff",
+                style={{ background: view === "list" ? "var(--brand-navy)" : "var(--surface)",
                          color:      view === "list" ? "#fff" : "var(--brand-muted)",
                          borderLeft: "1px solid var(--brand-border)" }}>
                 <LayoutList className="h-3.5 w-3.5" /> List
@@ -450,15 +450,15 @@ export default function OrgChartPage() {
         {/* Legend */}
         <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3">
           {([
-            { color: "#0F1F3D", label: "Branch" },
-            { color: "#1A3260", label: "MC" },
-            { color: "var(--brand-navy)", label: "Buscentre", outline: true },
-            { color: "#1A8C6C", label: "Cell" },
-            { color: "#B87015", label: "Shepherd" },
+            { color: "var(--brand-link)", label: "Branch" },
+            { color: "var(--brand-navy-mid)", label: "MC" },
+            { color: "var(--brand-link)", label: "Buscentre", outline: true },
+            { color: "var(--brand-success)", label: "Cell" },
+            { color: "var(--brand-warning)", label: "Shepherd" },
           ] as { color: string; label: string; outline?: true }[]).map(({ color, label, outline }) => (
             <div key={label} className="flex items-center gap-1.5">
               <div className="rounded-sm shrink-0"
-                   style={{ width: 10, height: 10, background: outline ? "#fff" : color,
+                   style={{ width: 10, height: 10, background: outline ? "var(--surface)" : color,
                             border: outline ? `2px solid ${color}` : "none" }} />
               <span className="text-[11px]" style={{ color: "var(--brand-muted)" }}>{label}</span>
             </div>
@@ -476,7 +476,7 @@ export default function OrgChartPage() {
       ) : branches.length === 0 ? (
         <div className="flex flex-col items-center py-20 gap-3">
           <p className="text-[14px]" style={{ color: "var(--brand-muted)" }}>No org structure yet.</p>
-          <Link href="/org" className="text-[13px] font-medium hover:underline" style={{ color: "var(--brand-navy)" }}>
+          <Link href="/org" className="text-[13px] font-medium hover:underline" style={{ color: "var(--brand-link)" }}>
             Build it from the Org tree →
           </Link>
         </div>

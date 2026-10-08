@@ -55,7 +55,7 @@ export function RecommendShepherdDialog({ memberId, memberName, onDone }: Props)
         type="button"
         onClick={(e) => { e.stopPropagation(); setOpen(true); }}
         className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium transition-colors hover:opacity-80 shrink-0"
-        style={{ background: "#EAF3EE", color: "#1A8C6C" }}
+        style={{ background: "var(--green-50b)", color: "var(--brand-success)" }}
       >
         <Award className="h-3 w-3" /> Recommend as shepherd
       </button>
@@ -90,7 +90,7 @@ export function RecommendShepherdDialog({ memberId, memberName, onDone }: Props)
                   rows={3}
                   placeholder="What have you observed — outreach involvement, informal mentoring, faithfulness…"
                   className="w-full px-3 py-2 text-[13px] rounded-lg resize-none"
-                  style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}
+                  style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}
                 />
               </div>
 

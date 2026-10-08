@@ -24,7 +24,7 @@ export function SummaryCard({
 
   return (
     <div
-      className="bg-white rounded-xl p-5 flex flex-col gap-3"
+      className="bg-[var(--surface)] rounded-xl p-5 flex flex-col gap-3"
       style={{ border: "1px solid var(--brand-border)" }}
     >
       {/* Label row */}

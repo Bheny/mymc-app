@@ -12,7 +12,7 @@ export function BreadcrumbTrail({ items }: { items: BreadcrumbItem[] }) {
           <span key={i} className="flex items-center gap-1.5">
             {i > 0 && <ChevronRight className="h-3.5 w-3.5" style={{ color: "var(--brand-muted)" }} />}
             {item.href && !isLast ? (
-              <Link href={item.href} className="hover:underline" style={{ color: "var(--brand-navy)" }}>
+              <Link href={item.href} className="hover:underline" style={{ color: "var(--brand-link)" }}>
                 {item.label}
               </Link>
             ) : (

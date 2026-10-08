@@ -37,6 +37,12 @@ export async function POST(request: Request) {
   }
 
   const cap = await checkCapacity("buscentre", mcId);
+  if (cap.blocked) {
+    return NextResponse.json(
+      { error: `${mc.name} already has the maximum of ${cap.max} buscentres` },
+      { status: 409 }
+    );
+  }
   if (cap.atCapacity) {
     await logCapacityWarning({
       level: "buscentre", parentId: mcId, parentName: mc.name,

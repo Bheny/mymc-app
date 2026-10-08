@@ -34,6 +34,12 @@ export async function POST(request: Request) {
   if (!cell) return NextResponse.json({ error: "Cell not found" }, { status: 404 });
 
   const cap = await checkCapacity("shepherd", cellId);
+  if (cap.blocked) {
+    return NextResponse.json(
+      { error: `${cell.name} already has the maximum of ${cap.max} shepherds` },
+      { status: 409 }
+    );
+  }
   if (cap.atCapacity) {
     await logCapacityWarning({
       level: "shepherd", parentId: cellId, parentName: cell.name,

@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 import {
   Home, Users, Network, TrendingUp, Settings,
   LayoutGrid, ClipboardList, Building2, Heart,
-  BarChart2, Menu, X, UserPlus, ChevronsLeft, ChevronsRight, Trophy,
+  BarChart2, Menu, X, UserPlus, ChevronsLeft, ChevronsRight, Trophy, Library, ScrollText,
 } from 'lucide-react';
 import { useActiveRole, roleLabel as getRoleLabel, type RoleView } from '@/hooks/use-active-role';
 import { useSidebar, SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from '@/hooks/use-sidebar';
@@ -30,6 +30,8 @@ const ADMIN_NAV: NavConfig = {
     { name: 'Attendance',  href: '/attendance',  icon: ClipboardList },
     { name: 'Leaderboard', href: '/leaderboard',  icon: Trophy },
     { name: 'Reports',     href: '/reports',     icon: TrendingUp },
+    { name: 'Legacy',      href: '/legacy',      icon: ScrollText },
+    { name: 'Library',     href: '/library',     icon: Library },
     { name: 'Settings',    href: '/settings',    icon: Settings },
   ],
 };
@@ -44,6 +46,7 @@ const MC_PASTOR_NAV: NavConfig = {
   secondary: [
     { name: 'Attendance',  href: '/attendance',  icon: ClipboardList },
     { name: 'Leaderboard', href: '/leaderboard',  icon: Trophy },
+    { name: 'Library',     href: '/library',     icon: Library },
   ],
 };
 
@@ -59,6 +62,7 @@ const BUSCENTRE_HEAD_NAV: NavConfig = {
     { name: 'Leaderboard', href: '/leaderboard',  icon: Trophy },
     { name: 'Analysis',    href: '/analysis',    icon: BarChart2 },
     { name: 'Org',         href: '/org',         icon: Network },
+    { name: 'Library',     href: '/library',     icon: Library },
     { name: 'Settings',    href: '/settings',    icon: Settings },
   ],
 };
@@ -75,6 +79,7 @@ const CELL_SHEPHERD_NAV: NavConfig = {
     { name: 'Members',     href: '/members',     icon: Users },
     { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
     { name: 'Analysis',    href: '/analysis',    icon: BarChart2 },
+    { name: 'Library',     href: '/library',     icon: Library },
     { name: 'Settings',    href: '/settings',    icon: Settings },
   ],
 };
@@ -88,6 +93,7 @@ const SHEPHERD_NAV: NavConfig = {
   secondary: [
     { name: 'Attendance',  href: '/attendance',  icon: ClipboardList },
     { name: 'Leaderboard', href: '/leaderboard', icon: Trophy },
+    { name: 'Library',     href: '/library',     icon: Library },
   ],
 };
 
@@ -150,7 +156,7 @@ function HamburgerDrawer({
 
       {/* Drawer panel — anchored just above the 64px nav bar */}
       <div
-        className="lg:hidden fixed left-0 right-0 z-50 bg-white rounded-t-2xl flex flex-col transition-transform duration-300 ease-out"
+        className="lg:hidden fixed left-0 right-0 z-50 bg-[var(--surface)] rounded-t-2xl flex flex-col transition-transform duration-300 ease-out"
         style={{
           bottom:    64,
           transform: open ? 'translateY(0)' : 'translateY(110%)',
@@ -181,7 +187,7 @@ function HamburgerDrawer({
             className="flex items-center justify-center rounded-full"
             style={{ width: 32, height: 32, background: 'var(--brand-navy-light)' }}
           >
-            <X style={{ width: 16, height: 16, color: 'var(--brand-navy)' }} />
+            <X style={{ width: 16, height: 16, color: 'var(--brand-link)' }} />
           </button>
         </div>
 
@@ -209,7 +215,7 @@ function HamburgerDrawer({
                     flexShrink: 0,
                   }}
                 >
-                  <item.icon style={{ width: 18, height: 18, color: active ? '#fff' : 'var(--brand-navy)' }} />
+                  <item.icon style={{ width: 18, height: 18, color: active ? '#fff' : 'var(--brand-link)' }} />
                 </div>
                 <span
                   className="text-[15px]"
@@ -238,7 +244,7 @@ function HamburgerDrawer({
                   className="w-full flex items-center gap-3 py-2.5 px-1 rounded-lg transition-colors hover:bg-[var(--brand-navy-light)]"
                 >
                   <span style={{ width: 18, flexShrink: 0 }}>
-                    {isCurrent && <Check style={{ width: 14, height: 14, color: 'var(--brand-navy)' }} />}
+                    {isCurrent && <Check style={{ width: 14, height: 14, color: 'var(--brand-link)' }} />}
                   </span>
                   <span className="flex-1 text-left text-[14px]"
                         style={{ color: 'var(--brand-text)', fontWeight: isCurrent ? 600 : 400 }}>
@@ -246,7 +252,7 @@ function HamburgerDrawer({
                   </span>
                   {view.isActing && (
                     <span className="text-[10px] font-semibold rounded-pill px-2 py-0.5"
-                          style={{ background: '#FEF3DC', color: '#854F0B' }}>
+                          style={{ background: 'var(--tint-warn-bg)', color: 'var(--tint-warn-fg)' }}>
                       acting
                     </span>
                   )}
@@ -280,7 +286,7 @@ export function BottomNavbar() {
       {/* ── Desktop Sidebar ─────────────────────────────────────────── */}
       <aside
         className="hidden lg:flex fixed top-0 left-0 h-full flex-col transition-[width] duration-200"
-        style={{ width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH, backgroundColor: 'var(--brand-navy)', zIndex: 30 }}
+        style={{ width: collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH, backgroundColor: 'var(--sidebar-bg)', zIndex: 30 }}
       >
         {/* Logo + collapse toggle */}
         <div
@@ -357,7 +363,7 @@ export function BottomNavbar() {
 
       {/* ── Mobile Bottom Nav ────────────────────────────────────────── */}
       <nav
-        className="lg:hidden fixed z-[60] bottom-0 left-0 right-0 bg-white"
+        className="lg:hidden fixed z-[60] bottom-0 left-0 right-0 bg-[var(--surface)]"
         style={{ borderTop: '1px solid var(--brand-border)', height: 64 }}
       >
         <ul className="flex h-full justify-around items-center px-1">
@@ -388,7 +394,7 @@ export function BottomNavbar() {
                   </div>
                   <span
                     className="text-[10.5px] font-medium leading-none whitespace-nowrap"
-                    style={{ color: active ? 'var(--brand-navy)' : 'var(--brand-muted)' }}
+                    style={{ color: active ? 'var(--brand-link)' : 'var(--brand-muted)' }}
                   >
                     {item.short ?? item.name}
                   </span>
@@ -422,7 +428,7 @@ export function BottomNavbar() {
                 </div>
                 <span
                   className="text-[10.5px] font-medium leading-none whitespace-nowrap"
-                  style={{ color: moreActive ? 'var(--brand-navy)' : 'var(--brand-muted)' }}
+                  style={{ color: moreActive ? 'var(--brand-link)' : 'var(--brand-muted)' }}
                 >
                   More
                 </span>

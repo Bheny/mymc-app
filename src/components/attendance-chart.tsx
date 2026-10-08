@@ -33,7 +33,7 @@ export function AttendanceChart() {
             <PolarGrid />
             <PolarAngleAxis dataKey="month" />
             <PolarRadiusAxis angle={30} domain={[0, 100]} />
-            <Radar name="Attendance" dataKey="attendance" stroke="#2563eb" fill="#3b82f6" fillOpacity={0.6} />
+            <Radar name="Attendance" dataKey="attendance" stroke="var(--blue-600)" fill="var(--blue-500)" fillOpacity={0.6} />
             <Legend />
           </RadarChart>
         )
@@ -45,7 +45,7 @@ export function AttendanceChart() {
             <YAxis domain={[0, 100]} />
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey="attendance" stroke="#2563eb" />
+            <Line type="monotone" dataKey="attendance" stroke="var(--blue-600)" />
           </LineChart>
         )
       case 'bar':
@@ -56,7 +56,7 @@ export function AttendanceChart() {
             <YAxis domain={[0, 100]} />
             <Tooltip />
             <Legend />
-            <Bar dataKey="attendance" fill="#3b82f6" />
+            <Bar dataKey="attendance" fill="var(--blue-500)" />
           </BarChart>
         )
     }

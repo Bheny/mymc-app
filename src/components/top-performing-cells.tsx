@@ -25,7 +25,7 @@ export function TopPerformingCells({ cells }: { cells: Cell[] }) {
             <div key={cell.id} className="flex items-center space-x-4">
               <div className="flex-1">
                 <h3 className="text-sm font-medium">{cell.name}</h3>
-                <p className="text-xs text-gray-500">Led by {cell.leader}</p>
+                <p className="text-xs text-[var(--brand-muted)]">Led by {cell.leader}</p>
               </div>
               <div className="flex items-center space-x-2 text-sm">
                 <div className="flex items-center space-x-1">

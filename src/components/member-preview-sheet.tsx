@@ -111,11 +111,11 @@ function timeAgo(iso: string): string {
 function memberPosition(detail: MemberPreview): { badge: string; badgeBg: string; badgeColor: string } {
   const sysRole = detail.user?.role?.role;
   if (sysRole === "cell_shepherd")  return { badge: "Cell Shepherd",  badgeBg: "var(--brand-navy)", badgeColor: "#fff" };
-  if (sysRole === "buscentre_head") return { badge: "Buscentre Head", badgeBg: "#7C3AED",           badgeColor: "#fff" };
-  if (sysRole === "mc_pastor")      return { badge: "MC Pastor",      badgeBg: "#059669",           badgeColor: "#fff" };
-  if (sysRole === "chief_shepherd") return { badge: "Chief Shepherd", badgeBg: "#B45309",           badgeColor: "#fff" };
-  if (sysRole === "admin")          return { badge: "Admin",          badgeBg: "#1F2937",           badgeColor: "#fff" };
-  if (detail.shepherdRole)          return { badge: "Shepherd",       badgeBg: "#E0F4EC",           badgeColor: "#085041" };
+  if (sysRole === "buscentre_head") return { badge: "Buscentre Head", badgeBg: "var(--violet-600)",           badgeColor: "#fff" };
+  if (sysRole === "mc_pastor")      return { badge: "MC Pastor",      badgeBg: "var(--green-600)",           badgeColor: "#fff" };
+  if (sysRole === "chief_shepherd") return { badge: "Chief Shepherd", badgeBg: "var(--amber-700)",           badgeColor: "#fff" };
+  if (sysRole === "admin")          return { badge: "Admin",          badgeBg: "var(--gray-800)",           badgeColor: "#fff" };
+  if (detail.shepherdRole)          return { badge: "Shepherd",       badgeBg: "var(--tint-ok-bg)",           badgeColor: "var(--tint-ok-fg)" };
   return                                   { badge: "Member",         badgeBg: "var(--brand-navy-light)", badgeColor: "var(--brand-navy)" };
 }
 
@@ -220,8 +220,8 @@ export function MemberPreviewSheet({
                     })()}
                     <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5"
                           style={detail.isActive
-                            ? { background: "#E0F4EC", color: "#085041" }
-                            : { background: "#FDECEA", color: "#791F1F" }}>
+                            ? { background: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)" }
+                            : { background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)" }}>
                       {detail.isActive ? "Active" : "Inactive"}
                     </span>
                   </div>
@@ -299,13 +299,13 @@ export function MemberPreviewSheet({
                       SHEPHERDS_MEETING: "Shepherds Mtg", SPECIAL_MEETING: "Special Mtg",
                     };
                     const svcColor: Record<string, string> = {
-                      LC_LIVE: "var(--brand-navy)", MGS: "#1A8C6C",
-                      SHEPHERDS_MEETING: "#7C3AED", SPECIAL_MEETING: "#B45309",
+                      LC_LIVE: "var(--brand-navy)", MGS: "var(--brand-success)",
+                      SHEPHERDS_MEETING: "var(--violet-600)", SPECIAL_MEETING: "var(--amber-700)",
                     };
                     const statusStyle: Record<string, React.CSSProperties> = {
-                      PRESENT: { background: "#E0F4EC", color: "#085041" },
-                      ABSENT:  { background: "#FDECEA", color: "#791F1F" },
-                      EXCUSED: { background: "#FEF3DC", color: "#854F0B" },
+                      PRESENT: { background: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)" },
+                      ABSENT:  { background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)" },
+                      EXCUSED: { background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" },
                     };
                     const dateStr = new Date(rec.service.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
                     return (
@@ -334,13 +334,13 @@ export function MemberPreviewSheet({
               <SectionLabel>System access</SectionLabel>
               {detail.isUser ? (
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ background: "#E0F4EC" }}>
-                    <ShieldCheck className="h-5 w-5 shrink-0" style={{ color: "#085041" }} />
+                  <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ background: "var(--tint-ok-bg)" }}>
+                    <ShieldCheck className="h-5 w-5 shrink-0" style={{ color: "var(--tint-ok-fg)" }} />
                     <div>
-                      <p className="text-[14px] font-medium" style={{ color: "#085041" }}>
+                      <p className="text-[14px] font-medium" style={{ color: "var(--tint-ok-fg)" }}>
                         Activated — {detail.user?.role?.role.replace(/_/g, " ") ?? "system user"}
                       </p>
-                      <p className="text-[12px] mt-0.5" style={{ color: "#085041" }}>This member can log in to the app.</p>
+                      <p className="text-[12px] mt-0.5" style={{ color: "var(--tint-ok-fg)" }}>This member can log in to the app.</p>
                     </div>
                   </div>
                   <DetailRow icon={UserCircle} label="Overseer"
@@ -350,9 +350,9 @@ export function MemberPreviewSheet({
                 </div>
               ) : (
                 <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ background: "var(--brand-navy-light)" }}>
-                  <ShieldAlert className="h-5 w-5 shrink-0" style={{ color: "var(--brand-navy)" }} />
+                  <ShieldAlert className="h-5 w-5 shrink-0" style={{ color: "var(--brand-link)" }} />
                   <div>
-                    <p className="text-[14px] font-medium" style={{ color: "var(--brand-navy)" }}>Not activated</p>
+                    <p className="text-[14px] font-medium" style={{ color: "var(--brand-link)" }}>Not activated</p>
                     <p className="text-[12px] mt-0.5" style={{ color: "var(--brand-muted)" }}>No system access yet.</p>
                   </div>
                 </div>

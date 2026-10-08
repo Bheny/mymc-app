@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Bell, UserCircle, Settings, LogOut, CheckCheck, Users } from "lucide-react";
+import { Bell, UserCircle, Settings, LogOut, CheckCheck, Users, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/hooks/use-theme";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +25,7 @@ type Notification = {
 };
 
 export function Header({ mcHeadName }: { mcHeadName: string }) {
+  const { theme, toggle: toggleTheme } = useTheme();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notifOpen,     setNotifOpen]     = useState(false);
 
@@ -47,8 +49,8 @@ export function Header({ mcHeadName }: { mcHeadName: string }) {
 
   return (
     <header
-      className="fixed left-0 right-0 top-0 z-30 bg-white"
-      style={{ borderBottom: "1px solid var(--brand-border)" }}
+      className="fixed left-0 right-0 top-0 z-30"
+      style={{ borderBottom: "1px solid var(--brand-border)", background: "var(--surface)" }}
     >
       <div
         className="flex items-center justify-between px-4 sm:px-6"
@@ -57,14 +59,14 @@ export function Header({ mcHeadName }: { mcHeadName: string }) {
         {/* Left: app name (visible on mobile where sidebar is hidden) */}
         <span
           className="lg:hidden text-[15px] font-semibold"
-          style={{ color: "var(--brand-navy)" }}
+          style={{ color: "var(--brand-link)" }}
         >
           MyMC
           <span
             className="ml-1 text-[11px] font-medium px-1.5 py-0.5 rounded"
             style={{
               background: "var(--brand-navy-light)",
-              color: "var(--brand-navy)",
+              color: "var(--brand-link)",
             }}
           >
             beta
@@ -76,6 +78,17 @@ export function Header({ mcHeadName }: { mcHeadName: string }) {
 
         {/* Right: notification + user menu */}
         <div className="flex items-center gap-1">
+          {/* Light / dark */}
+          <button
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+            title={theme === "dark" ? "Light mode" : "Dark mode"}
+            className="h-9 w-9 flex items-center justify-center rounded-lg transition-colors hover:bg-[var(--brand-navy-light)]"
+          >
+            {theme === "dark"
+              ? <Sun className="h-[18px] w-[18px]" style={{ color: "var(--brand-muted)" }} />
+              : <Moon className="h-[18px] w-[18px]" style={{ color: "var(--brand-muted)" }} />}
+          </button>
           {/* Notifications */}
           <DropdownMenu open={notifOpen} onOpenChange={setNotifOpen}>
             <DropdownMenuTrigger asChild>
@@ -109,7 +122,7 @@ export function Header({ mcHeadName }: { mcHeadName: string }) {
                   <button
                     onClick={markAllRead}
                     className="flex items-center gap-1 text-[11px] font-medium hover:opacity-70 transition-opacity"
-                    style={{ color: "var(--brand-navy)" }}
+                    style={{ color: "var(--brand-link)" }}
                   >
                     <CheckCheck className="h-3.5 w-3.5" /> Mark all read
                   </button>
@@ -127,7 +140,7 @@ export function Header({ mcHeadName }: { mcHeadName: string }) {
                       className="px-4 py-3 flex items-start gap-3 transition-colors hover:bg-[var(--brand-navy-light)]"
                       style={{
                         borderBottom: "1px solid var(--brand-border)",
-                        background: n.read ? "transparent" : "#F0F4FA",
+                        background: n.read ? "transparent" : "var(--brand-navy-light)",
                       }}
                     >
                       {/* Unread dot */}

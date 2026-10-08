@@ -38,13 +38,13 @@ function StatCard({
 
   const rateColor = lowSample ? "var(--brand-muted)" :
     stats.attendanceRate >= 75 ? "var(--brand-success)" :
-    stats.attendanceRate >= 50 ? "#854F0B" :
+    stats.attendanceRate >= 50 ? "var(--tint-warn-fg)" :
     "var(--brand-danger)";
 
   return (
     <div
       className="rounded-xl px-5 py-4 flex flex-col gap-1"
-      style={{ border: "1px solid var(--brand-border)", background: "#fff" }}
+      style={{ border: "1px solid var(--brand-border)", background: "var(--surface)" }}
     >
       {/* Service type label */}
       <p className="text-[11px] font-medium uppercase tracking-[0.06em]"
@@ -167,7 +167,7 @@ export function AttendanceStatsSection({
               onClick={() => setPeriod(p)}
               className="px-3 py-1 text-[12px] font-medium transition-colors"
               style={{
-                background: period === p ? "var(--brand-navy)" : "#fff",
+                background: period === p ? "var(--brand-navy)" : "var(--surface)",
                 color:      period === p ? "#fff" : "var(--brand-muted)",
                 borderRight: p === "month" ? "1px solid var(--brand-border)" : "none",
               }}

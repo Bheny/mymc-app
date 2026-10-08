@@ -33,9 +33,9 @@ const TYPE_DAY: Record<string, string> = {
 };
 const TYPE_COLOR: Record<string, string> = {
   LC_LIVE:           "var(--brand-navy)",
-  MGS:               "#1A8C6C",
-  SHEPHERDS_MEETING: "#7C3AED",
-  SPECIAL_MEETING:   "#B45309",
+  MGS:               "var(--brand-success)",
+  SHEPHERDS_MEETING: "var(--violet-600)",
+  SPECIAL_MEETING:   "var(--amber-700)",
 };
 
 function attendanceRate(stats: ServiceSummary["stats"]): number {
@@ -166,7 +166,7 @@ export default function AttendancePage() {
               onClick={() => setTab(key)}
               className="flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-medium transition-colors"
               style={{
-                background:  tab === key ? "var(--brand-navy)" : "#fff",
+                background:  tab === key ? "var(--brand-navy)" : "var(--surface)",
                 color:       tab === key ? "#fff" : "var(--brand-muted)",
                 borderRight: key === "overview" ? "1px solid var(--brand-border)" : "none",
               }}
@@ -191,15 +191,15 @@ export default function AttendancePage() {
       {/* ── Missed services card ── */}
       {gaps.length > 0 && (
         <div className="rounded-xl overflow-hidden mb-6"
-             style={{ border: "1px solid #FCD34D", background: "#FFFBEB" }}>
+             style={{ border: "1px solid var(--amber-300)", background: "var(--amber-50)" }}>
           {/* Header */}
           <div className="flex items-center gap-2 px-4 py-3"
-               style={{ borderBottom: "1px solid #FCD34D" }}>
-            <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: "#D97706" }} />
-            <span className="text-[13px] font-semibold" style={{ color: "#92400E" }}>
+               style={{ borderBottom: "1px solid var(--amber-300)" }}>
+            <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: "var(--amber-600)" }} />
+            <span className="text-[13px] font-semibold" style={{ color: "var(--amber-800)" }}>
               {gaps.length} missed service{gaps.length !== 1 ? "s" : ""} — up to 4 weeks back
             </span>
-            <span className="ml-auto text-[11px]" style={{ color: "#B45309" }}>
+            <span className="ml-auto text-[11px]" style={{ color: "var(--amber-700)" }}>
               Fill in or mark as cancelled
             </span>
           </div>
@@ -210,14 +210,14 @@ export default function AttendancePage() {
             const isBusy = cancellingGap === key;
             return (
               <div key={key} className="flex items-center gap-3 px-4 py-3"
-                   style={{ borderBottom: "1px solid #FEF3DC" }}>
+                   style={{ borderBottom: "1px solid var(--tint-warn-bg)" }}>
                 {/* Type badge */}
                 <span className="rounded-pill text-[11px] font-semibold px-2 py-0.5 text-white shrink-0"
                       style={{ background: TYPE_COLOR[gap.type] ?? "var(--brand-navy)" }}>
                   {TYPE_LABEL[gap.type] ?? gap.type}
                 </span>
                 {/* Date */}
-                <span className="flex-1 text-[13px] font-medium" style={{ color: "#92400E" }}>
+                <span className="flex-1 text-[13px] font-medium" style={{ color: "var(--amber-800)" }}>
                   {gap.label}
                 </span>
                 {/* Actions */}
@@ -232,7 +232,7 @@ export default function AttendancePage() {
                     onClick={() => markCancelled(gap)}
                     disabled={isBusy}
                     className="h-8 px-3 rounded-lg text-[12px] font-medium transition-colors disabled:opacity-50"
-                    style={{ border: "1px solid #FCD34D", color: "#B45309", background: "#fff" }}
+                    style={{ border: "1px solid var(--amber-300)", color: "var(--amber-700)", background: "var(--surface)" }}
                   >
                     {isBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Cancelled"}
                   </button>
@@ -288,7 +288,7 @@ export default function AttendancePage() {
                       </span>
                       {s.mode === "ONLINE" && (
                         <span className="rounded-pill text-[11px] font-medium px-2 py-0.5"
-                              style={{ background: "#FEF3DC", color: "#854F0B" }}>
+                              style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
                           Online
                         </span>
                       )}

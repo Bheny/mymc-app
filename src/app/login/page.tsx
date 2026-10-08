@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Metadata } from "next";
 import { LoginForm } from "@/components/login-form";
 
@@ -36,9 +37,11 @@ export default function LoginPage() {
 
         <div
           className="w-full rounded-xl p-8"
-          style={{ background: "#fff", boxShadow: "0 20px 45px -15px rgba(15,31,61,0.45)" }}
+          style={{ background: "var(--surface)", boxShadow: "0 20px 45px -15px rgba(15,31,61,0.45)" }}
         >
-          <LoginForm />
+          <Suspense>
+            <LoginForm />
+          </Suspense>
         </div>
       </div>
     </div>

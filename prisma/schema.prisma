@@ -117,6 +117,8 @@ model User {
   firstTimersConverted FirstTimer[] @relation("FirstTimerConvertedBy")
   notifications        Notification[]
   soulsRecorded        Soul[]       @relation("SoulRecordedBy")
+  memberStatusChanges  MemberStatusChange[] @relation("StatusChangedBy")
+  libraryItems         LibraryItem[]        @relation("LibraryItemCreatedBy")
 
   shepherdCandidatesRecommended ShepherdCandidate[] @relation("CandidateRecommendedBy")
   shepherdCandidatesCertified   ShepherdCandidate[] @relation("CandidateCertifiedBy")
@@ -135,6 +137,7 @@ model Branch {
   megaChurches MegaChurch[]
   userRoles    UserRole[]
   departments  Department[]
+  libraryItems LibraryItem[]
 
   @@map("branches")
 }
@@ -150,6 +153,7 @@ model MegaChurch {
   buscentres Buscentre[]
   userRoles  UserRole[]
   members    Member[]    // MC-level members (MC Pastors, etc.)
+  libraryItems LibraryItem[]
 
   @@map("mega_churches")
 }
@@ -161,7 +165,7 @@ model Buscentre {
   location  String?
   createdAt DateTime @default(now()) @map("created_at")
 
-  // MAX 4 per MegaChurch — enforced in application logic
+  // Max per MegaChurch — configurable (CapacityLimit "buscentre")
   mc        MegaChurch @relation(fields: [mcId], references: [id], onDelete: Cascade)
   cells     Cell[]
   userRoles UserRole[]
@@ -177,7 +181,7 @@ model Cell {
   location    String?  @map("location")
   createdAt   DateTime @default(now()) @map("created_at")
 
-  // MAX 4 per Buscentre — enforced in application logic
+  // Max per Buscentre — configurable (CapacityLimit "cell")
   buscentre    Buscentre    @relation(fields: [buscentreId], references: [id], onDelete: Cascade)
   shepherds    Shepherd[]
   members      Member[]
@@ -197,7 +201,7 @@ model Shepherd {
   memberId  String?  @unique @map("member_id") // set when named but not yet activated
   createdAt DateTime @default(now()) @map("created_at")
 
-  // MAX 2 per Cell — enforced in application logic
+  // Max per Cell — configurable (CapacityLimit "shepherd")
   cell      Cell       @relation(fields: [cellId], references: [id], onDelete: Cascade)
   user      User?      @relation(fields: [userId], references: [id], onDelete: SetNull)
   person    Member?    @relation("ShepherdPerson", fields: [memberId], references: [id], onDelete: SetNull)
@@ -274,7 +278,43 @@ model Member {
   // Back-relation: this member has been put forward to become a shepherd
   shepherdCandidacy ShepherdCandidate? @relation("CandidateMember")
 
+  // Active ⇄ inactive history (latest row explains the current status)
+  statusChanges MemberStatusChange[]
+
   @@map("members")
+}
+
+// ─── App settings ─────────────────────────────────────────────────────────────
+
+// Generic key/value store for app-wide settings that don't warrant their own
+// table (e.g. "legacy.sheet" → the Google Sheet behind the Legacy dashboard).
+model AppSetting {
+  key         String   @id
+  value       Json
+  updatedById String?  @map("updated_by_id")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("app_settings")
+}
+
+// ─── Member status history ────────────────────────────────────────────────────
+
+// Logged whenever a member's isActive flag changes. Deactivation requires a
+// reason + details (enforced in the API); reactivation details are optional.
+model MemberStatusChange {
+  id          String   @id @default(cuid())
+  memberId    String   @map("member_id")
+  isActive    Boolean  @map("is_active")   // the status the member was changed TO
+  reason      String?                       // e.g. "RELOCATED" — see MEMBER_INACTIVE_REASONS
+  details     String?
+  changedById String?  @map("changed_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  member    Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  changedBy User?  @relation("StatusChangedBy", fields: [changedById], references: [id], onDelete: SetNull)
+
+  @@index([memberId, createdAt])
+  @@map("member_status_changes")
 }
 
 // ─── Roles & scope ───────────────────────────────────────────────────────────
@@ -329,6 +369,22 @@ model CapacityWarning {
   createdBy User @relation(fields: [createdById], references: [id])
 
   @@map("capacity_warnings")
+}
+
+// ─── Capacity limits (configurable in Settings) ──────────────────────────────
+
+// One row per level ("buscentre" | "cell" | "shepherd" | "member"). Missing
+// rows fall back to the defaults in src/lib/capacity.ts.
+//   enforce = false → over-limit creations are allowed but log a CapacityWarning
+//   enforce = true  → over-limit creations are rejected
+model CapacityLimit {
+  level       String   @id
+  max         Int
+  enforce     Boolean  @default(false)
+  updatedById String?  @map("updated_by_id")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("capacity_limits")
 }
 
 // ─── Services & Attendance ───────────────────────────────────────────────────
@@ -558,4 +614,55 @@ model DepartmentLeader {
 
   @@unique([departmentId, memberId])
   @@map("department_leaders")
+}
+
+// ─── Library ──────────────────────────────────────────────────────────────────
+
+enum LibraryItemKind {
+  FILE     // uploaded to Supabase Storage (bucket "library")
+  YOUTUBE
+  PODCAST
+  LINK
+}
+
+// Shared documents and media. Visible to everyone in the branch (mcId null)
+// or in one MC (mcId set). Admins / chief shepherds manage branch-wide items;
+// MC pastors manage their own MC's items.
+model LibraryItem {
+  id          String          @id @default(cuid())
+  kind        LibraryItemKind
+  title       String
+  description String?
+  category    String?
+
+  // Links (YOUTUBE / PODCAST / LINK)
+  url          String?
+  thumbnailUrl String? @map("thumbnail_url")
+
+  // Files
+  storagePath String? @unique @map("storage_path")
+  fileName    String? @map("file_name")
+  mimeType    String? @map("mime_type")
+  sizeBytes   Int?    @map("size_bytes")
+
+  // Audience
+  branchId String  @map("branch_id")
+  mcId     String? @map("mc_id")
+
+  pinned       Boolean @default(false)
+  // Public link /l/{shareToken} — opens without logging in while enabled
+  shareToken   String  @unique @default(cuid()) @map("share_token")
+  shareEnabled Boolean @default(true) @map("share_enabled")
+
+  createdById String    @map("created_by_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  archivedAt  DateTime? @map("archived_at")
+
+  branch    Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  mc        MegaChurch? @relation(fields: [mcId], references: [id], onDelete: Cascade)
+  createdBy User        @relation("LibraryItemCreatedBy", fields: [createdById], references: [id])
+
+  @@index([branchId, mcId])
+  @@map("library_items")
 }

@@ -23,6 +23,8 @@ import {
 import { AddMemberModal } from "@/components/add-member-modal";
 import { SummaryCard } from "@/components/summary-card";
 import { DepartmentPicker } from "@/components/department-picker";
+import { Textarea } from "@/components/ui/textarea";
+import { MEMBER_INACTIVE_REASONS, STATUS_DETAILS_MIN, inactiveReasonLabel } from "@/lib/member-status";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -52,8 +54,8 @@ function StatusBadge({ active }: { active: boolean }) {
     <span
       className="rounded-pill text-[11px] font-medium px-2.5 py-0.5"
       style={active
-        ? { background: "#E0F4EC", color: "#085041" }
-        : { background: "#FDECEA", color: "#791F1F" }}
+        ? { background: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)" }
+        : { background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)" }}
     >
       {active ? "Active" : "Inactive"}
     </span>
@@ -70,7 +72,7 @@ function SystemUserIcon() {
 
 function LevelBadge({ member }: { member: Member }) {
   if (member.shepherd)  return null; // regular member — no extra badge needed
-  const styles = { background: "#FEF3DC", color: "#854F0B" };
+  const styles = { background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" };
   if (member.mc)        return <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5" style={styles}>MC level</span>;
   if (member.buscentre) return <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5" style={styles}>Buscentre level</span>;
   if (member.cell)      return <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5" style={styles}>Cell level</span>;
@@ -186,7 +188,7 @@ function NativeSelect({ value, onChange, disabled, placeholder, options, display
   return (
     <select value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}
       className="h-10 px-3 text-[14px] rounded-lg disabled:opacity-40"
-      style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+      style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
       <option value="">{placeholder}</option>
       {options.map((o) => <option key={o.id} value={o.id}>{displayFn(o)}</option>)}
     </select>
@@ -194,6 +196,31 @@ function NativeSelect({ value, onChange, disabled, placeholder, options, display
 }
 
 // ─── Member detail sheet ──────────────────────────────────────────────────────
+
+type StatusChange = {
+  isActive:  boolean;
+  reason:    string | null;
+  details:   string | null;
+  createdAt: string;
+  changedBy: { name: string | null } | null;
+};
+
+// "Relocated / moved away — Moved to Kumasi for work · 3 Oct 2026 by Ama"
+function StatusChangeNote({ change }: { change: StatusChange }) {
+  const label = inactiveReasonLabel(change.reason);
+  return (
+    <div className="flex flex-col gap-0.5">
+      {label && <span className="text-[13px] font-medium" style={{ color: "var(--brand-text)" }}>{label}</span>}
+      {change.details && (
+        <span className="text-[13px] whitespace-pre-wrap" style={{ color: "var(--brand-text)" }}>{change.details}</span>
+      )}
+      <span className="text-[11px]" style={{ color: "var(--brand-muted)" }}>
+        {new Date(change.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+        {change.changedBy?.name ? ` · by ${change.changedBy.name}` : ""}
+      </span>
+    </div>
+  );
+}
 
 type MemberDetail = Member & {
   dateOfBirth: string | null;
@@ -219,6 +246,8 @@ type MemberDetail = Member & {
   schoolName?:      string | null;
   programOfStudy?:  string | null;
   departments?: { department: { id: string; name: string } }[];
+  // Most recent active ⇄ inactive change (why they're inactive)
+  lastStatusChange?: StatusChange | null;
   // Populated if this member IS a shepherd in some cell
   shepherdRole?: {
     id:     string;
@@ -242,11 +271,11 @@ type MemberDetail = Member & {
 function memberPosition(detail: MemberDetail): { label: string; badge: string; badgeBg: string; badgeColor: string } {
   const sysRole = detail.user?.role?.role;
   if (sysRole === "cell_shepherd")  return { label: "Cell Shepherd",  badge: "Cell Shepherd",  badgeBg: "var(--brand-navy)",      badgeColor: "#fff"     };
-  if (sysRole === "buscentre_head") return { label: "Buscentre Head", badge: "Buscentre Head", badgeBg: "#7C3AED",                badgeColor: "#fff"     };
-  if (sysRole === "mc_pastor")      return { label: "MC Pastor",      badge: "MC Pastor",      badgeBg: "#059669",                badgeColor: "#fff"     };
-  if (sysRole === "chief_shepherd") return { label: "Chief Shepherd", badge: "Chief Shepherd", badgeBg: "#B45309",                badgeColor: "#fff"     };
-  if (sysRole === "admin")          return { label: "Admin",          badge: "Admin",          badgeBg: "#1F2937",                badgeColor: "#fff"     };
-  if (detail.shepherdRole)          return { label: "Shepherd",       badge: "Shepherd",       badgeBg: "#E0F4EC",                badgeColor: "#085041"  };
+  if (sysRole === "buscentre_head") return { label: "Buscentre Head", badge: "Buscentre Head", badgeBg: "var(--violet-600)",                badgeColor: "#fff"     };
+  if (sysRole === "mc_pastor")      return { label: "MC Pastor",      badge: "MC Pastor",      badgeBg: "var(--green-600)",                badgeColor: "#fff"     };
+  if (sysRole === "chief_shepherd") return { label: "Chief Shepherd", badge: "Chief Shepherd", badgeBg: "var(--amber-700)",                badgeColor: "#fff"     };
+  if (sysRole === "admin")          return { label: "Admin",          badge: "Admin",          badgeBg: "var(--gray-800)",                badgeColor: "#fff"     };
+  if (detail.shepherdRole)          return { label: "Shepherd",       badge: "Shepherd",       badgeBg: "var(--tint-ok-bg)",                badgeColor: "var(--tint-ok-fg)"  };
   return                                   { label: "Regular Member", badge: "Member",         badgeBg: "var(--brand-navy-light)", badgeColor: "var(--brand-navy)" };
 }
 
@@ -421,6 +450,18 @@ function MemberDetailSheet({
           ) : detail ? (
             <div className="flex flex-col gap-0">
 
+              {/* ── Why inactive ── */}
+              {!detail.isActive && detail.lastStatusChange && !detail.lastStatusChange.isActive && (
+                <div className="flex items-start gap-3 py-3"
+                     style={{ borderBottom: "1px solid var(--brand-border)" }}>
+                  <span className="text-[12px] font-medium uppercase tracking-[0.04em] w-24 shrink-0 pt-0.5"
+                        style={{ color: "var(--brand-muted)" }}>
+                    Inactive
+                  </span>
+                  <StatusChangeNote change={detail.lastStatusChange} />
+                </div>
+              )}
+
               {/* ── Position / rank ── */}
               {(() => {
                 const pos = memberPosition(detail);
@@ -526,13 +567,13 @@ function MemberDetailSheet({
                       SHEPHERDS_MEETING: "Shepherds Mtg", SPECIAL_MEETING: "Special Mtg",
                     };
                     const svcColor: Record<string, string> = {
-                      LC_LIVE: "var(--brand-navy)", MGS: "#1A8C6C",
-                      SHEPHERDS_MEETING: "#7C3AED", SPECIAL_MEETING: "#B45309",
+                      LC_LIVE: "var(--brand-navy)", MGS: "var(--brand-success)",
+                      SHEPHERDS_MEETING: "var(--violet-600)", SPECIAL_MEETING: "var(--amber-700)",
                     };
                     const statusStyle: Record<string, React.CSSProperties> = {
-                      PRESENT: { background: "#E0F4EC", color: "#085041" },
-                      ABSENT:  { background: "#FDECEA", color: "#791F1F" },
-                      EXCUSED: { background: "#FEF3DC", color: "#854F0B" },
+                      PRESENT: { background: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)" },
+                      ABSENT:  { background: "var(--tint-danger-bg)", color: "var(--tint-danger-fg)" },
+                      EXCUSED: { background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" },
                     };
                     const dateStr = new Date(rec.service.date).toLocaleDateString("en-GB", {
                       day: "numeric", month: "short",
@@ -568,13 +609,13 @@ function MemberDetailSheet({
                  style={{ color: "var(--brand-muted)" }}>System access</p>
               {detail.isUser ? (
                 <div className="flex flex-col gap-2">
-                  <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ background: "#E0F4EC" }}>
-                    <ShieldCheck className="h-5 w-5 shrink-0" style={{ color: "#085041" }} />
+                  <div className="flex items-center gap-3 rounded-xl px-4 py-3" style={{ background: "var(--tint-ok-bg)" }}>
+                    <ShieldCheck className="h-5 w-5 shrink-0" style={{ color: "var(--tint-ok-fg)" }} />
                     <div>
-                      <p className="text-[14px] font-medium" style={{ color: "#085041" }}>
+                      <p className="text-[14px] font-medium" style={{ color: "var(--tint-ok-fg)" }}>
                         Activated — {detail.user?.role?.role.replace(/_/g, " ") ?? "system user"}
                       </p>
-                      <p className="text-[12px] mt-0.5" style={{ color: "#085041" }}>
+                      <p className="text-[12px] mt-0.5" style={{ color: "var(--tint-ok-fg)" }}>
                         This member can log in to the app.
                       </p>
                     </div>
@@ -588,15 +629,15 @@ function MemberDetailSheet({
                 <div className="flex items-center justify-between rounded-xl px-4 py-3"
                      style={{ background: "var(--brand-navy-light)" }}>
                   <div className="flex items-center gap-3">
-                    <ShieldAlert className="h-5 w-5 shrink-0" style={{ color: "var(--brand-navy)" }} />
+                    <ShieldAlert className="h-5 w-5 shrink-0" style={{ color: "var(--brand-link)" }} />
                     <div>
-                      <p className="text-[14px] font-medium" style={{ color: "var(--brand-navy)" }}>Not activated</p>
+                      <p className="text-[14px] font-medium" style={{ color: "var(--brand-link)" }}>Not activated</p>
                       <p className="text-[12px] mt-0.5" style={{ color: "var(--brand-muted)" }}>No system access yet.</p>
                     </div>
                   </div>
                   <Link href="/org/activate"
                         className="flex items-center gap-1 text-[13px] font-medium transition-colors hover:underline"
-                        style={{ color: "var(--brand-navy)" }}>
+                        style={{ color: "var(--brand-link)" }}>
                     Activate <ChevronRight className="h-3.5 w-3.5" />
                   </Link>
                 </div>
@@ -694,6 +735,13 @@ function EditMemberSheet({
   const [cellId,       setCellId]       = useState("");
   const [shepherdId,   setShepherdId]   = useState("");
 
+  // ── Status change details ──
+  const [statusReason,     setStatusReason]     = useState("");
+  const [statusDetails,    setStatusDetails]    = useState("");
+  const [lastStatusChange, setLastStatusChange] = useState<StatusChange | null>(null);
+  const deactivating = !!member?.isActive && !isActive;
+  const reactivating = !!member && !member.isActive && isActive;
+
   const [busy,  setBusy]  = useState(false);
   const [error, setError] = useState("");
 
@@ -707,6 +755,7 @@ function EditMemberSheet({
     setGender(member.gender ?? "");
     setJoinedDate(member.joinedDate ? member.joinedDate.slice(0, 10) : "");
     setIsActive(member.isActive);
+    setStatusReason(""); setStatusDetails(""); setLastStatusChange(null);
     setReassigning(false);
     setError("");
     // Reset extended fields until detail loads
@@ -741,6 +790,7 @@ function EditMemberSheet({
         setSchoolName(d.schoolName ?? "");
         setProgramOfStudy(d.programOfStudy ?? "");
         setDepartmentIds((d.departments ?? []).map((md) => md.department.id));
+        setLastStatusChange(d.lastStatusChange ?? null);
       })
       .catch(() => {});
 
@@ -782,6 +832,10 @@ function EditMemberSheet({
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!firstName.trim() || !lastName.trim()) { setError("Name is required."); return; }
+    if (deactivating) {
+      if (!statusReason) { setError("Choose a reason for marking this member inactive."); return; }
+      if (statusDetails.trim().length < STATUS_DETAILS_MIN) { setError("Add some details about the status change."); return; }
+    }
     setBusy(true);
 
     // Build reassignment payload if section is open and valid
@@ -812,6 +866,10 @@ function EditMemberSheet({
         dateOfBirth:       dateOfBirth       || null,
         joinedDate:        joinedDate        || null,
         isActive,
+        ...((deactivating || reactivating) && {
+          statusReason:  deactivating ? statusReason : null,
+          statusDetails: statusDetails.trim() || null,
+        }),
         hometown:          hometown          || null,
         previousChurch:    previousChurch    || null,
         parentName:        parentName        || null,
@@ -886,7 +944,7 @@ function EditMemberSheet({
                   <FieldLabel>Gender</FieldLabel>
                   <select value={gender} onChange={(e) => setGender(e.target.value)}
                           className="h-10 px-3 text-[14px] rounded-lg"
-                          style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                          style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
                     <option value="">— None —</option>
                     <option>Male</option><option>Female</option><option>Other</option>
                   </select>
@@ -916,12 +974,62 @@ function EditMemberSheet({
               <div className="flex flex-col gap-1.5">
                 <FieldLabel>Status</FieldLabel>
                 <select value={isActive ? "active" : "inactive"}
-                        onChange={(e) => setIsActive(e.target.value === "active")}
+                        onChange={(e) => { setIsActive(e.target.value === "active"); setError(""); }}
                         className="h-10 px-3 text-[14px] rounded-lg"
-                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
                   <option value="active">Active</option>
                   <option value="inactive">Inactive</option>
                 </select>
+
+                {/* Already inactive — show why */}
+                {!member?.isActive && !isActive && lastStatusChange && !lastStatusChange.isActive && (
+                  <div className="rounded-lg px-3 py-2.5 mt-1"
+                       style={{ background: "var(--tint-danger-bg)", border: "1px solid var(--red-200)" }}>
+                    <StatusChangeNote change={lastStatusChange} />
+                  </div>
+                )}
+
+                {/* Going inactive — reason + details required */}
+                {deactivating && (
+                  <div className="flex flex-col gap-3 rounded-lg p-3 mt-1"
+                       style={{ background: "var(--tint-warn-bg)", border: "1px solid var(--tint-warn-border)" }}>
+                    <p className="text-[12px]" style={{ color: "var(--tint-warn-fg)" }}>
+                      Tell us why this member is being marked inactive. This is kept on their record.
+                    </p>
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel required>Reason</FieldLabel>
+                      <select value={statusReason}
+                              onChange={(e) => { setStatusReason(e.target.value); setError(""); }}
+                              className="h-10 px-3 text-[14px] rounded-lg"
+                              style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
+                        <option value="">— Select reason —</option>
+                        {Object.entries(MEMBER_INACTIVE_REASONS).map(([key, label]) => (
+                          <option key={key} value={key}>{label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <FieldLabel required>Details</FieldLabel>
+                      <Textarea value={statusDetails}
+                                onChange={(e) => { setStatusDetails(e.target.value); setError(""); }}
+                                placeholder="e.g. Moved to Kumasi for work in September; still reachable on WhatsApp."
+                                rows={3} className="text-[14px] bg-[var(--surface)]"
+                                style={{ borderColor: "var(--brand-border)" }} />
+                    </div>
+                  </div>
+                )}
+
+                {/* Coming back — optional note */}
+                {reactivating && (
+                  <div className="flex flex-col gap-1.5 mt-1">
+                    <FieldLabel>Reactivation note</FieldLabel>
+                    <Textarea value={statusDetails}
+                              onChange={(e) => setStatusDetails(e.target.value)}
+                              placeholder="optional, e.g. Back from school, attending again"
+                              rows={2} className="text-[14px]"
+                              style={{ borderColor: "var(--brand-border)" }} />
+                  </div>
+                )}
               </div>
 
               <div className="flex flex-col gap-1.5">
@@ -1013,7 +1121,7 @@ function EditMemberSheet({
                 <FieldLabel>Employed?</FieldLabel>
                 <select value={isEmployed} onChange={(e) => setIsEmployed(e.target.value)}
                         className="h-10 px-3 text-[14px] rounded-lg"
-                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
                   <option value="">— Not recorded —</option>
                   <option value="yes">Yes</option>
                   <option value="no">No</option>
@@ -1042,7 +1150,7 @@ function EditMemberSheet({
                       <FieldLabel>Salary range (monthly)</FieldLabel>
                       <select value={salaryRange} onChange={(e) => setSalaryRange(e.target.value)}
                               className="h-10 px-3 text-[14px] rounded-lg"
-                              style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                              style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
                         <option value="">— Not recorded —</option>
                         {Object.entries(SALARY_LABELS).map(([value, label]) => (
                           <option key={value} value={value}>{label}</option>
@@ -1069,7 +1177,7 @@ function EditMemberSheet({
                 <FieldLabel>Owns a business?</FieldLabel>
                 <select value={ownsBusiness} onChange={(e) => setOwnsBusiness(e.target.value)}
                         className="h-10 px-3 text-[14px] rounded-lg"
-                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
                   <option value="">— Not recorded —</option>
                   <option value="yes">Yes</option>
                   <option value="no">No</option>
@@ -1105,7 +1213,7 @@ function EditMemberSheet({
                 <FieldLabel>Student?</FieldLabel>
                 <select value={isStudent} onChange={(e) => setIsStudent(e.target.value)}
                         className="h-10 px-3 text-[14px] rounded-lg"
-                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
                   <option value="">— Not recorded —</option>
                   <option value="yes">Yes</option>
                   <option value="no">No</option>
@@ -1118,7 +1226,7 @@ function EditMemberSheet({
                     <FieldLabel>School level</FieldLabel>
                     <select value={schoolLevel} onChange={(e) => setSchoolLevel(e.target.value)}
                             className="h-10 px-3 text-[14px] rounded-lg"
-                            style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "#fff" }}>
+                            style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
                       <option value="">— None —</option>
                       {Object.entries(SCHOOL_LEVEL_LABELS).map(([value, label]) => (
                         <option key={value} value={value}>{label}</option>
@@ -1156,7 +1264,7 @@ function EditMemberSheet({
                       style={{ color: "var(--brand-muted)" }}>
                   Change assignment
                 </span>
-                <span className="text-[12px] font-medium" style={{ color: "var(--brand-navy)" }}>
+                <span className="text-[12px] font-medium" style={{ color: "var(--brand-link)" }}>
                   {reassigning ? "Cancel" : "Edit"}
                 </span>
               </button>
@@ -1164,7 +1272,7 @@ function EditMemberSheet({
               {!reassigning && member && (
                 <div className="rounded-lg px-3 py-2.5 text-[13px]"
                      style={{ background: "var(--brand-navy-light)" }}>
-                  <span style={{ color: "var(--brand-navy)", fontWeight: 500 }}>
+                  <span style={{ color: "var(--brand-link)", fontWeight: 500 }}>
                     {LEVEL_LABELS[inferLevel(member)]}
                   </span>
                   <span style={{ color: "var(--brand-muted)" }}>
@@ -1182,7 +1290,7 @@ function EditMemberSheet({
                         className="text-left px-3 py-2 rounded-lg text-[12px] font-medium transition-colors"
                         style={level === l
                           ? { background: "var(--brand-navy)", color: "#fff", border: "1px solid var(--brand-navy)" }
-                          : { background: "#fff", color: "var(--brand-text)", border: "1px solid var(--brand-border)" }}>
+                          : { background: "var(--surface)", color: "var(--brand-text)", border: "1px solid var(--brand-border)" }}>
                         {LEVEL_LABELS[l]}
                       </button>
                     ))}
@@ -1378,7 +1486,7 @@ export default function MembersPage() {
               className="rounded-pill text-[12px] font-medium px-3 py-1.5 transition-colors"
               style={filter === f
                 ? { background: "var(--brand-navy)", color: "#fff" }
-                : { background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}
+                : { background: "var(--brand-navy-light)", color: "var(--brand-link)" }}
             >
               {f === "all" ? "All" : f === "active" ? "Active" : f === "inactive" ? "Inactive" : "System users"}
             </button>
@@ -1408,7 +1516,7 @@ export default function MembersPage() {
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
-                <TableRow style={{ background: "#F9FAFB" }}>
+                <TableRow style={{ background: "var(--gray-50)" }}>
                   {["Name", "Cell", "Buscentre", "Shepherd", "Gender", "Phone", "Joined", "Status", ""].map((h) => (
                     <TableHead
                       key={h}
@@ -1437,7 +1545,7 @@ export default function MembersPage() {
                         <span className="inline-flex items-center gap-1.5">
                           <span
                             className="text-[14px] font-medium group-hover:underline"
-                            style={{ color: "var(--brand-navy)" }}
+                            style={{ color: "var(--brand-link)" }}
                           >
                             {member.firstName} {member.lastName}
                           </span>
@@ -1564,7 +1672,7 @@ export default function MembersPage() {
               className="rounded-pill text-[12px] font-medium px-3 py-1.5 transition-colors"
               style={showAll
                 ? { background: "var(--brand-navy)", color: "#fff" }
-                : { background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}
+                : { background: "var(--brand-navy-light)", color: "var(--brand-link)" }}
             >
               {showAll ? "Show 25 per page" : "Show all"}
             </button>
