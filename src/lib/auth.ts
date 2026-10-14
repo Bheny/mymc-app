@@ -55,7 +55,16 @@ export const authOptions: AuthOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      // useSession().update() after a password change: re-read the flag from the
+      // database (never trust a value sent from the browser)
+      if (trigger === "update" && token.id) {
+        const fresh = await prisma.user.findUnique({
+          where:  { id: token.id as string },
+          select: { mustChangePassword: true },
+        });
+        if (fresh) token.mustChangePassword = fresh.mustChangePassword;
+      }
       if (user) {
         const u = user as typeof user & {
           role?:              string | null;

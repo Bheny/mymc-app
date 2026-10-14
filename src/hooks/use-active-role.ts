@@ -1,11 +1,12 @@
 "use client";
 
 import {
-  createContext, useContext, useEffect, useState, useCallback, createElement,
+  createContext, useContext, useEffect, useRef, useState, useCallback, createElement,
   type ReactNode,
 } from "react";
 import { useSession } from "next-auth/react";
 import { useIdleLogout } from "@/hooks/use-idle-logout";
+import { fetchJson } from "@/lib/fetch-json";
 
 export type RoleView = {
   key:          string;
@@ -58,30 +59,44 @@ const ActiveRoleContext = createContext<ActiveRoleContextValue | null>(null);
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
 
-export function ActiveRoleProvider({ children }: { children: ReactNode }) {
+const ACTING_FETCH_TIMEOUT_MS = 8_000;
+const ACTING_MIN_GAP_MS       = 10_000;  // focus + visibilitychange fire together; don't refetch twice
+
+export function ActiveRoleProvider({
+  children, initialActing,
+}: {
+  children: ReactNode;
+  /** Loaded on the server so the first render already knows the acting roles */
+  initialActing?: { actingAs: string[]; actingAt: Record<string, string> };
+}) {
   const { data: session } = useSession();
   const userId = session?.user?.id;
 
   useIdleLogout(!!userId);
 
-  const [actingAs,  setActingAs]  = useState<string[]>([]);
-  const [actingAt,  setActingAt]  = useState<Record<string, string>>({});
-  // fetchDone = the /api/me/acting request has completed (data is in state)
-  const [fetchDone, setFetchDone] = useState(false);
+  const [actingAs,  setActingAs]  = useState<string[]>(initialActing?.actingAs ?? []);
+  const [actingAt,  setActingAt]  = useState<Record<string, string>>(initialActing?.actingAt ?? {});
+  // fetchDone = we have acting-roles data (from the server render, or the fetch below)
+  const [fetchDone, setFetchDone] = useState(!!initialActing);
   // ready = fetchDone AND the activeKey has been resolved from localStorage
   // Never set this directly — it is set at the end of the activeKey effect below.
   const [ready,     setReady]     = useState(false);
 
-  const fetchActing = useCallback(() => {
+  const lastFetch = useRef(initialActing ? Date.now() : 0);
+
+  const fetchActing = useCallback((force = false) => {
     if (!userId) return;
-    fetch("/api/me/acting")
-      .then((r) => r.json())
+    if (!force && Date.now() - lastFetch.current < ACTING_MIN_GAP_MS) return;
+    lastFetch.current = Date.now();
+    // Never leave the app waiting on this: on a slow or dropped connection fall back to
+    // the primary role after a few seconds instead of holding every page on its skeleton
+    fetchJson<{ actingAs?: string[]; actingAt?: Record<string, string> }>("/api/me/acting", { timeoutMs: ACTING_FETCH_TIMEOUT_MS })
       .then((d) => {
         setActingAs(d.actingAs ?? []);
         setActingAt(d.actingAt ?? {});
-        setFetchDone(true);   // triggers the activeKey effect which then sets ready
       })
-      .catch(() => { setFetchDone(true); });
+      .catch(() => { lastFetch.current = 0; })  // let the next poll retry sooner
+      .finally(() => setFetchDone(true));      // triggers the activeKey effect which then sets ready
   }, [userId]);
 
   useEffect(() => {
@@ -90,13 +105,17 @@ export function ActiveRoleProvider({ children }: { children: ReactNode }) {
     const onVisible = () => {
       if (document.visibilityState === "visible") fetchActing();
     };
+    const onFocus = () => fetchActing();
     document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("focus", fetchActing);
-    const poll = setInterval(fetchActing, 30_000);
+    window.addEventListener("focus", onFocus);
+    // Only poll while the page is in front — backgrounded phones shouldn't keep waking
+    const poll = setInterval(() => {
+      if (document.visibilityState === "visible") fetchActing();
+    }, 30_000);
 
     return () => {
       document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("focus", fetchActing);
+      window.removeEventListener("focus", onFocus);
       clearInterval(poll);
     };
   }, [fetchActing]);
@@ -172,7 +191,7 @@ export function ActiveRoleProvider({ children }: { children: ReactNode }) {
       body: JSON.stringify({ userId, actingAs: view.role, nodeId: view.scopeId ?? "" }),
     });
     if (activeKey === view.key) switchToView("primary");
-    fetchActing();
+    fetchActing(true);
   }, [userId, activeKey, switchToView, fetchActing]);
 
   const value: ActiveRoleContextValue = {
@@ -182,7 +201,7 @@ export function ActiveRoleProvider({ children }: { children: ReactNode }) {
     removeActing,
     hasMultipleViews: allViews.length > 1,
     roleLabel,
-    refreshActing: fetchActing,
+    refreshActing: () => fetchActing(true),
     ready,
   };
 

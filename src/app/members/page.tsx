@@ -1,6 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import useSWR from "swr";
+import { LoadError, StaleNotice } from "@/components/load-error";
+import { useToast } from "@/hooks/use-toast";
 import { useSession } from "next-auth/react";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { Input } from "@/components/ui/input";
@@ -734,6 +737,8 @@ function EditMemberSheet({
   const [buscentreId,  setBuscentreId]  = useState("");
   const [cellId,       setCellId]       = useState("");
   const [shepherdId,   setShepherdId]   = useState("");
+  const [moveReason,   setMoveReason]   = useState("");
+  const [moves,        setMoves]        = useState<{ id: string; fromLabel: string; toLabel: string; reason: string | null; createdAt: string; movedBy: { name: string | null } | null }[]>([]);
 
   // ── Status change details ──
   const [statusReason,     setStatusReason]     = useState("");
@@ -757,7 +762,11 @@ function EditMemberSheet({
     setIsActive(member.isActive);
     setStatusReason(""); setStatusDetails(""); setLastStatusChange(null);
     setReassigning(false);
+    setMoveReason("");
     setError("");
+    // Where they've been before — newest first
+    setMoves([]);
+    fetch(`/api/members/${member.id}/moves`).then((r) => (r.ok ? r.json() : [])).then((d) => setMoves(Array.isArray(d) ? d : [])).catch(() => {});
     // Reset extended fields until detail loads
     setDateOfBirth(""); setHometown(""); setPreviousChurch("");
     setParentName(""); setParentPhone("");
@@ -838,20 +847,26 @@ function EditMemberSheet({
     }
     setBusy(true);
 
-    // Build reassignment payload if section is open and valid
-    let placementPatch: Record<string, string | null> = {};
+    // Moving goes through its own endpoint: it sets shepherd, cell, buscentre and MC
+    // together, checks you lead both ends, and records the move
     if (reassigning) {
       if (level === "shepherd" && !shepherdId) { setError("Select a shepherd."); setBusy(false); return; }
       if (level === "cell"     && !cellId)     { setError("Select a cell."); setBusy(false); return; }
       if (level === "buscentre"&& !buscentreId){ setError("Select a buscentre."); setBusy(false); return; }
       if (level === "mc"       && !mcId)       { setError("Select an MC."); setBusy(false); return; }
 
-      placementPatch = {
-        shepherdId:  level === "shepherd"  ? shepherdId  : null,
-        cellId:      level === "shepherd" || level === "cell" ? cellId : null,
-        buscentreId: level === "buscentre" ? buscentreId : null,
-        mcId:        level === "mc"        ? mcId        : null,
-      };
+      const moveRes = await fetch(`/api/members/${member!.id}/move`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          level, shepherdId: shepherdId || null, cellId: cellId || null,
+          buscentreId: buscentreId || null, mcId: mcId || null, reason: moveReason.trim() || null,
+        }),
+      });
+      if (!moveRes.ok) {
+        const d = await moveRes.json().catch(() => ({}));
+        setError(d.error ?? "Couldn't move this member."); setBusy(false); return;
+      }
     }
 
     const res = await fetch(`/api/members/${member!.id}`, {
@@ -889,7 +904,6 @@ function EditMemberSheet({
         schoolName:     schoolName     || null,
         programOfStudy: programOfStudy || null,
         departmentIds,
-        ...placementPatch,
       }),
     });
     setBusy(false);
@@ -1344,6 +1358,27 @@ function EditMemberSheet({
                         }} />
                     </div>
                   )}
+
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel>Reason (optional)</FieldLabel>
+                    <Input value={moveReason} onChange={(e) => setMoveReason(e.target.value)}
+                           placeholder="e.g. Relocated closer to this cell" className="h-10 text-[14px]"
+                           style={{ borderColor: "var(--brand-border)" }} />
+                  </div>
+                </div>
+              )}
+
+              {!reassigning && moves.length > 0 && (
+                <div className="flex flex-col gap-1.5 pt-1">
+                  <p className="text-[11px]" style={{ color: "var(--brand-muted)" }}>Previous assignments</p>
+                  {moves.slice(0, 5).map((m) => (
+                    <p key={m.id} className="text-[12px]" style={{ color: "var(--brand-text)" }}>
+                      {new Date(m.createdAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      {" · "}{m.fromLabel} → {m.toLabel}
+                      {m.movedBy?.name ? <span style={{ color: "var(--brand-muted)" }}> · by {m.movedBy.name}</span> : null}
+                      {m.reason ? <span style={{ color: "var(--brand-muted)" }}> · {m.reason}</span> : null}
+                    </p>
+                  ))}
                 </div>
               )}
             </section>
@@ -1371,8 +1406,7 @@ function EditMemberSheet({
 export default function MembersPage() {
   const { data: session } = useSession();
   const { activeView, ready } = useActiveRole();
-  const [members,         setMembers]         = useState<Member[]>([]);
-  const [loading,         setLoading]         = useState(true);
+  const { toast } = useToast();
   const [query,           setQuery]           = useState("");
   const [debouncedQuery,  setDebouncedQuery]  = useState("");
   const [filter,          setFilter]          = useState<"all" | "active" | "inactive" | "system">("all");
@@ -1396,30 +1430,49 @@ export default function MembersPage() {
     return () => clearTimeout(t);
   }, [query]);
 
-  const loadMembers = useCallback(async () => {
-    if (!ready) return; // wait for acting-roles before scoping the query
-    setLoading(true);
-    const params = new URLSearchParams();
-    if (debouncedQuery) params.set("q", debouncedQuery);
-    if (filter === "active")   params.set("isActive", "true");
-    if (filter === "inactive") params.set("isActive", "false");
-    if (filter === "system")   params.set("isUser", "true");
-    // Auto-scope — each role only sees their slice
-    if (scopedBuscentreId) params.set("buscentreId", scopedBuscentreId);
-    if (scopedCellId)      params.set("cellId",      scopedCellId);
-    if (scopedShepherdId)  params.set("shepherdId",  scopedShepherdId);
-    const res = await fetch(`/api/members?${params.toString()}`);
-    if (res.ok) setMembers(await res.json());
-    setLoading(false);
-  }, [ready, debouncedQuery, filter, scopedBuscentreId, scopedCellId, scopedShepherdId]);
+  const params = new URLSearchParams();
+  if (debouncedQuery) params.set("q", debouncedQuery);
+  if (filter === "active")   params.set("isActive", "true");
+  if (filter === "inactive") params.set("isActive", "false");
+  if (filter === "system")   params.set("isUser", "true");
+  // Auto-scope — each role only sees their slice
+  if (scopedBuscentreId) params.set("buscentreId", scopedBuscentreId);
+  if (scopedCellId)      params.set("cellId",      scopedCellId);
+  if (scopedShepherdId)  params.set("shepherdId",  scopedShepherdId);
 
-  useEffect(() => { loadMembers(); }, [loadMembers]);
+  // Cached by URL, so coming back shows the last list at once and refreshes it quietly;
+  // while a new search/filter loads, the previous rows stay on screen (dimmed). A null
+  // key waits for the acting roles before scoping the query. SWR also drops stale replies,
+  // so a slow older search can never overwrite a newer one.
+  const { data: membersData, error: loadErr, isLoading, mutate } =
+    useSWR<Member[]>(ready ? `/api/members?${params.toString()}` : null);
+  const members   = membersData ?? [];
+  const loading   = !membersData && !loadErr;           // first load only → skeleton
+  const switching = isLoading && !!membersData;          // new search/filter → keep rows, dim them
+  const loadError = loadErr?.message ?? "";
+  const loadMembers = () => { mutate(); };               // quiet re-sync after add/edit
 
   async function handleDelete(id: string) {
     setDeleting(id);
-    await fetch(`/api/members/${id}`, { method: "DELETE" });
-    setDeleting(null);
-    loadMembers();
+    try {
+      // The row disappears at once; if the server refuses it comes back with a message
+      await mutate(
+        async (current) => {
+          const res = await fetch(`/api/members/${id}`, { method: "DELETE" });
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            throw new Error(d.error ?? "Couldn't delete this member.");
+          }
+          return current?.filter((m) => m.id !== id);
+        },
+        { optimisticData: (current) => current?.filter((m) => m.id !== id) ?? [], rollbackOnError: true, revalidate: false },
+      );
+    } catch (e) {
+      toast({ title: "Couldn't delete member", description: (e as Error).message, variant: "destructive" });
+    } finally {
+      setDeleting(null);
+      mutate();
+    }
   }
 
   // Derived counts for summary cards — always over the full filtered set,
@@ -1450,7 +1503,15 @@ export default function MembersPage() {
             {loading ? "Loading…" : `${total} member${total !== 1 ? "s" : ""}${scopedCellId || scopedShepherdId ? " in your scope" : ""}`}
           </p>
         </div>
-        <AddMemberModal onAdded={loadMembers} />
+        <div className="flex items-center gap-2">
+          {role !== "shepherd" && (
+            <Link href="/members/move" className="h-9 px-3 inline-flex items-center rounded-lg text-[13px] font-medium"
+                  style={{ border: "1px solid var(--brand-border)", color: "var(--brand-link)" }}>
+              Move members
+            </Link>
+          )}
+          <AddMemberModal onAdded={loadMembers} />
+        </div>
       </div>
 
       {/* Summary cards */}
@@ -1495,13 +1556,17 @@ export default function MembersPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
+      {loadError && members.length > 0 && <StaleNotice onRetry={loadMembers} />}
+      <div className="rounded-xl overflow-hidden transition-opacity"
+           style={{ border: "1px solid var(--brand-border)", opacity: switching ? 0.55 : 1 }}>
         {loading ? (
           <div className="p-8 flex flex-col gap-3">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="skeleton h-10 rounded-lg" />
             ))}
           </div>
+        ) : loadError && members.length === 0 ? (
+          <LoadError compact message={loadError} onRetry={loadMembers} />
         ) : members.length === 0 ? (
           <div className="p-12 text-center">
             <Users style={{ width: 40, height: 40, color: "var(--brand-muted)", margin: "0 auto 12px" }} />

@@ -5,7 +5,8 @@ import Link from "next/link";
 import { ClipboardList, Plus, ChevronRight, CheckCircle2, XCircle, Clock, AlertTriangle, Loader2, LayoutDashboard, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveRole } from "@/hooks/use-active-role";
-import { AttendanceOverviewSection } from "@/components/attendance-overview-section";
+import { AttendanceDashboard } from "@/components/attendance-dashboard";
+import { RecentRecordings } from "@/components/attendance/recent-recordings";
 import { AttendanceDrilldownSection } from "@/components/attendance-drilldown-section";
 import { AttendanceReviewSection } from "@/components/attendance-review-section";
 
@@ -84,7 +85,7 @@ export default function AttendancePage() {
       ? `actingBranchId=${activeView.branchId}`
       : "";
 
-  const [tab, setTab] = useState<"overview" | "review">("overview");
+  const [tab, setTab] = useState<"overview" | "drilldown" | "review">("overview");
   const reviewScope = {
     branchId:    activeView?.branchId,
     mcId:        activeView?.mcId,
@@ -144,7 +145,7 @@ export default function AttendancePage() {
           </p>
 
         </div>
-        {canRecord && (
+        {(canRecord || role === "buscentre_head") && (
           <Link href="/attendance/new">
             <Button className="h-9 px-4 text-[14px] font-medium"
                     style={{ background: "var(--brand-navy)", color: "#fff", borderRadius: 8 }}>
@@ -159,6 +160,7 @@ export default function AttendancePage() {
         <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
           {([
             { key: "overview", label: "Overview", icon: LayoutDashboard },
+            ...(showDrilldown ? [{ key: "drilldown" as const, label: "Drill-down", icon: ClipboardList }] : []),
             { key: "review",   label: "Review",   icon: Filter },
           ] as const).map(({ key, label, icon: Icon }) => (
             <button
@@ -168,7 +170,7 @@ export default function AttendancePage() {
               style={{
                 background:  tab === key ? "var(--brand-navy)" : "var(--surface)",
                 color:       tab === key ? "#fff" : "var(--brand-muted)",
-                borderRight: key === "overview" ? "1px solid var(--brand-border)" : "none",
+                borderRight: key !== "review" ? "1px solid var(--brand-border)" : "none",
               }}
             >
               <Icon className="h-3.5 w-3.5" /> {label}
@@ -180,10 +182,13 @@ export default function AttendancePage() {
       {/* ── Role-scoped overview: latest attendance + breakdown, or filtered review ── */}
       {tab === "review" ? (
         <AttendanceReviewSection role={role} scope={reviewScope} />
-      ) : showDrilldown ? (
+      ) : tab === "drilldown" ? (
         <AttendanceDrilldownSection endpoint="/api/attendance/drilldown" actingParam={drilldownActingParam} />
       ) : (
-        <AttendanceOverviewSection endpoint="/api/attendance/overview" actingParam={overviewActingParam} />
+        <div className="flex flex-col gap-4">
+          <AttendanceDashboard actingParam={overviewActingParam} canRecordFor={role === "buscentre_head"} />
+          {role === "buscentre_head" && <RecentRecordings actingParam={overviewActingParam} />}
+        </div>
       )}
 
       {!canRecord ? null : (

@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fetchJson } from "@/lib/fetch-json";
+import { LoadError } from "@/components/load-error";
 import { AlertTriangle, CheckCircle2, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -62,12 +64,19 @@ export default function WarningsPage() {
   const [warnings, setWarnings] = useState<CapacityWarning[]>([]);
   const [loading,  setLoading]  = useState(true);
 
+  const [loadError, setLoadError] = useState("");
+
   async function loadData() {
-    const res = await fetch("/api/org/warnings");
-    const data = await res.json();
-    setFlags(data.actingUpFlags ?? []);
-    setWarnings(data.capacityWarnings ?? []);
-    setLoading(false);
+    setLoadError("");
+    try {
+      const data = await fetchJson<{ actingUpFlags?: ActingUpFlag[]; capacityWarnings?: CapacityWarning[] }>("/api/org/warnings");
+      setFlags(data.actingUpFlags ?? []);
+      setWarnings(data.capacityWarnings ?? []);
+    } catch (e) {
+      setLoadError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { loadData(); }, []);
@@ -89,6 +98,7 @@ export default function WarningsPage() {
       </div>
     );
   }
+  if (loadError && !flags.length && !warnings.length) return <LoadError message={loadError} onRetry={loadData} />;
 
   const hasAny = flags.length + warnings.length > 0;
 

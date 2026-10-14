@@ -7,6 +7,11 @@ import {
 } from "@/lib/legacy-sheet";
 import { mapColumns } from "@/lib/legacy-report";
 import { parseDirectory } from "@/lib/legacy-directory";
+import { mapFirstTimerColumns } from "@/lib/legacy-first-timers";
+
+// Reads several Google Sheets (plus tab lists) per request — allow more than
+// Vercel's default function time
+export const maxDuration = 30;
 
 const EDITOR_ROLES = ["admin", "chief_shepherd"];
 
@@ -48,6 +53,23 @@ async function probeDirectory(url: string, gid: string, fresh = true): Promise<{
   }
 }
 
+/** How many registrations the First Timers tab holds, or why it can't be used. */
+async function probeFirstTimers(url: string, gid: string, fresh = true): Promise<{ count: number } | { error: string }> {
+  try {
+    const data = await readSource({ url, gid }, fresh);
+    const { missing } = mapFirstTimerColumns(data.headers);
+    if (missing.length) return { error: `This tab doesn't look like the first timers form — missing ${missing.join(", ")}.` };
+    return { count: data.rows.length };
+  } catch (e) {
+    return { error: e instanceof SheetAccessError ? e.message : "Couldn't read the first timers tab." };
+  }
+}
+
+/** Likely First Timers tab, if the file has one. */
+function suggestFirstTimers(tabs: SheetTab[]): string | null {
+  return tabs.find((t) => /first.?timers?/i.test(t.name))?.gid ?? null;
+}
+
 /** Likely "who leads what" tab, if the file has one. */
 function suggestDirectory(tabs: SheetTab[]): string | null {
   return tabs.find((t) => /bacenta info|directory|leadership/i.test(t.name))?.gid ?? null;
@@ -79,6 +101,7 @@ export async function GET(request: Request) {
       tabs,
       suggested: suggestTab(tabs, ref.gidInLink ? ref.gid : null),
       suggestedDirectory: suggestDirectory(tabs),
+      suggestedFirstTimers: suggestFirstTimers(tabs),
     });
   }
 
@@ -96,12 +119,16 @@ export async function GET(request: Request) {
   const church = config?.directory && sp.get("check")
     ? await probeDirectory(config.directory.url, config.directory.gid)
     : null;
-  return NextResponse.json({ config, status, church });
+  const firstTimers = config?.firstTimers && sp.get("check")
+    ? await probeFirstTimers(config.firstTimers.url, config.firstTimers.gid)
+    : null;
+  return NextResponse.json({ config, status, church, firstTimers });
 }
 
 /**
  * PUT — { label?, directory?: { url, gid? } | null, sources: [{ id?, name, url, gid?, directoryGid?, mcPastor? }] }.
  * directory: the shared church directory — each cell's MC and bacenta come from it.
+ * firstTimers: the First Timers registration tab, summarised on the Legacy dashboard.
  * directoryGid: "" for none, omitted to auto-detect a "Bacenta Info"-style tab.
  * Every source is checked before saving; errors come back keyed by index.
  */
@@ -132,6 +159,23 @@ export async function PUT(request: Request) {
     if ("error" in d) return NextResponse.json({ error: `Church directory: ${d.error}`, directoryError: true }, { status: 400 });
     directory = { url: dirUrl, gid, tabName: tabs.find((t) => t.gid === gid)?.name ?? null };
     church = d;
+  }
+
+  // ── First Timers tab (optional) ──
+  let firstTimers: ChurchDirectory | null = null;
+  let firstTimersStatus: { count: number } | null = null;
+  const ftInput = body.firstTimers as { url?: unknown; gid?: unknown } | null | undefined;
+  const ftUrl = typeof ftInput?.url === "string" ? ftInput.url.trim() : "";
+  if (ftUrl) {
+    const ref = parseSheetUrl(ftUrl);
+    if (!ref) return NextResponse.json({ error: "First timers: that isn't a Google Sheets link.", firstTimersError: true }, { status: 400 });
+    const tabs = await listTabs(ref);
+    const gid = (typeof ftInput?.gid === "string" && ftInput.gid) || suggestFirstTimers(tabs) || (ref.gidInLink ? ref.gid : null);
+    if (!gid) return NextResponse.json({ error: "First timers: choose which tab holds the registrations.", firstTimersError: true }, { status: 400 });
+    const f = await probeFirstTimers(ftUrl, gid);
+    if ("error" in f) return NextResponse.json({ error: `First timers: ${f.error}`, firstTimersError: true }, { status: 400 });
+    firstTimers = { url: ftUrl, gid, tabName: tabs.find((t) => t.gid === gid)?.name ?? null };
+    firstTimersStatus = f;
   }
 
   const errors: Record<number, string> = {};
@@ -197,7 +241,7 @@ export async function PUT(request: Request) {
   if (Object.keys(errors).length) return NextResponse.json({ error: "Some sheets need attention", errors }, { status: 400 });
 
   try {
-    await saveLegacyConfig({ label, sources, directory }, session.user.id);
+    await saveLegacyConfig({ label, sources, directory, firstTimers }, session.user.id);
   } catch (e) {
     console.error("[settings/legacy-sheet] save failed:", e);
     return NextResponse.json(
@@ -206,9 +250,10 @@ export async function PUT(request: Request) {
     );
   }
   return NextResponse.json({
-    config: { label, sources, directory },
+    config: { label, sources, directory, firstTimers },
     status: Object.fromEntries(sources.map((s, i) => [s.id, statuses[i]])),
     church,
+    firstTimers: firstTimersStatus,
   });
 }
 

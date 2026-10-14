@@ -9,6 +9,9 @@ import { MainContentArea } from '@/components/main-content-area'
 import { Toaster } from "@/components/ui/toaster"
 import { Header } from '@/components/header'
 import { ThemeProvider, themeInitScript } from "@/hooks/use-theme"
+import { DataProvider } from "@/components/data-provider"
+import { authOptions } from "@/lib/auth"
+import { prisma } from "@/lib/prisma"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -22,7 +25,29 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await getServerSession()
+  // authOptions matters: without it next-auth skips this app's session callback, so the
+  // session handed to the client has no id/role. The role provider then can't start, and
+  // pages sit on their skeleton until some later event refreshes the session — which on
+  // a phone (one page, no tab switching) can be never.
+  const session = await getServerSession(authOptions)
+
+  // Acting roles, loaded here (next to the database) so the client doesn't need a
+  // separate round trip before pages can start loading their own data
+  let initialActing: { actingAs: string[]; actingAt: Record<string, string> } | undefined
+  if (session?.user?.id) {
+    try {
+      const r = await prisma.userRole.findUnique({
+        where:  { userId: session.user.id },
+        select: { actingAs: true, actingAt: true },
+      })
+      initialActing = {
+        actingAs: r?.actingAs ?? [],
+        actingAt: (r?.actingAt as Record<string, string> | null) ?? {},
+      }
+    } catch {
+      // The client falls back to fetching it
+    }
+  }
 
   return (
     // suppressHydrationWarning: the theme script may add the `dark` class before React hydrates
@@ -33,7 +58,8 @@ export default async function RootLayout({
       <body className={inter.className}>
         <SessionProvider session={session}>
           <ThemeProvider>
-          <ActiveRoleProvider>
+          <DataProvider>
+          <ActiveRoleProvider initialActing={initialActing}>
             {session ? (
               <SidebarProvider>
                 {/* Fixed top bar (56px) */}
@@ -55,6 +81,7 @@ export default async function RootLayout({
             )}
             <Toaster />
           </ActiveRoleProvider>
+          </DataProvider>
           </ThemeProvider>
         </SessionProvider>
       </body>

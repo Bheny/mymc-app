@@ -1,7 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { LoadError, StaleNotice } from "@/components/load-error";
 import { useActiveRole } from "@/hooks/use-active-role";
+import { useToast } from "@/hooks/use-toast";
 import { Users, Phone, MapPin, ChevronDown } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -26,6 +29,19 @@ type FirstTimer = {
 };
 
 type Summary = { total: number; green: number; yellow: number; red: number; unreached: number };
+type FirstTimersResponse = { firstTimers?: FirstTimer[]; summary?: Summary };
+
+const EMPTY_SUMMARY: Summary = { total: 0, green: 0, yellow: 0, red: 0, unreached: 0 };
+
+const bucket = (s: ReachOutStatus): "green" | "yellow" | "red" | "unreached" =>
+  s === "GREEN" ? "green" : s === "YELLOW" ? "yellow" : s === "RED" ? "red" : "unreached";
+
+/** Move one first timer between summary buckets (e.g. Not reached → Committed). */
+function moveBucket(sum: Summary, from: ReachOutStatus, to: ReachOutStatus): Summary {
+  const [a, b] = [bucket(from), bucket(to)];
+  if (a === b) return sum;
+  return { ...sum, [a]: Math.max(0, sum[a] - 1), [b]: sum[b] + 1 };
+}
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -170,38 +186,33 @@ function StatusSelector({
 
 // ─── First Timer row ──────────────────────────────────────────────────────────
 
-function FTRow({ ft, onUpdated }: { ft: FirstTimer; onUpdated: (id: string, status: ReachOutStatus, note: string | null) => void }) {
+function FTRow({ ft, onSave }: {
+  ft: FirstTimer;
+  /** Applies the change on screen at once, saves it, and resolves false if the save failed */
+  onSave: (id: string, status: ReachOutStatus, note: string | null) => Promise<boolean>;
+}) {
   const [note,    setNote]    = useState(ft.reachOutNote ?? "");
   const [editing, setEditing] = useState(false);
   const [saving,  setSaving]  = useState(false);
 
   async function updateStatus(status: ReachOutStatus) {
     setSaving(true);
-    const res = await fetch(`/api/first-timers/${ft.id}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reachOutStatus: status, reachOutNote: note || null }),
-    });
+    await onSave(ft.id, status, note || null);
     setSaving(false);
-    if (res.ok) {
-      const d = await res.json();
-      onUpdated(ft.id, d.reachOutStatus, d.reachOutNote);
-    }
   }
 
   async function saveNote() {
+    setEditing(false);               // closes straight away; the note is already showing
     setSaving(true);
-    const res = await fetch(`/api/first-timers/${ft.id}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ reachOutStatus: ft.reachOutStatus, reachOutNote: note || null }),
-    });
+    const ok = await onSave(ft.id, ft.reachOutStatus, note || null);
     setSaving(false);
-    if (res.ok) { setEditing(false); onUpdated(ft.id, ft.reachOutStatus, note || null); }
+    if (!ok) setEditing(true);       // failed: bring the editor back with what they typed
   }
 
   const rowBg =
     ft.reachOutStatus === "GREEN"  ? "var(--green-50)" :
     ft.reachOutStatus === "YELLOW" ? "var(--amber-50)" :
-    ft.reachOutStatus === "RED"    ? "var(--red-50c)" : "#fff";
+    ft.reachOutStatus === "RED"    ? "var(--red-50c)" : "var(--surface)";
 
   return (
     <div className="flex flex-col" style={{ borderBottom: "1px solid var(--brand-border)", background: rowBg }}>
@@ -301,35 +312,60 @@ export default function FirstTimersPage() {
   const actingCellId      = activeView?.isActing && activeView.cellId      ? activeView.cellId      : null;
   const actingBuscentreId = activeView?.isActing && activeView.buscentreId ? activeView.buscentreId : null;
 
-  const [filter,      setFilter]      = useState("unreached");
-  const [firstTimers, setFirstTimers] = useState<FirstTimer[]>([]);
-  const [summary,     setSummary]     = useState<Summary>({ total: 0, green: 0, yellow: 0, red: 0, unreached: 0 });
-  const [loading,     setLoading]     = useState(true);
+  const { toast } = useToast();
+  const [filter, setFilter] = useState("unreached");
 
-  const load = useCallback(async () => {
-    if (!ready) return;
-    setLoading(true);
-    const params = new URLSearchParams({ take: "100" });
-    if (filter !== "all") params.set("status", filter);
-    if (actingCellId)      params.set("actingCellId",      actingCellId);
-    if (actingBuscentreId) params.set("actingBuscentreId", actingBuscentreId);
-    const res = await fetch(`/api/first-timers?${params}`);
-    if (res.ok) {
-      const d = await res.json();
-      setFirstTimers(d.firstTimers ?? []);
-      setSummary(d.summary ?? { total: 0, green: 0, yellow: 0, red: 0, unreached: 0 });
+  const params = new URLSearchParams({ take: "100" });
+  if (filter !== "all") params.set("status", filter);
+  if (actingCellId)      params.set("actingCellId",      actingCellId);
+  if (actingBuscentreId) params.set("actingBuscentreId", actingBuscentreId);
+
+  // Cached by URL: coming back shows the last list at once and refreshes it quietly;
+  // switching tabs keeps the current rows (dimmed) until the new ones arrive
+  const { data, error: loadErr, isLoading, mutate } =
+    useSWR<FirstTimersResponse>(ready ? `/api/first-timers?${params}` : null);
+  const firstTimers = data?.firstTimers ?? [];
+  const summary     = data?.summary ?? EMPTY_SUMMARY;
+  const loading     = !data && !loadErr;
+  const switching   = isLoading && !!data;
+  const loadError   = loadErr?.message ?? "";
+  const load        = () => { mutate(); };
+
+  // Change a first timer's reach-out status/note. The row recolours and the summary
+  // counts move straight away; if the server refuses, everything goes back.
+  async function saveReachOut(id: string, status: ReachOutStatus, note: string | null): Promise<boolean> {
+    const apply = (cur?: FirstTimersResponse): FirstTimersResponse => {
+      const base = cur ?? {};
+      const before = base.firstTimers?.find((ft) => ft.id === id)?.reachOutStatus ?? null;
+      return {
+        ...base,
+        firstTimers: (base.firstTimers ?? []).map((ft) => (ft.id === id ? { ...ft, reachOutStatus: status, reachOutNote: note } : ft)),
+        summary: moveBucket(base.summary ?? EMPTY_SUMMARY, before, status),
+      };
+    };
+    try {
+      await mutate(
+        async () => {
+          const res = await fetch(`/api/first-timers/${id}`, {
+            method: "PATCH", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ reachOutStatus: status, reachOutNote: note }),
+          });
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            throw new Error(d.error ?? "Couldn't save this change.");
+          }
+          return undefined;
+        },
+        // populateCache off: keep the on-screen (optimistic) data until the quiet re-sync below
+        { optimisticData: apply, rollbackOnError: true, populateCache: false, revalidate: false },
+      );
+      return true;
+    } catch (e) {
+      toast({ title: "Couldn't save", description: (e as Error).message, variant: "destructive" });
+      return false;
+    } finally {
+      mutate();   // confirm with the server (and drop the row if it no longer matches the tab)
     }
-    setLoading(false);
-  }, [ready, filter, actingCellId, actingBuscentreId]);
-
-  useEffect(() => { load(); }, [load]);
-
-  function handleUpdated(id: string, status: ReachOutStatus, note: string | null) {
-    setFirstTimers((prev) => prev.map((ft) =>
-      ft.id === id ? { ...ft, reachOutStatus: status, reachOutNote: note } : ft
-    ));
-    // Refresh summary counts after a status change
-    load();
   }
 
   const summaryCards = [
@@ -389,10 +425,13 @@ export default function FirstTimersPage() {
       </div>
 
       {/* List */}
+      {loadError && firstTimers.length > 0 && <StaleNotice onRetry={load} />}
       {loading ? (
         <div className="flex flex-col gap-2">
           {[...Array(5)].map((_, i) => <div key={i} className="skeleton h-16 rounded-xl" />)}
         </div>
+      ) : loadError && firstTimers.length === 0 ? (
+        <LoadError compact message={loadError} onRetry={load} />
       ) : firstTimers.length === 0 ? (
         <div className="rounded-xl p-12 text-center" style={{ border: "1px solid var(--brand-border)" }}>
           <Users style={{ width: 40, height: 40, color: "var(--brand-muted)", margin: "0 auto 12px" }} />
@@ -404,7 +443,8 @@ export default function FirstTimersPage() {
           </p>
         </div>
       ) : (
-        <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
+        <div className="rounded-xl overflow-hidden transition-opacity"
+             style={{ border: "1px solid var(--brand-border)", opacity: switching ? 0.55 : 1 }}>
           {/* Column headers */}
           <div className="px-4 py-2.5 flex items-center"
                style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--brand-border)" }}>
@@ -418,7 +458,7 @@ export default function FirstTimersPage() {
             </span>
           </div>
           {firstTimers.map((ft) => (
-            <FTRow key={ft.id} ft={ft} onUpdated={handleUpdated} />
+            <FTRow key={ft.id} ft={ft} onSave={saveReachOut} />
           ))}
         </div>
       )}

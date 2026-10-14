@@ -58,6 +58,7 @@ export async function GET(request: Request) {
     orderBy: { date: "desc" },
     include: {
       recordedBy: { select: { name: true } },
+      wonBy:      { select: { id: true, firstName: true, lastName: true } },
     },
   });
 
@@ -70,7 +71,7 @@ export async function POST(request: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const body = await request.json();
-  const { firstName, lastName, phone, location, date, notes, actingCellId } = body;
+  const { firstName, lastName, phone, location, date, notes, actingCellId, wonByMemberId } = body;
 
   if (!firstName?.trim() || !lastName?.trim() || !date) {
     return NextResponse.json({ error: "firstName, lastName and date are required" }, { status: 400 });
@@ -80,6 +81,16 @@ export async function POST(request: Request) {
   if (cellResult && typeof cellResult === "object") return NextResponse.json(cellResult, { status: 403 });
   const cellId = cellResult as string | null;
   if (!cellId) return NextResponse.json({ error: "No cell assigned" }, { status: 400 });
+
+  // Who won them: the evangelist picked on the form, otherwise whoever is recording (if they're a member)
+  let wonBy: string | null = null;
+  if (wonByMemberId) {
+    const m = await prisma.member.findUnique({ where: { id: wonByMemberId }, select: { id: true } });
+    if (!m) return NextResponse.json({ error: "The evangelist you picked wasn't found" }, { status: 400 });
+    wonBy = m.id;
+  } else {
+    wonBy = (await prisma.member.findUnique({ where: { userId: session.user.id }, select: { id: true } }))?.id ?? null;
+  }
 
   const soul = await prisma.soul.create({
     data: {
@@ -91,8 +102,12 @@ export async function POST(request: Request) {
       notes:        notes?.trim()    || null,
       cellId,
       recordedById: session.user.id,
+      wonByMemberId: wonBy,
     },
-    include: { recordedBy: { select: { name: true } } },
+    include: {
+      recordedBy: { select: { name: true } },
+      wonBy:      { select: { id: true, firstName: true, lastName: true } },
+    },
   });
 
   return NextResponse.json(soul, { status: 201 });

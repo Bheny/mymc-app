@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
+import { fetchJson } from "@/lib/fetch-json";
+import { LoadError } from "@/components/load-error";
 import {
   Heart, Plus, Search, Pencil, Trash2, X,
   Phone, MapPin, Calendar, StickyNote, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveRole } from "@/hooks/use-active-role";
+import { MemberPicker, type PickedMember } from "@/components/member-picker";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,6 +23,7 @@ type Soul = {
   notes:       string | null;
   createdAt:   string;
   recordedBy:  { name: string | null };
+  wonBy:       { id: string; firstName: string; lastName: string } | null;
 };
 
 type FormState = {
@@ -29,6 +33,7 @@ type FormState = {
   location:  string;
   date:      string;
   notes:     string;
+  wonBy:     PickedMember | null;
 };
 
 function emptyForm(): FormState {
@@ -39,6 +44,7 @@ function emptyForm(): FormState {
     location:  "",
     date:      new Date().toISOString().slice(0, 10),
     notes:     "",
+    wonBy:     null,
   };
 }
 
@@ -64,7 +70,7 @@ function SoulForm({
   error:    string;
 }) {
   const [form, setForm] = useState<FormState>(initial);
-  const set = (k: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const set = (k: Exclude<keyof FormState, "wonBy">) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
   return (
@@ -115,6 +121,14 @@ function SoulForm({
                    style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", outline: "none" }} />
           </div>
         </div>
+      </div>
+
+      {/* Who won them */}
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[11px] font-medium uppercase tracking-[0.04em]"
+               style={{ color: "var(--brand-muted)" }}>Won by</label>
+        <MemberPicker value={form.wonBy} onChange={(m) => setForm((f) => ({ ...f, wonBy: m }))}
+                      placeholder="Search the member who won them — leave empty to credit yourself" />
       </div>
 
       {/* Notes */}
@@ -173,9 +187,9 @@ function SoulRow({
             <p className="text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>
               {soul.firstName} {soul.lastName}
             </p>
-            {soul.recordedBy.name && (
+            {(soul.wonBy || soul.recordedBy.name) && (
               <p className="text-[11px]" style={{ color: "var(--brand-muted)" }}>
-                by {soul.recordedBy.name}
+                {soul.wonBy ? `won by ${soul.wonBy.firstName} ${soul.wonBy.lastName}` : `by ${soul.recordedBy.name}`}
               </p>
             )}
           </div>
@@ -253,9 +267,14 @@ export default function SoulTrackerPage() {
   const [saving,   setSaving]   = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  const [loadError, setLoadError] = useState("");
+  const loadSeq = useRef(0);
+
   const load = useCallback(async () => {
     if (!ready) return;
+    const seq = ++loadSeq.current;
     setLoading(true);
+    setLoadError("");
     const params = new URLSearchParams();
     if (actingCellId) params.set("actingCellId", actingCellId);
     if (q)            params.set("q", q);
@@ -263,9 +282,14 @@ export default function SoulTrackerPage() {
       const [y, m] = month.split("-");
       params.set("year", y); params.set("month", m);
     }
-    const res = await fetch(`/api/souls?${params}`);
-    if (res.ok) setSouls(await res.json());
-    setLoading(false);
+    try {
+      const data = await fetchJson<Soul[]>(`/api/souls?${params}`);
+      if (seq === loadSeq.current) setSouls(data);
+    } catch (e) {
+      if (seq === loadSeq.current) setLoadError((e as Error).message);
+    } finally {
+      if (seq === loadSeq.current) setLoading(false);
+    }
   }, [ready, actingCellId, q, month]);
 
   useEffect(() => { load(); }, [load]);
@@ -288,7 +312,7 @@ export default function SoulTrackerPage() {
 
     const res = await fetch(url, {
       method, headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, actingCellId }),
+      body: JSON.stringify({ ...form, wonBy: undefined, wonByMemberId: form.wonBy?.id ?? null, actingCellId }),
     });
     setSaving(false);
     if (res.ok) {
@@ -354,7 +378,8 @@ export default function SoulTrackerPage() {
             initial={editing
               ? { firstName: editing.firstName, lastName: editing.lastName,
                   phone: editing.phone ?? "", location: editing.location ?? "",
-                  date: editing.date.slice(0, 10), notes: editing.notes ?? "" }
+                  date: editing.date.slice(0, 10), notes: editing.notes ?? "",
+                  wonBy: editing.wonBy ? { id: editing.wonBy.id, name: `${editing.wonBy.firstName} ${editing.wonBy.lastName}` } : null }
               : emptyForm()}
             onSave={handleSave}
             onCancel={() => { setAdding(false); setEditing(null); setFormErr(""); }}
@@ -422,6 +447,8 @@ export default function SoulTrackerPage() {
         <div className="flex flex-col gap-3">
           {[...Array(5)].map((_, i) => <div key={i} className="skeleton h-14 rounded-xl" />)}
         </div>
+      ) : loadError ? (
+        <LoadError compact message={loadError} onRetry={load} />
       ) : souls.length === 0 ? (
         <div className="rounded-xl py-16 flex flex-col items-center gap-3"
              style={{ border: "2px dashed var(--brand-border)" }}>

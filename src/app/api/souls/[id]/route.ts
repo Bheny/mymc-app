@@ -13,7 +13,13 @@ export async function PATCH(request: Request, { params }: Params) {
   const soul = await prisma.soul.findUnique({ where: { id: params.id } });
   if (!soul) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const { firstName, lastName, phone, location, date, notes } = await request.json();
+  const { firstName, lastName, phone, location, date, notes, wonByMemberId } = await request.json();
+
+  // undefined = leave as is · null/"" = nobody credited · an id = that member
+  if (wonByMemberId) {
+    const m = await prisma.member.findUnique({ where: { id: wonByMemberId }, select: { id: true } });
+    if (!m) return NextResponse.json({ error: "The evangelist you picked wasn't found" }, { status: 400 });
+  }
 
   const updated = await prisma.soul.update({
     where: { id: params.id },
@@ -24,8 +30,12 @@ export async function PATCH(request: Request, { params }: Params) {
       ...(location  !== undefined && { location:  location?.trim() || null }),
       ...(date      !== undefined && { date:      new Date(date) }),
       ...(notes     !== undefined && { notes:     notes?.trim()    || null }),
+      ...(wonByMemberId !== undefined && { wonByMemberId: wonByMemberId || null }),
     },
-    include: { recordedBy: { select: { name: true } } },
+    include: {
+      recordedBy: { select: { name: true } },
+      wonBy:      { select: { id: true, firstName: true, lastName: true } },
+    },
   });
 
   return NextResponse.json(updated);

@@ -12,7 +12,7 @@ type Source = {
   directoryGid?: string | null; directoryTabName?: string | null; mcPastor?: string | null;
 };
 type ChurchDirectory = { url: string; gid: string; tabName: string | null };
-type Config = { label: string | null; sources: Source[]; directory?: ChurchDirectory | null };
+type Config = { label: string | null; sources: Source[]; directory?: ChurchDirectory | null; firstTimers?: ChurchDirectory | null };
 type ChurchStatus = { count: number } | { error: string };
 type Status =
   | { ok: true; rowCount: number; headers: string[]; directoryCount?: number; directoryError?: string }
@@ -189,10 +189,20 @@ function SourceEditor({
   );
 }
 
-/** The shared church directory: a link + the tab that lists cell → bacenta → MC. */
-function ChurchDirectoryEditor({
-  url, gid, error, onChange,
+/**
+ * A single shared tab elsewhere in a sheet — a link plus the tab to read. Used for the
+ * church directory and for the first timers registrations.
+ */
+function SharedTabEditor({
+  id, title, description, suggestKey, shortcut, url, gid, error, onChange,
 }: {
+  id: string;
+  title: string;
+  description: React.ReactNode;
+  /** Which tab the server suggests once it has listed the link's tabs */
+  suggestKey: "suggestedDirectory" | "suggestedFirstTimers";
+  /** One-click way to reuse a link already entered elsewhere */
+  shortcut?: { label: string; url: string };
   url: string; gid: string; error?: string;
   onChange: (patch: { url?: string; gid?: string }) => void;
 }) {
@@ -211,7 +221,7 @@ function ChurchDirectoryEditor({
         if (!alive) return;
         const list: Tab[] = d.tabs ?? [];
         setTabs(list);
-        if (!list.some((x) => x.gid === gid)) onChange({ gid: d.suggestedDirectory ?? list[0]?.gid ?? "" });
+        if (!list.some((x) => x.gid === gid)) onChange({ gid: d[suggestKey] ?? list[0]?.gid ?? "" });
       } catch {
         if (alive) setTabs([]);
       } finally {
@@ -226,30 +236,32 @@ function ChurchDirectoryEditor({
     <div className="flex flex-col gap-3 rounded-lg p-3"
          style={{ border: `1px solid ${error ? "var(--red-200)" : "var(--brand-border)"}`, background: error ? "var(--red-50b)" : "var(--brand-navy-light)" }}>
       <div>
-        <p className="text-[12px] font-semibold" style={{ color: "var(--brand-text)" }}>Church directory</p>
-        <p className="text-[11px] mt-0.5" style={{ color: "var(--brand-muted)" }}>
-          One tab listing every cell with its bacenta, senior shepherd, cell shepherd and MC (and MC sections like
-          &ldquo;LAMPO MC — Pastor Che&rdquo;). Each cell&apos;s MC and bacenta come from here, so restructuring is just
-          an edit to this tab — no new sheets needed.
-        </p>
+        <p className="text-[12px] font-semibold" style={{ color: "var(--brand-text)" }}>{title}</p>
+        <p className="text-[11px] mt-0.5" style={{ color: "var(--brand-muted)" }}>{description}</p>
       </div>
       <div className="flex flex-col gap-1.5">
-        <label htmlFor="church-dir-url" className={fieldLabel} style={{ color: "var(--brand-muted)" }}>
+        <label htmlFor={`${id}-url`} className={fieldLabel} style={{ color: "var(--brand-muted)" }}>
           Link <span className="normal-case tracking-normal font-normal">(optional)</span>
         </label>
-        <Input id="church-dir-url" value={url} onChange={(e) => onChange({ url: e.target.value })}
+        <Input id={`${id}-url`} value={url} onChange={(e) => onChange({ url: e.target.value })}
                placeholder="https://docs.google.com/spreadsheets/d/…" inputMode="url"
                className="h-10 text-[14px] bg-[var(--surface)]" style={{ borderColor: "var(--brand-border)" }} />
+        {shortcut && url.trim() !== shortcut.url.trim() && (
+          <button type="button" onClick={() => onChange({ url: shortcut.url })}
+                  className="self-start text-[12px] font-medium hover:underline" style={{ color: "var(--brand-link)" }}>
+            {shortcut.label}
+          </button>
+        )}
       </div>
       {(tabs.length > 0 || loading) && (
         <div className="flex flex-col gap-1.5">
-          <label htmlFor="church-dir-tab" className={fieldLabel} style={{ color: "var(--brand-muted)" }}>Tab</label>
+          <label htmlFor={`${id}-tab`} className={fieldLabel} style={{ color: "var(--brand-muted)" }}>Tab</label>
           {loading && !tabs.length ? (
             <p className="text-[12px] flex items-center gap-1.5" style={{ color: "var(--brand-muted)" }}>
               <Loader2 className="h-3.5 w-3.5 animate-spin" /> Finding tabs…
             </p>
           ) : (
-            <select id="church-dir-tab" value={gid} onChange={(e) => onChange({ gid: e.target.value })}
+            <select id={`${id}-tab`} value={gid} onChange={(e) => onChange({ gid: e.target.value })}
                     className="h-10 px-3 text-[14px] rounded-lg"
                     style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
               {tabs.map((t) => <option key={t.gid} value={t.gid}>{t.name}</option>)}
@@ -284,6 +296,10 @@ export function LegacySheetSettings() {
   const [dirGid,   setDirGid]   = useState("");
   const [dirError, setDirError] = useState("");
   const [church,   setChurch]   = useState<ChurchStatus | null>(null);
+  const [ftUrl,    setFtUrl]    = useState("");
+  const [ftGid,    setFtGid]    = useState("");
+  const [ftError,  setFtError]  = useState("");
+  const [ftStatus, setFtStatus] = useState<ChurchStatus | null>(null);
 
   async function load(check = true) {
     const res = await fetch(`/api/settings/legacy-sheet${check ? "?check=1" : ""}`);
@@ -293,6 +309,7 @@ export function LegacySheetSettings() {
     setConfig(d.config);
     setStatus(d.status);
     setChurch(d.church ?? null);
+    setFtStatus(d.firstTimers ?? null);
     setEditing(!d.config);
   }
 
@@ -311,7 +328,9 @@ export function LegacySheetSettings() {
       : [newDraft()]);
     setDirUrl(config?.directory?.url ?? "");
     setDirGid(config?.directory?.gid ?? "");
-    setErrors({}); setError(""); setDirError("");
+    setFtUrl(config?.firstTimers?.url ?? "");
+    setFtGid(config?.firstTimers?.gid ?? "");
+    setErrors({}); setError(""); setDirError(""); setFtError("");
     setEditing(true);
   }
 
@@ -323,12 +342,13 @@ export function LegacySheetSettings() {
 
   async function save(e: React.FormEvent) {
     e.preventDefault();
-    setBusy("save"); setError(""); setErrors({}); setDirError("");
+    setBusy("save"); setError(""); setErrors({}); setDirError(""); setFtError("");
     const res = await fetch("/api/settings/legacy-sheet", {
       method: "PUT", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         label: config?.label ?? null,
         directory: dirUrl.trim() ? { url: dirUrl.trim(), gid: dirGid || undefined } : null,
+        firstTimers: ftUrl.trim() ? { url: ftUrl.trim(), gid: ftGid || undefined } : null,
         sources: drafts.map((d) => ({
           id: d.id, name: d.name, url: d.url, gid: d.gid || undefined,
           directoryGid: d.directoryGid, mcPastor: d.mcPastor,
@@ -339,11 +359,13 @@ export function LegacySheetSettings() {
     setBusy(null);
     if (!res.ok) {
       if (d.directoryError) { setDirError(d.error); return; }
+      if (d.firstTimersError) { setFtError(d.error); return; }
       setErrors(d.errors ?? {}); setError(d.error ?? "Could not save."); return;
     }
     setConfig(d.config);
     setStatus(d.status);
     setChurch(d.church ?? null);
+    setFtStatus(d.firstTimers ?? null);
     setEditing(false);
   }
 
@@ -358,7 +380,8 @@ export function LegacySheetSettings() {
     setBusy("remove");
     await fetch("/api/settings/legacy-sheet", { method: "DELETE" });
     setBusy(null);
-    setConfig(null); setStatus(null); setChurch(null); setDirUrl(""); setDirGid(""); setDrafts([newDraft()]); setEditing(true);
+    setConfig(null); setStatus(null); setChurch(null); setFtStatus(null);
+    setDirUrl(""); setDirGid(""); setFtUrl(""); setFtGid(""); setDrafts([newDraft()]); setEditing(true);
   }
 
   return (
@@ -378,12 +401,37 @@ export function LegacySheetSettings() {
 
         {editing ? (
           <form onSubmit={save} className="flex flex-col gap-3 px-4 py-4">
-            <ChurchDirectoryEditor
+            <SharedTabEditor
+              id="church-dir"
+              title="Church directory"
+              description={<>
+                One tab listing every cell with its bacenta, senior shepherd, cell shepherd and MC (and MC sections like
+                &ldquo;LAMPO MC — Pastor Che&rdquo;). Each cell&apos;s MC and bacenta come from here, so restructuring is just
+                an edit to this tab — no new sheets needed.
+              </>}
+              suggestKey="suggestedDirectory"
               url={dirUrl} gid={dirGid} error={dirError}
               onChange={(p) => {
                 if (p.url !== undefined) setDirUrl(p.url);
                 if (p.gid !== undefined) setDirGid(p.gid);
                 setDirError("");
+              }}
+            />
+            <SharedTabEditor
+              id="first-timers"
+              title="First timers"
+              description={<>
+                The tab the first-timers registration form writes to (names, MC, handler and follow-up status). The
+                dashboard summarises it by month, MC, campus, department and who&apos;s following up. Names and phone
+                numbers are read on the server and never sent to the browser.
+              </>}
+              suggestKey="suggestedFirstTimers"
+              shortcut={dirUrl.trim() ? { label: "Use the church directory's file", url: dirUrl } : undefined}
+              url={ftUrl} gid={ftGid} error={ftError}
+              onChange={(p) => {
+                if (p.url !== undefined) setFtUrl(p.url);
+                if (p.gid !== undefined) setFtGid(p.gid);
+                setFtError("");
               }}
             />
             <p className="text-[11px] font-semibold uppercase tracking-[0.07em] mt-1" style={{ color: "var(--brand-muted)" }}>
@@ -462,6 +510,35 @@ export function LegacySheetSettings() {
             ) : (
               <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>
                 No church directory — each sheet is treated as one MC. Add one under Edit sheets to group cells into MCs by the directory.
+              </p>
+            )}
+
+            {config.firstTimers ? (
+              <div className="rounded-lg px-3 py-2.5 flex flex-col gap-1"
+                   style={{ background: ftStatus && "error" in ftStatus ? "var(--tint-danger-bg)" : ftStatus ? "var(--tint-ok-bg)" : "var(--brand-navy-light)" }}>
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>First timers</span>
+                  <a href={config.firstTimers.url} target="_blank" rel="noopener noreferrer" aria-label="Open the first timers tab in Google Sheets"
+                     className="text-[12px] inline-flex items-center gap-1 hover:underline shrink-0" style={{ color: "var(--brand-link)" }}>
+                    Open <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+                {config.firstTimers.tabName && (
+                  <span className="text-[12px]" style={{ color: "var(--brand-muted)" }}>Tab: {config.firstTimers.tabName}</span>
+                )}
+                {ftStatus && ("error" in ftStatus ? (
+                  <span className="text-[12px] flex items-start gap-1.5" style={{ color: "var(--tint-danger-fg)" }}>
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" /> {ftStatus.error}
+                  </span>
+                ) : (
+                  <span className="text-[12px] flex items-center gap-1.5" style={{ color: "var(--tint-ok-fg)" }}>
+                    <CheckCircle2 className="h-3.5 w-3.5" /> {ftStatus.count} registrations — summarised on the Legacy page
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>
+                No first timers tab — add one under Edit sheets to see registrations and follow-up on the Legacy page.
               </p>
             )}
 

@@ -1,6 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import useSWR from "swr";
+import { FetchError } from "@/lib/fetch-json";
+import { LoadError } from "@/components/load-error";
 import { useCapacityLimits } from "@/hooks/use-capacity-limits";
 import Link from "next/link";
 import {
@@ -528,12 +531,7 @@ export function BuscentreDashboard({ buscentreId }: { buscentreId?: string }) {
   // reserved for the buscentre's own page or a real acting-up grant.
   const readOnly = !!buscentreId;
 
-  const [overview, setOverview] = useState<BuscentreOverview | null>(null);
-  const [cells,    setCells]    = useState<CellInfo[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState("");
-
-  const { activeView } = useActiveRole();
+  const { activeView, ready } = useActiveRole();
   const actingBuscentreId = activeView?.isActing && activeView.buscentreId ? activeView.buscentreId : null;
   // An explicit buscentreId (drill-down route) always wins over the acting-up override —
   // it's a deliberate "go view this node" action, not a permission switch.
@@ -541,28 +539,18 @@ export function BuscentreDashboard({ buscentreId }: { buscentreId?: string }) {
     ? `?viewBuscentreId=${buscentreId}`
     : actingBuscentreId ? `?actingBuscentreId=${actingBuscentreId}` : "";
 
-  async function load() {
-    setLoading(true);
-    const [ovRes, cellsRes] = await Promise.all([
-      fetch(`/api/buscentre/overview${queryParam}`),
-      fetch(`/api/buscentre/cells${queryParam}`),
-    ]);
+  // Cached by URL: coming back shows the last data at once and refreshes it quietly,
+  // and nothing here ever swaps the page for a skeleton after the first load.
+  const { data: overview, error: loadErr, mutate } =
+    useSWR<BuscentreOverview>(ready ? `/api/buscentre/overview${queryParam}` : null);
+  const { data: cellsData, mutate: mutateCells } =
+    useSWR<{ cells?: CellInfo[] }>(ready ? `/api/buscentre/cells${queryParam}` : null);
+  const cells = cellsData?.cells ?? [];
+  const error = loadErr instanceof FetchError && loadErr.status ? loadErr.message : "";
+  const load  = () => { mutate(); mutateCells(); };
 
-    if (ovRes.ok && cellsRes.ok) {
-      const [ovData, cellsData] = await Promise.all([ovRes.json(), cellsRes.json()]);
-      setOverview(ovData);
-      setCells(cellsData.cells ?? []);
-    } else {
-      const d = await ovRes.json().catch(() => ({}));
-      setError(d.error ?? "Failed to load buscentre data.");
-    }
-    setLoading(false);
-  }
-
-  // Re-fetch whenever the active role or the drilled-into buscentre changes
-  useEffect(() => { load(); }, [buscentreId, actingBuscentreId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  if (loading) return <Skeleton />;
+  if (!overview && loadErr && !error) return <LoadError message={loadErr.message} onRetry={load} />;
+  if (!overview && !error) return <Skeleton />;
 
   if (error || !overview) {
     return (

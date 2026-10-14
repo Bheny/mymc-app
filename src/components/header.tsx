@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
 import Link from "next/link";
 import { Bell, UserCircle, Settings, LogOut, CheckCheck, Users, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/hooks/use-theme";
@@ -26,21 +27,28 @@ type Notification = {
 
 export function Header({ mcHeadName }: { mcHeadName: string }) {
   const { theme, toggle: toggleTheme } = useTheme();
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [notifOpen,     setNotifOpen]     = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/me/notifications")
-      .then((r) => r.json())
-      .then((d) => { if (Array.isArray(d)) setNotifications(d); })
-      .catch(() => {});
-  }, []);
+  // Cached, and re-checked every minute while the app is open (paused when it's in the
+  // background), so new notifications show up without a reload
+  const { data: notifData, mutate: mutateNotifications } =
+    useSWR<Notification[]>("/api/me/notifications", { refreshInterval: 60_000 });
+  const notifications = Array.isArray(notifData) ? notifData : [];
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   async function markAllRead() {
-    await fetch("/api/me/notifications/read-all", { method: "PATCH" });
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    // They read at once; if the save fails they simply stay unread
+    try {
+      await mutateNotifications(
+        async (current) => {
+          const res = await fetch("/api/me/notifications/read-all", { method: "PATCH" });
+          if (!res.ok) throw new Error("not saved");
+          return current?.map((n) => ({ ...n, read: true }));
+        },
+        { optimisticData: (current) => (current ?? []).map((n) => ({ ...n, read: true })), rollbackOnError: true, revalidate: false },
+      );
+    } catch { /* rolled back */ }
   }
 
   const handleLogout = async () => {

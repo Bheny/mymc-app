@@ -1,10 +1,26 @@
 import { withAuth } from "next-auth/middleware"
+import { NextResponse } from "next/server"
 
-export default withAuth({
-  pages: {
-    signIn: "/login",
+// This is the middleware Next.js runs (the app lives in src/, so a root-level
+// middleware.ts would be ignored).
+export default withAuth(
+  function middleware(req) {
+    // First login: a temporary password must be replaced before anything else
+    if (req.nextauth.token?.mustChangePassword && req.nextUrl.pathname !== "/change-password") {
+      return NextResponse.redirect(new URL("/change-password", req.url))
+    }
+    return NextResponse.next()
   },
-})
+  {
+    callbacks: {
+      // Only signed-in users reach the function above; others go to /login
+      authorized: ({ token }) => !!token,
+    },
+    pages: {
+      signIn: "/login",
+    },
+  },
+)
 
 export const config = {
   matcher: [
@@ -20,4 +36,3 @@ export const config = {
     "/((?!api|_next/static|_next/image|favicon.ico|login|l/).*)",
   ],
 }
-

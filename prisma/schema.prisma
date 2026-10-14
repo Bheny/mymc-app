@@ -12,10 +12,10 @@ datasource db {
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 enum ServiceType {
-  LC_LIVE            // Wednesday service
-  MGS                // Sunday service (Mega Gospel Service)
-  SHEPHERDS_MEETING  // Friday shepherds meeting
-  SPECIAL_MEETING    // Ad-hoc program with guest minister / prophet
+  LC_LIVE // Wednesday service
+  MGS // Sunday service (Mega Gospel Service)
+  SHEPHERDS_MEETING // Friday shepherds meeting
+  SPECIAL_MEETING // Ad-hoc program with guest minister / prophet
 }
 
 enum ServiceMode {
@@ -85,7 +85,7 @@ model User {
   id            String    @id @default(cuid())
   email         String    @unique
   emailVerified DateTime? @map("email_verified")
-  password      String?   // bcrypt hash — null until account is activated
+  password      String? // bcrypt hash — null until account is activated
   name          String?
   image         String?
 
@@ -93,7 +93,7 @@ model User {
   isActive           Boolean   @default(true) @map("is_active")
   activatedAt        DateTime? @map("activated_at")
   activatedById      String?   @map("activated_by_id")
-  rank               String?   // "Reverend" | "Pastor" | "Senior Shepherd" | "Shepherd" | "Member"
+  rank               String? // "Reverend" | "Pastor" | "Senior Shepherd" | "Shepherd" | "Member"
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
@@ -102,23 +102,29 @@ model User {
   supervisorId String? @map("supervisor_id")
 
   // Relations
-  role             UserRole?
-  shepherd         Shepherd?
-  member           Member?           @relation("MemberUser")
-  supervisor       User?             @relation("Supervision", fields: [supervisorId], references: [id], onDelete: SetNull)
-  supervisees      User[]            @relation("Supervision")
-  activatedBy      User?             @relation("ActivatedBy", fields: [activatedById], references: [id], onDelete: SetNull)
-  activatedUsers   User[]            @relation("ActivatedBy")
-  actingUpFlags    ActingUpFlag[]
-  capacityWarnings CapacityWarning[]
-  servicesCreated  Service[]     @relation("ServiceCreatedBy")
-  attendanceMarked Attendance[]  @relation("AttendanceMarkedBy")
-  firstTimersRecorded  FirstTimer[] @relation("FirstTimerRecordedBy")
-  firstTimersConverted FirstTimer[] @relation("FirstTimerConvertedBy")
+  role                 UserRole?
+  shepherd             Shepherd?
+  member               Member?              @relation("MemberUser")
+  supervisor           User?                @relation("Supervision", fields: [supervisorId], references: [id], onDelete: SetNull)
+  supervisees          User[]               @relation("Supervision")
+  activatedBy          User?                @relation("ActivatedBy", fields: [activatedById], references: [id], onDelete: SetNull)
+  activatedUsers       User[]               @relation("ActivatedBy")
+  actingUpFlags        ActingUpFlag[]
+  capacityWarnings     CapacityWarning[]
+  servicesCreated      Service[]            @relation("ServiceCreatedBy")
+  attendanceMarked     Attendance[]         @relation("AttendanceMarkedBy")
+  firstTimersRecorded  FirstTimer[]         @relation("FirstTimerRecordedBy")
+  firstTimersConverted FirstTimer[]         @relation("FirstTimerConvertedBy")
   notifications        Notification[]
-  soulsRecorded        Soul[]       @relation("SoulRecordedBy")
+  soulsRecorded        Soul[]               @relation("SoulRecordedBy")
   memberStatusChanges  MemberStatusChange[] @relation("StatusChangedBy")
+  memberMovesMade      MemberMove[]         @relation("MemberMovedBy")
   libraryItems         LibraryItem[]        @relation("LibraryItemCreatedBy")
+  outreachesCreated    Outreach[]           @relation("OutreachCreatedBy")
+  encountersRecorded   Encounter[]          @relation("EncounterRecordedBy")
+  contactActivities    ContactActivity[]    @relation("ContactActivityBy")
+  guestVisitsRecorded  GuestVisit[]         @relation("GuestVisitBy")
+  contactConversations Contact[]            @relation("ContactConversationBy")
 
   shepherdCandidatesRecommended ShepherdCandidate[] @relation("CandidateRecommendedBy")
   shepherdCandidatesCertified   ShepherdCandidate[] @relation("CandidateCertifiedBy")
@@ -138,6 +144,8 @@ model Branch {
   userRoles    UserRole[]
   departments  Department[]
   libraryItems LibraryItem[]
+  outreaches   Outreach[]
+  contacts     Contact[]
 
   @@map("branches")
 }
@@ -149,11 +157,13 @@ model MegaChurch {
   createdAt DateTime @default(now()) @map("created_at")
 
   // No capacity limit — unlimited MCs per Branch
-  branch     Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
-  buscentres Buscentre[]
-  userRoles  UserRole[]
-  members    Member[]    // MC-level members (MC Pastors, etc.)
+  branch       Branch        @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  buscentres   Buscentre[]
+  userRoles    UserRole[]
+  members      Member[] // MC-level members (MC Pastors, etc.)
   libraryItems LibraryItem[]
+  outreaches   Outreach[]
+  contacts     Contact[]
 
   @@map("mega_churches")
 }
@@ -166,10 +176,12 @@ model Buscentre {
   createdAt DateTime @default(now()) @map("created_at")
 
   // Max per MegaChurch — configurable (CapacityLimit "buscentre")
-  mc        MegaChurch @relation(fields: [mcId], references: [id], onDelete: Cascade)
-  cells     Cell[]
-  userRoles UserRole[]
-  members   Member[]   // buscentre-level members (Buscentre Heads, etc.)
+  mc         MegaChurch @relation(fields: [mcId], references: [id], onDelete: Cascade)
+  cells      Cell[]
+  userRoles  UserRole[]
+  members    Member[] // buscentre-level members (Buscentre Heads, etc.)
+  outreaches Outreach[]
+  contacts   Contact[]
 
   @@map("buscentres")
 }
@@ -182,14 +194,16 @@ model Cell {
   createdAt   DateTime @default(now()) @map("created_at")
 
   // Max per Buscentre — configurable (CapacityLimit "cell")
-  buscentre    Buscentre    @relation(fields: [buscentreId], references: [id], onDelete: Cascade)
-  shepherds    Shepherd[]
-  members      Member[]
-  userRoles    UserRole[]
-  services     Service[]
-  firstTimers  FirstTimer[]
-  souls        Soul[]
+  buscentre          Buscentre           @relation(fields: [buscentreId], references: [id], onDelete: Cascade)
+  shepherds          Shepherd[]
+  members            Member[]
+  userRoles          UserRole[]
+  services           Service[]
+  firstTimers        FirstTimer[]
+  souls              Soul[]
   shepherdCandidates ShepherdCandidate[]
+  outreaches         Outreach[]
+  contacts           Contact[]
 
   @@map("cells")
 }
@@ -197,7 +211,7 @@ model Cell {
 model Shepherd {
   id        String   @id @default(cuid())
   cellId    String   @map("cell_id")
-  userId    String?  @unique @map("user_id")   // set when fully activated (system login)
+  userId    String?  @unique @map("user_id") // set when fully activated (system login)
   memberId  String?  @unique @map("member_id") // set when named but not yet activated
   createdAt DateTime @default(now()) @map("created_at")
 
@@ -212,17 +226,17 @@ model Shepherd {
 }
 
 model Member {
-  id          String    @id @default(cuid())
+  id String @id @default(cuid())
 
   // Hierarchy placement — exactly one level is populated:
   //   Regular member  → shepherdId + cellId
   //   Cell-level      → cellId only (e.g. acting cell shepherd without system access)
   //   Buscentre-level → buscentreId only (e.g. Buscentre Head)
   //   MC-level        → mcId only (e.g. MC Pastor)
-  shepherdId  String?   @map("shepherd_id")
-  cellId      String?   @map("cell_id")
-  buscentreId String?   @map("buscentre_id")
-  mcId        String?   @map("mc_id")
+  shepherdId  String? @map("shepherd_id")
+  cellId      String? @map("cell_id")
+  buscentreId String? @map("buscentre_id")
+  mcId        String? @map("mc_id")
 
   firstName   String    @map("first_name")
   lastName    String    @map("last_name")
@@ -236,13 +250,13 @@ model Member {
   createdAt   DateTime  @default(now()) @map("created_at")
 
   // Extended profile — collected over time, not required at creation
-  hometown              String?  @map("hometown")
-  previousChurch        String?  @map("previous_church")
-  parentName            String?  @map("parent_name")
-  parentPhone           String?  @map("parent_phone")
-  emergencyName         String?  @map("emergency_name")
-  emergencyPhone        String?  @map("emergency_phone")
-  emergencyRelation     String?  @map("emergency_relation")
+  hometown          String? @map("hometown")
+  previousChurch    String? @map("previous_church")
+  parentName        String? @map("parent_name")
+  parentPhone       String? @map("parent_phone")
+  emergencyName     String? @map("emergency_name")
+  emergencyPhone    String? @map("emergency_phone")
+  emergencyRelation String? @map("emergency_relation")
 
   // Employment / profession — salary visibility is restricted to cell_shepherd+ in the API layer
   isEmployed  Boolean?     @map("is_employed")
@@ -259,20 +273,22 @@ model Member {
   schoolName     String?      @map("school_name")
   programOfStudy String?      @map("program_of_study")
 
-  shepherd  Shepherd?   @relation(fields: [shepherdId],  references: [id])
-  cell      Cell?       @relation(fields: [cellId],      references: [id])
+  shepherd  Shepherd?   @relation(fields: [shepherdId], references: [id])
+  cell      Cell?       @relation(fields: [cellId], references: [id])
   buscentre Buscentre?  @relation(fields: [buscentreId], references: [id])
-  mc        MegaChurch? @relation(fields: [mcId],        references: [id])
+  mc        MegaChurch? @relation(fields: [mcId], references: [id])
 
   // Set when this member is activated as a system user
-  userId String?  @unique @map("user_id")
-  user   User?    @relation("MemberUser", fields: [userId], references: [id], onDelete: SetNull)
+  userId String? @unique @map("user_id")
+  user   User?   @relation("MemberUser", fields: [userId], references: [id], onDelete: SetNull)
 
   // Back-relation: this member IS a shepherd in a slot (named but not yet activated)
-  shepherdRole         Shepherd?   @relation("ShepherdPerson")
-  attendance           Attendance[]
-  firstTimerConversion FirstTimer? @relation("FirstTimerConversion")
-  departments          MemberDepartment[]
+  shepherdRole          Shepherd?          @relation("ShepherdPerson")
+  attendance            Attendance[]
+  firstTimerConversion  FirstTimer?        @relation("FirstTimerConversion")
+  soulsWon              Soul[]             @relation("SoulWonBy")
+  firstTimersBrought    FirstTimer[]       @relation("FirstTimerBroughtBy")
+  departments           MemberDepartment[]
   departmentLeaderRoles DepartmentLeader[]
 
   // Back-relation: this member has been put forward to become a shepherd
@@ -280,6 +296,17 @@ model Member {
 
   // Active ⇄ inactive history (latest row explains the current status)
   statusChanges MemberStatusChange[]
+
+  // Where this member has been placed over time
+  moves MemberMove[]
+
+  // Evangelism — outreaches led / joined, people met, contacts followed up,
+  // and the contact (if any) this member originally came in as
+  outreachesLed     Outreach[]           @relation("OutreachLead")
+  outreachTeams     OutreachTeamMember[]
+  encountersMade    Encounter[]          @relation("EncounterMetBy")
+  contactsFollowing Contact[]            @relation("ContactFollowUpOwner")
+  originContact     Contact?             @relation("ContactConversion")
 
   @@map("members")
 }
@@ -297,6 +324,23 @@ model AppSetting {
   @@map("app_settings")
 }
 
+// ─── Recognition snapshots ────────────────────────────────────────────────────
+
+// A closed month's Recognition results, frozen at the moment they were generated so an award
+// doesn't shift if records are edited later. One row per branch per month ("YYYY-MM"); `data` holds
+// every member with activity and every group with their metric counts (see src/lib/recognition.ts).
+// The current month is never stored — it's computed live.
+model RecognitionSnapshot {
+  id        String   @id @default(cuid())
+  branchId  String   @map("branch_id")
+  period    String // "YYYY-MM"
+  data      Json
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([branchId, period])
+  @@map("recognition_snapshots")
+}
+
 // ─── Member status history ────────────────────────────────────────────────────
 
 // Logged whenever a member's isActive flag changes. Deactivation requires a
@@ -304,8 +348,8 @@ model AppSetting {
 model MemberStatusChange {
   id          String   @id @default(cuid())
   memberId    String   @map("member_id")
-  isActive    Boolean  @map("is_active")   // the status the member was changed TO
-  reason      String?                       // e.g. "RELOCATED" — see MEMBER_INACTIVE_REASONS
+  isActive    Boolean  @map("is_active") // the status the member was changed TO
+  reason      String? // e.g. "RELOCATED" — see MEMBER_INACTIVE_REASONS
   details     String?
   changedById String?  @map("changed_by_id")
   createdAt   DateTime @default(now()) @map("created_at")
@@ -320,7 +364,7 @@ model MemberStatusChange {
 // ─── Roles & scope ───────────────────────────────────────────────────────────
 
 model UserRole {
-  id   String @id @default(cuid())
+  id     String @id @default(cuid())
   userId String @unique @map("user_id")
   role   Role
 
@@ -356,7 +400,7 @@ model UserRole {
 
 model CapacityWarning {
   id           String    @id @default(cuid())
-  level        String    // "buscentre" | "cell" | "shepherd" | "member"
+  level        String // "buscentre" | "cell" | "shepherd" | "member"
   parentId     String    @map("parent_id")
   parentName   String    @map("parent_name")
   currentCount Int       @map("current_count")
@@ -395,16 +439,17 @@ model Service {
   date        DateTime    @db.Date
   mode        ServiceMode @default(IN_PERSON)
   notes       String?
-  speaker     String?     // Minister / Prophet name — used for SPECIAL_MEETING
+  speaker     String? // Minister / Prophet name — used for SPECIAL_MEETING
   cancelled   Boolean     @default(false) // true = service didn't happen (no attendance required)
   cellId      String      @map("cell_id")
   createdById String      @map("created_by_id")
   createdAt   DateTime    @default(now()) @map("created_at")
 
-  cell        Cell         @relation(fields: [cellId],      references: [id], onDelete: Cascade)
+  cell        Cell         @relation(fields: [cellId], references: [id], onDelete: Cascade)
   createdBy   User         @relation("ServiceCreatedBy", fields: [createdById], references: [id])
   attendance  Attendance[]
   firstTimers FirstTimer[]
+  guestVisits GuestVisit[]
 
   // One service record per cell per type per date
   @@unique([cellId, type, date])
@@ -420,9 +465,9 @@ model Attendance {
   markedById String?          @map("marked_by_id")
   markedAt   DateTime         @default(now()) @map("marked_at")
 
-  service    Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  member     Member   @relation(fields: [memberId],  references: [id], onDelete: Cascade)
-  markedBy   User?    @relation("AttendanceMarkedBy", fields: [markedById], references: [id], onDelete: SetNull)
+  service  Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  member   Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  markedBy User?   @relation("AttendanceMarkedBy", fields: [markedById], references: [id], onDelete: SetNull)
 
   @@unique([serviceId, memberId])
   @@map("attendance")
@@ -461,6 +506,10 @@ model FirstTimer {
   intent     FirstTimerIntent @default(UNDECIDED)
   referredBy String?          @map("referred_by") // free-text name of person who brought them
 
+  // The member who brought them, when that person is a member (referredBy stays as the fallback
+  // for guests who were brought by a non-member). Drives Recognition.
+  broughtByMemberId String? @map("brought_by_member_id")
+
   serviceId String @map("service_id")
   cellId    String @map("cell_id")
 
@@ -468,6 +517,10 @@ model FirstTimer {
   convertedToMemberId String?   @unique @map("converted_to_member_id")
   convertedAt         DateTime? @map("converted_at")
   convertedById       String?   @map("converted_by_id")
+
+  // The person this visit belongs to — set when they came through evangelism, or
+  // created for walk-ins so Contact is the one record of everyone we have met
+  contactId String? @unique @map("contact_id")
 
   recordedById String   @map("recorded_by_id")
   createdAt    DateTime @default(now()) @map("created_at")
@@ -478,34 +531,43 @@ model FirstTimer {
   reachOutNote   String?   @map("reach_out_note")
   reachedOutAt   DateTime? @map("reached_out_at")
 
-  service         Service  @relation(fields: [serviceId],            references: [id], onDelete: Cascade)
-  cell            Cell     @relation(fields: [cellId],               references: [id], onDelete: Cascade)
-  convertedMember Member?  @relation("FirstTimerConversion",         fields: [convertedToMemberId], references: [id], onDelete: SetNull)
-  recordedBy      User     @relation("FirstTimerRecordedBy",         fields: [recordedById],         references: [id])
-  convertedBy     User?    @relation("FirstTimerConvertedBy",        fields: [convertedById],         references: [id])
+  contact         Contact? @relation("ContactFirstTimer", fields: [contactId], references: [id], onDelete: SetNull)
+  service         Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  cell            Cell     @relation(fields: [cellId], references: [id], onDelete: Cascade)
+  convertedMember Member?  @relation("FirstTimerConversion", fields: [convertedToMemberId], references: [id], onDelete: SetNull)
+  recordedBy      User     @relation("FirstTimerRecordedBy", fields: [recordedById], references: [id])
+  convertedBy     User?    @relation("FirstTimerConvertedBy", fields: [convertedById], references: [id])
+  broughtBy       Member?  @relation("FirstTimerBroughtBy", fields: [broughtByMemberId], references: [id], onDelete: SetNull)
 
+  @@index([broughtByMemberId])
   @@map("first_timers")
 }
 
 // ─── Soul Tracker ─────────────────────────────────────────────────────────────
 
 model Soul {
-  id           String   @id @default(cuid())
-  firstName    String   @map("first_name")
-  lastName     String   @map("last_name")
-  phone        String?
-  location     String?
-  date         DateTime @db.Date       // date of outreach
-  notes        String?
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt     @map("updated_at")
+  id        String   @id @default(cuid())
+  firstName String   @map("first_name")
+  lastName  String   @map("last_name")
+  phone     String?
+  location  String?
+  date      DateTime @db.Date // date of outreach
+  notes     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   cellId       String @map("cell_id")
   recordedById String @map("recorded_by_id")
 
-  cell       Cell @relation(fields: [cellId],       references: [id], onDelete: Cascade)
-  recordedBy User @relation("SoulRecordedBy", fields: [recordedById], references: [id])
+  // Who actually won this soul — any member of the church, not necessarily whoever typed the
+  // record in. Drives Recognition. null on records made before this existed.
+  wonByMemberId String? @map("won_by_member_id")
 
+  cell       Cell    @relation(fields: [cellId], references: [id], onDelete: Cascade)
+  recordedBy User    @relation("SoulRecordedBy", fields: [recordedById], references: [id])
+  wonBy      Member? @relation("SoulWonBy", fields: [wonByMemberId], references: [id], onDelete: SetNull)
+
+  @@index([wonByMemberId, date])
   @@map("souls")
 }
 
@@ -537,13 +599,13 @@ model ShepherdCandidate {
   wtgfUpdatedAt    DateTime?  @map("wtgf_updated_at")
 
   createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt     @map("updated_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  cell           Cell  @relation(fields: [cellId], references: [id], onDelete: Cascade)
-  member         Member @relation("CandidateMember",         fields: [memberId],        references: [id], onDelete: Cascade)
-  recommendedBy  User  @relation("CandidateRecommendedBy",   fields: [recommendedById], references: [id])
-  certifiedBy    User? @relation("CandidateCertifiedBy",     fields: [certifiedById],   references: [id], onDelete: SetNull)
-  wtgfRecordedBy User? @relation("CandidateWtgfRecordedBy",  fields: [wtgfRecordedById],references: [id], onDelete: SetNull)
+  cell           Cell   @relation(fields: [cellId], references: [id], onDelete: Cascade)
+  member         Member @relation("CandidateMember", fields: [memberId], references: [id], onDelete: Cascade)
+  recommendedBy  User   @relation("CandidateRecommendedBy", fields: [recommendedById], references: [id])
+  certifiedBy    User?  @relation("CandidateCertifiedBy", fields: [certifiedById], references: [id], onDelete: SetNull)
+  wtgfRecordedBy User?  @relation("CandidateWtgfRecordedBy", fields: [wtgfRecordedById], references: [id], onDelete: SetNull)
 
   @@map("shepherd_candidates")
 }
@@ -553,7 +615,7 @@ model ShepherdCandidate {
 model Notification {
   id        String   @id @default(cuid())
   userId    String   @map("user_id")
-  type      String   @default("info")  // "absent_member" | "info"
+  type      String   @default("info") // "absent_member" | "info"
   title     String
   body      String
   read      Boolean  @default(false)
@@ -619,7 +681,7 @@ model DepartmentLeader {
 // ─── Library ──────────────────────────────────────────────────────────────────
 
 enum LibraryItemKind {
-  FILE     // uploaded to Supabase Storage (bucket "library")
+  FILE // uploaded to Supabase Storage (bucket "library")
   YOUTUBE
   PODCAST
   LINK
@@ -665,4 +727,327 @@ model LibraryItem {
 
   @@index([branchId, mcId])
   @@map("library_items")
+}
+
+// ─── Evangelism ───────────────────────────────────────────────────────────────
+//
+// Evangelism runs at every level of the hierarchy. An Outreach is owned by one
+// node (cell / buscentre / MC / branch) and carries that node's ancestors, the
+// same denormalized placement UserRole uses, so visibility is a one-line filter:
+//   cell_shepherd → cellId · buscentre_head → buscentreId · mc_pastor → mcId ·
+//   chief_shepherd / admin → branchId
+//
+// Contact = the person (one row ever). Encounter = each time we met them.
+// ContactActivity = append-only follow-up log (calls, visits, invites).
+
+enum OutreachLevel {
+  CELL
+  BUSCENTRE
+  MC
+  BRANCH
+}
+
+enum OutreachStatus {
+  PLANNED
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum OutreachType {
+  STREET
+  DOOR_TO_DOOR
+  CAMPUS
+  MARKET
+  EVENT
+  ONLINE
+  OTHER
+}
+
+enum ContactStage {
+  NEW // met, nothing done yet
+  CONTACTED // first call / visit / message logged
+  INVITED // invited to a specific service
+  ATTENDED // came — linked to a first timer (phase 2)
+  CONVERTED // became a member
+  NOT_INTERESTED
+  UNREACHABLE
+  OUT_OF_AREA
+  DO_NOT_CONTACT
+}
+
+enum ContactSource {
+  OUTREACH
+  PERSONAL_INVITE
+  WALK_IN
+  CELL_SOUL
+  LEGACY_IMPORT
+}
+
+enum AgeRange {
+  CHILD
+  TEEN
+  YOUTH
+  ADULT
+  ELDER
+}
+
+enum EncounterResponse {
+  RECEIVED_CHRIST
+  INTERESTED
+  NEUTRAL
+  DECLINED
+}
+
+enum ContactActivityType {
+  CALL
+  WHATSAPP
+  VISIT
+  INVITED
+  NOTE
+  REASSIGNED
+  STAGE_CHANGE
+}
+
+model Outreach {
+  id     String         @id @default(cuid())
+  title  String
+  type   OutreachType   @default(STREET)
+  status OutreachStatus @default(PLANNED)
+  level  OutreachLevel
+
+  // Owning node + its ancestors
+  branchId    String  @map("branch_id")
+  mcId        String? @map("mc_id")
+  buscentreId String? @map("buscentre_id")
+  cellId      String? @map("cell_id")
+
+  startsAt     DateTime  @map("starts_at")
+  endsAt       DateTime? @map("ends_at")
+  locationName String    @map("location_name")
+  area         String?
+  lat          Float?
+  lng          Float?
+  notes        String?
+
+  leadMemberId String? @map("lead_member_id")
+  targetCount  Int?    @map("target_count")
+
+  // Anonymous tallies — not everyone we speak to gives their details
+  peopleSpokenTo     Int?    @map("people_spoken_to")
+  decisionsForChrist Int?    @map("decisions_for_christ")
+  summary            String?
+  cancelledReason    String? @map("cancelled_reason")
+
+  createdById String   @map("created_by_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  branch    Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  mc        MegaChurch? @relation(fields: [mcId], references: [id], onDelete: Cascade)
+  buscentre Buscentre?  @relation(fields: [buscentreId], references: [id], onDelete: Cascade)
+  cell      Cell?       @relation(fields: [cellId], references: [id], onDelete: Cascade)
+  lead      Member?     @relation("OutreachLead", fields: [leadMemberId], references: [id], onDelete: SetNull)
+  createdBy User        @relation("OutreachCreatedBy", fields: [createdById], references: [id])
+
+  team       OutreachTeamMember[]
+  encounters Encounter[]
+
+  @@index([branchId, startsAt])
+  @@index([mcId, startsAt])
+  @@index([buscentreId, startsAt])
+  @@index([cellId, startsAt])
+  @@map("outreaches")
+}
+
+model OutreachTeamMember {
+  id         String   @id @default(cuid())
+  outreachId String   @map("outreach_id")
+  memberId   String   @map("member_id")
+  isLead     Boolean  @default(false) @map("is_lead")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  outreach Outreach @relation(fields: [outreachId], references: [id], onDelete: Cascade)
+  member   Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([outreachId, memberId])
+  @@map("outreach_team_members")
+}
+
+model Contact {
+  id        String  @id @default(cuid())
+  firstName String  @map("first_name")
+  lastName  String? @map("last_name") // street contacts often give only a first name
+
+  phone           String?
+  phoneNormalized String?   @map("phone_normalized") // E.164 — unique per branch
+  gender          Gender?
+  ageRange        AgeRange? @map("age_range") // CHILD / TEEN are treated as minors
+  homeArea        String?   @map("home_area")
+  notes           String?
+
+  stage        ContactStage  @default(NEW)
+  source       ContactSource @default(OUTREACH)
+  doNotContact Boolean       @default(false) @map("do_not_contact")
+
+  // Placement — the node currently responsible. Starts at the owning node of
+  // the outreach (or the recorder's cell) and is narrowed down when assigned.
+  branchId    String  @map("branch_id")
+  mcId        String? @map("mc_id")
+  buscentreId String? @map("buscentre_id")
+  cellId      String? @map("cell_id")
+
+  followUpOwnerId String? @map("follow_up_owner_id") // Member doing the follow-up
+
+  firstMetAt     DateTime @map("first_met_at")
+  lastActivityAt DateTime @default(now()) @map("last_activity_at")
+
+  convertedMemberId String?   @unique @map("converted_member_id")
+  convertedAt       DateTime? @map("converted_at")
+
+  // The buscentre head's conversation with someone who keeps coming — do they want to stay?
+  conversationAt      DateTime?            @map("conversation_at")
+  conversationById    String?              @map("conversation_by_id")
+  conversationOutcome ConversationOutcome? @map("conversation_outcome")
+  conversationNote    String?              @map("conversation_note")
+
+  mergedIntoId String?   @map("merged_into_id")
+  archivedAt   DateTime? @map("archived_at")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  branch          Branch      @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  mc              MegaChurch? @relation(fields: [mcId], references: [id], onDelete: SetNull)
+  buscentre       Buscentre?  @relation(fields: [buscentreId], references: [id], onDelete: SetNull)
+  cell            Cell?       @relation(fields: [cellId], references: [id], onDelete: SetNull)
+  followUpOwner   Member?     @relation("ContactFollowUpOwner", fields: [followUpOwnerId], references: [id], onDelete: SetNull)
+  convertedMember Member?     @relation("ContactConversion", fields: [convertedMemberId], references: [id], onDelete: SetNull)
+  mergedInto      Contact?    @relation("ContactMerge", fields: [mergedIntoId], references: [id], onDelete: SetNull)
+  mergedFrom      Contact[]   @relation("ContactMerge")
+
+  encounters     Encounter[]
+  guestVisits    GuestVisit[]
+  firstTimer     FirstTimer?       @relation("ContactFirstTimer")
+  conversationBy User?             @relation("ContactConversationBy", fields: [conversationById], references: [id], onDelete: SetNull)
+  activities     ContactActivity[]
+
+  // A phone number identifies one person across the whole branch (NULLs don't collide)
+  @@unique([branchId, phoneNormalized])
+  @@index([mcId, stage])
+  @@index([buscentreId, stage])
+  @@index([cellId, stage])
+  @@index([followUpOwnerId])
+  @@map("contacts")
+}
+
+model Encounter {
+  id         String  @id @default(cuid())
+  contactId  String  @map("contact_id")
+  outreachId String? @map("outreach_id") // null = personal evangelism outside a planned outreach
+
+  metAt       DateTime          @map("met_at")
+  metLocation String?           @map("met_location")
+  lat         Float?
+  lng         Float?
+  response    EncounterResponse @default(NEUTRAL)
+  prayedWith  Boolean           @default(false) @map("prayed_with")
+  notes       String?
+
+  metByMemberId String?  @map("met_by_member_id") // may be a member with no login
+  recordedById  String   @map("recorded_by_id")
+  clientRef     String?  @unique @map("client_ref") // idempotency key for retried field submissions
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  contact    Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  outreach   Outreach? @relation(fields: [outreachId], references: [id], onDelete: SetNull)
+  metBy      Member?   @relation("EncounterMetBy", fields: [metByMemberId], references: [id], onDelete: SetNull)
+  recordedBy User      @relation("EncounterRecordedBy", fields: [recordedById], references: [id])
+
+  @@unique([outreachId, contactId])
+  @@index([contactId, metAt])
+  @@map("encounters")
+}
+
+model ContactActivity {
+  id        String              @id @default(cuid())
+  contactId String              @map("contact_id")
+  type      ContactActivityType
+  outcome   String?
+  note      String?
+
+  // INVITED — which service the invitation was for
+  invitedServiceDate DateTime?    @map("invited_service_date") @db.Date
+  invitedServiceType ServiceType? @map("invited_service_type")
+
+  byUserId  String   @map("by_user_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  contact Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  by      User    @relation("ContactActivityBy", fields: [byUserId], references: [id])
+
+  @@index([contactId, createdAt])
+  @@map("contact_activities")
+}
+
+// ─── Member placement history ─────────────────────────────────────────────────
+
+// One row per move of a member between shepherds / cells / buscentres / MCs.
+// The ids are plain columns (no foreign keys) and the labels are snapshots, so
+// the history stays readable after a cell is renamed, moved or deleted.
+// Moves made together (e.g. "move everyone from this shepherd") share a batchId.
+model MemberMove {
+  id       String @id @default(cuid())
+  memberId String @map("member_id")
+
+  fromShepherdId  String? @map("from_shepherd_id")
+  fromCellId      String? @map("from_cell_id")
+  fromBuscentreId String? @map("from_buscentre_id")
+  fromMcId        String? @map("from_mc_id")
+  fromLabel       String  @map("from_label")
+
+  toShepherdId  String? @map("to_shepherd_id")
+  toCellId      String? @map("to_cell_id")
+  toBuscentreId String? @map("to_buscentre_id")
+  toMcId        String? @map("to_mc_id")
+  toLabel       String  @map("to_label")
+
+  reason    String?
+  batchId   String?  @map("batch_id")
+  movedById String?  @map("moved_by_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  member  Member @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  movedBy User?  @relation("MemberMovedBy", fields: [movedById], references: [id], onDelete: SetNull)
+
+  @@index([memberId, createdAt])
+  @@index([batchId])
+  @@map("member_moves")
+}
+
+// ─── Returning guests & the membership decision ──────────────────────────────
+
+// How the buscentre head's conversation with a regular guest ended
+enum ConversationOutcome {
+  WANTS_TO_JOIN
+  STILL_DECIDING
+  NOT_STAYING
+}
+
+// A guest who is not yet a member coming to a service after their first visit (the first visit
+// is the FirstTimer record). Counting these is what lets us see who has come 3+ times in a month.
+model GuestVisit {
+  id           String   @id @default(cuid())
+  contactId    String   @map("contact_id")
+  serviceId    String   @map("service_id")
+  recordedById String   @map("recorded_by_id")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  contact    Contact @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  service    Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  recordedBy User    @relation("GuestVisitBy", fields: [recordedById], references: [id])
+
+  @@unique([contactId, serviceId])
+  @@index([serviceId])
+  @@map("guest_visits")
 }

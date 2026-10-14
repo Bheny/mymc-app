@@ -4,7 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveMemberShepherdName } from "@/lib/leadership";
 import { roleRank } from "@/lib/permissions";
-import { checkCapacity } from "@/lib/capacity";
+import { actorViews, canEditMember } from "@/lib/member-moves";
 import { isInactiveReason, STATUS_DETAILS_MIN } from "@/lib/member-status";
 import { Role } from "@prisma/client";
 
@@ -88,7 +88,6 @@ export async function PATCH(request: Request, { params }: Params) {
   const {
     firstName, lastName, phone, email,
     gender, dateOfBirth, joinedDate, isActive,
-    shepherdId, cellId,
     hometown, previousChurch,
     parentName, parentPhone,
     emergencyName, emergencyPhone, emergencyRelation,
@@ -98,6 +97,12 @@ export async function PATCH(request: Request, { params }: Params) {
     departmentIds,
     statusReason, statusDetails,
   } = body;
+
+  // Where a member sits is changed only through the move endpoint, which sets
+  // shepherd + cell + buscentre + MC together, checks authority and keeps history
+  if (["shepherdId", "cellId", "buscentreId", "mcId"].some((k) => k in body)) {
+    return NextResponse.json({ error: "Use POST /api/members/[id]/move to change a member's assignment" }, { status: 400 });
+  }
 
   if (departmentIds !== undefined && (!Array.isArray(departmentIds) || departmentIds.length > 2)) {
     return NextResponse.json({ error: "A member can belong to at most 2 departments" }, { status: 400 });
@@ -109,9 +114,12 @@ export async function PATCH(request: Request, { params }: Params) {
 
   const current = await prisma.member.findUnique({
     where:  { id: params.id },
-    select: { shepherdId: true, isActive: true },
+    select: { id: true, shepherdId: true, cellId: true, buscentreId: true, mcId: true, isActive: true },
   });
   if (!current) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!(await canEditMember(await actorViews(session.user.id), current))) {
+    return NextResponse.json({ error: "You don't lead this member" }, { status: 403 });
+  }
 
   // ── Status change: deactivation must say why ──
   const statusChanging = typeof isActive === "boolean" && isActive !== current.isActive;
@@ -122,18 +130,6 @@ export async function PATCH(request: Request, { params }: Params) {
     }
     if (details.length < STATUS_DETAILS_MIN) {
       return NextResponse.json({ error: "Add some details about the status change" }, { status: 400 });
-    }
-  }
-
-  if (shepherdId) {
-    if (current.shepherdId !== shepherdId) {
-      const cap = await checkCapacity("member", shepherdId);
-      if (cap.blocked) {
-        return NextResponse.json(
-          { error: `This shepherd already has the maximum of ${cap.max} members` },
-          { status: 409 }
-        );
-      }
     }
   }
 
@@ -155,8 +151,6 @@ export async function PATCH(request: Request, { params }: Params) {
       ...(email      !== undefined && { email }),
       ...(gender     !== undefined && { gender }),
       ...(isActive   !== undefined && { isActive }),
-      ...(shepherdId !== undefined && { shepherdId }),
-      ...(cellId     !== undefined && { cellId }),
       ...(dateOfBirth !== undefined && { dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null }),
       ...(joinedDate  !== undefined && { joinedDate:  joinedDate  ? new Date(joinedDate)  : null }),
       // Extended profile fields
@@ -210,6 +204,17 @@ export async function PATCH(request: Request, { params }: Params) {
 export async function DELETE(_req: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
+
+  const member = await prisma.member.findUnique({
+    where:  { id: params.id },
+    select: { id: true, shepherdId: true, cellId: true, buscentreId: true, mcId: true },
+  });
+  if (!member) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  // Deleting is stricter than editing: only those who lead the member, not their shepherd
+  const views = await actorViews(session.user.id);
+  if (!(await canEditMember(views.filter((v) => v.role !== "shepherd"), member))) {
+    return NextResponse.json({ error: "You don't lead this member" }, { status: 403 });
+  }
 
   await prisma.member.delete({ where: { id: params.id } });
   return NextResponse.json({ success: true });

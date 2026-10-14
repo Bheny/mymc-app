@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import useSWR from "swr";
+import { LoadError, StaleNotice } from "@/components/load-error";
 import { useCapacityLimits } from "@/hooks/use-capacity-limits";
 import Link from "next/link";
 import { SummaryCard } from "@/components/summary-card";
 import { Button } from "@/components/ui/button";
 import { BirthdaySection } from "@/components/birthday-section";
 import { SummarySection } from "@/components/summary-section";
+import { OutreachSummary } from "@/components/outreach-summary";
 import type { BirthdayEntry } from "@/lib/birthdays";
 import { useActiveRole } from "@/hooks/use-active-role";
 import {
@@ -178,40 +180,38 @@ type ShepherdSummary = {
 
 type UnreachedFT = { id: string; firstName: string; lastName: string; phone: string | null; service: { date: string } };
 
+// What /api/cell/overview returns (the fields this page uses)
+type CellOverviewResponse = {
+  cell:       CellInfo;
+  stats:      CellStats;
+  shepherds?: ShepherdSummary[];
+  birthdays?: BirthdayEntry[];
+};
+
 function CellShepherdOverview() {
   const { data: session } = useSession();
   const { activeView } = useActiveRole();
-  const [cell,         setCell]         = useState<CellInfo | null>(null);
-  const [stats,        setStats]        = useState<CellStats | null>(null);
-  const [shepherds,    setShepherds]    = useState<ShepherdSummary[]>([]);
-  const [birthdays,    setBirthdays]    = useState<BirthdayEntry[]>([]);
-  const [unreachedFTs,   setUnreachedFTs]   = useState<UnreachedFT[]>([]);
-  const [missedServices, setMissedServices] = useState<{ date: string; type: string; label: string }[]>([]);
-  const [loading,        setLoading]        = useState(true);
 
   const actingCellId = activeView?.isActing && activeView.cellId ? activeView.cellId : null;
+  const q = actingCellId ? `?actingCellId=${actingCellId}` : "";
 
-  useEffect(() => {
-    const params = actingCellId ? `?actingCellId=${actingCellId}` : "";
-    const gapParam = actingCellId ? `?actingCellId=${actingCellId}` : "";
-    Promise.all([
-      fetch(`/api/cell/overview${params}`).then((r) => r.json()),
-      fetch(`/api/first-timers?status=unreached&take=5${actingCellId ? `&actingCellId=${actingCellId}` : ""}`).then((r) => r.json()),
-      fetch(`/api/attendance/gaps${gapParam}`).then((r) => r.json()),
-    ])
-      .then(([d, ft, gapData]) => {
-        setCell(d.cell);
-        setStats(d.stats);
-        setShepherds(d.shepherds ?? []);
-        setBirthdays(d.birthdays ?? []);
-        setUnreachedFTs(ft.firstTimers ?? []);
-        setMissedServices(gapData.gaps ?? []);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, [actingCellId]);
+  // Cached by URL: returning to Overview shows the last data at once and refreshes it
+  // quietly. The overview is what the page can't show without; first timers and missed
+  // services are extras that fill in when they arrive (or never, if they fail).
+  const { data: overview, error: loadError, mutate } = useSWR<CellOverviewResponse>(`/api/cell/overview${q}`);
+  const { data: ftData }  = useSWR<{ firstTimers?: UnreachedFT[] }>(
+    `/api/first-timers?status=unreached&take=5${actingCellId ? `&actingCellId=${actingCellId}` : ""}`);
+  const { data: gapData } = useSWR<{ gaps?: { date: string; type: string; label: string }[] }>(`/api/attendance/gaps${q}`);
 
-  if (loading) return <PageSkeleton />;
+  const cell           = overview?.cell;
+  const stats          = overview?.stats;
+  const shepherds      = overview?.shepherds ?? [];
+  const birthdays      = overview?.birthdays ?? [];
+  const unreachedFTs   = ftData?.firstTimers ?? [];
+  const missedServices = gapData?.gaps ?? [];
+
+  if (!overview && loadError) return <LoadError message={loadError.message} onRetry={() => mutate()} />;
+  if (!overview || !cell || !stats) return <PageSkeleton />;
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[1200px] mx-auto pb-20 lg:pb-8">
@@ -251,6 +251,7 @@ function CellShepherdOverview() {
       {/* ── Summary ── */}
       <SectionDivider label="Summary" />
       <SummarySection scope="cell" />
+      <OutreachSummary actingParam={actingCellId ? `actingCellId=${actingCellId}` : ""} />
 
       {/* KPIs */}
       {stats && (
@@ -428,31 +429,19 @@ type CellGap = { cellId: string; cellName: string; cellShepherd: string | null; 
 
 function BuscentreHeadOverview() {
   const { activeView } = useActiveRole();
-  const [data,         setData]         = useState<BuscentreData | null>(null);
-  const [unreachedFTs, setUnreachedFTs] = useState<UnreachedFT[]>([]);
-  const [cellGaps,     setCellGaps]     = useState<CellGap[]>([]);
 
-  const actingParam = activeView?.isActing && activeView.buscentreId
-    ? `?actingBuscentreId=${activeView.buscentreId}`
-    : "";
+  const actingBuscentreId = activeView?.isActing && activeView.buscentreId ? activeView.buscentreId : null;
+  const actingParam = actingBuscentreId ? `?actingBuscentreId=${actingBuscentreId}` : "";
+  const ftParam     = actingBuscentreId ? `?actingBuscentreId=${actingBuscentreId}&status=unreached&take=5` : "?status=unreached&take=5";
 
-  useEffect(() => {
-    const bcId    = actingParam ? actingParam.replace("?actingBuscentreId=", "") : null;
-    const ftParam = bcId ? `?actingBuscentreId=${bcId}&status=unreached&take=5` : "?status=unreached&take=5";
-    const gapParam = bcId ? `?actingBuscentreId=${bcId}` : "";
-    Promise.all([
-      fetch(`/api/buscentre/overview${actingParam}`).then((r) => r.json()),
-      fetch(`/api/first-timers${ftParam}`).then((r) => r.json()),
-      fetch(`/api/attendance/gaps${gapParam}`).then((r) => r.json()),
-    ])
-      .then(([d, ft, gapData]) => {
-        setData(d);
-        setUnreachedFTs(ft.firstTimers ?? []);
-        setCellGaps(gapData.cells ?? []);
-      })
-      .catch(console.error);
-  }, [actingParam]);
+  const { data, error: loadError, mutate } = useSWR<BuscentreData>(`/api/buscentre/overview${actingParam}`);
+  const { data: ftData }  = useSWR<{ firstTimers?: UnreachedFT[] }>(`/api/first-timers${ftParam}`);
+  const { data: gapData } = useSWR<{ cells?: CellGap[] }>(`/api/attendance/gaps${actingParam}`);
 
+  const unreachedFTs = ftData?.firstTimers ?? [];
+  const cellGaps     = gapData?.cells ?? [];
+
+  if (!data && loadError) return <LoadError message={loadError.message} onRetry={() => mutate()} />;
   if (!data) return <PageSkeleton />;
 
   const { buscentre, stats, cells, recentMembers, birthdays } = data;
@@ -509,6 +498,7 @@ function BuscentreHeadOverview() {
       {/* ── Summary ── */}
       <SectionDivider label="Summary" />
       <SummarySection scope="buscentre" />
+      <OutreachSummary actingParam={actingBuscentreId ? `actingBuscentreId=${actingBuscentreId}` : ""} />
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
@@ -703,7 +693,6 @@ function BuscentreHeadOverview() {
 export default function OverviewPage() {
   const { data: session }    = useSession();
   const { activeView, ready } = useActiveRole();
-  const [data, setData]      = useState<DashboardData | null>(null);
   const limits               = useCapacityLimits();
 
   // Use the ACTIVE role (may differ from primary if user has switched to an acting view)
@@ -716,18 +705,13 @@ export default function OverviewPage() {
   const actingMcId     = activeView?.isActing && activeView.mcId     ? activeView.mcId     : null;
   const actingBranchId = activeView?.isActing && activeView.branchId ? activeView.branchId : null;
 
-  // Always call hooks before any conditional returns
-  useEffect(() => {
-    if (!ready) return;          // wait for acting-roles fetch before routing
-    if (isScoped || isBuscentreHead) return;
-    const params = new URLSearchParams();
-    if (actingMcId)     params.set("actingMcId", actingMcId);
-    if (actingBranchId) params.set("actingBranchId", actingBranchId);
-    fetch(`/api/dashboard${params.toString() ? `?${params}` : ""}`)
-      .then((r) => r.json())
-      .then(setData)
-      .catch(console.error);
-  }, [ready, isScoped, isBuscentreHead, actingMcId, actingBranchId]);
+  // Always call hooks before any conditional returns. A null key means "don't fetch yet":
+  // wait for the acting roles, and scoped roles have their own views above.
+  const dashParams = new URLSearchParams();
+  if (actingMcId)     dashParams.set("actingMcId", actingMcId);
+  if (actingBranchId) dashParams.set("actingBranchId", actingBranchId);
+  const { data, error: loadError, mutate } = useSWR<DashboardData>(
+    ready && !isScoped && !isBuscentreHead ? `/api/dashboard${dashParams.toString() ? `?${dashParams}` : ""}` : null);
 
   // Hold at skeleton until acting-roles have settled — prevents the wrong
   // role view flashing in before the correct one is confirmed
@@ -737,6 +721,7 @@ export default function OverviewPage() {
   if (isScoped) return <CellShepherdOverview />;
   if (isBuscentreHead) return <BuscentreHeadOverview />;
 
+  if (!data && loadError) return <LoadError message={loadError.message} onRetry={() => mutate()} />;
   if (!data) return <PageSkeleton />;
 
   const activePct = data.totalMembers > 0
@@ -745,6 +730,8 @@ export default function OverviewPage() {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[1200px] mx-auto pb-20 lg:pb-8">
+
+      {loadError && <StaleNotice onRetry={() => mutate()} />}
 
       {/* ── Header ── */}
       <div className="mb-6">
@@ -765,6 +752,11 @@ export default function OverviewPage() {
           <SectionDivider label="Summary" />
           <SummarySection scope={isMcPastor ? "mc" : "branch"} />
         </>
+      )}
+
+      {/* ── Outreach & follow-up ── */}
+      {(isMcPastor || isChiefShepherd || role === "admin") && (
+        <OutreachSummary actingParam={[actingMcId && `actingMcId=${actingMcId}`, actingBranchId && `actingBranchId=${actingBranchId}`].filter(Boolean).join("&")} />
       )}
 
       {/* ── KPI cards ── */}

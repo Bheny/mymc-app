@@ -37,8 +37,12 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No cell assigned to your account" }, { status: 400 });
   }
 
+  // The queries below don't depend on each other, so they run together (see the
+  // Promise.all further down) — each one is a network round trip to the database,
+  // and running them in sequence made this the slowest call on the cell home screen.
+
   // ── Cell info ────────────────────────────────────────────────────────────────
-  const cell = await prisma.cell.findUnique({
+  const cellQuery = prisma.cell.findUnique({
     where: { id: cellId },
     select: {
       id: true, name: true,
@@ -55,10 +59,8 @@ export async function GET(request: Request) {
     },
   });
 
-  if (!cell) return NextResponse.json({ error: "Cell not found" }, { status: 404 });
-
   // ── Shepherd slots with member lists ─────────────────────────────────────────
-  const shepherds = await prisma.shepherd.findMany({
+  const shepherdsQuery = prisma.shepherd.findMany({
     where:   { cellId },
     include: {
       // member is the reverse link (User.member) — needed to preview an activated
@@ -79,7 +81,7 @@ export async function GET(request: Request) {
   });
 
   // ── Unassigned regular members (no shepherd, not filling a slot, not leadership) ─
-  const unassignedMembers = await prisma.member.findMany({
+  const unassignedQuery = prisma.member.findMany({
     where:   { cellId, shepherdId: null, shepherdRole: null, isUser: false },
     orderBy: { lastName: "asc" },
     select: {
@@ -96,7 +98,7 @@ export async function GET(request: Request) {
   const startOfYear   = new Date(now.getFullYear(), 0, 1);
   const sixMonthsAgo  = new Date(now.getFullYear(), now.getMonth() - 6, now.getDate());
 
-  const allMembers = await prisma.member.findMany({
+  const allMembersQuery = prisma.member.findMany({
     where:  { cellId },
     select: {
       id:          true,
@@ -110,6 +112,17 @@ export async function GET(request: Request) {
       createdAt:   true,
     },
   });
+
+  const [cell, shepherds, unassignedMembers, allMembers, memberMax, membersInDepartment] = await Promise.all([
+    cellQuery,
+    shepherdsQuery,
+    unassignedQuery,
+    allMembersQuery,
+    getCapacityLimit("member").then((l) => l.max),
+    prisma.member.count({ where: { cellId, departments: { some: {} } } }),
+  ]);
+
+  if (!cell) return NextResponse.json({ error: "Cell not found" }, { status: 404 });
 
   // ── Derived stats ─────────────────────────────────────────────────────────────
 
@@ -139,7 +152,6 @@ export async function GET(request: Request) {
   const avgPerShepherd      = occupiedSlots > 0
     ? Math.round((totalMembers / occupiedSlots) * 10) / 10
     : 0;
-  const memberMax           = (await getCapacityLimit("member")).max;
   const shepherdsAtCapacity = shepherds.filter((s) => s._count.members >= memberMax).length;
   const withoutShepherd     = unassignedMembers.length;
 
@@ -149,10 +161,6 @@ export async function GET(request: Request) {
   }));
 
   const birthdays = upcomingBirthdays(allMembers, 30);
-
-  const membersInDepartment = await prisma.member.count({
-    where: { cellId, departments: { some: {} } },
-  });
 
   return NextResponse.json({
     cell: {

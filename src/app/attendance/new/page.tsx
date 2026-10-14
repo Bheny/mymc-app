@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CheckCircle2, XCircle, Clock, Users, UserPlus, Trash2, Plus, Mic2, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Clock, Users, UserPlus, Trash2, Plus, Mic2, Loader2, Megaphone, Search } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { useSession } from "next-auth/react";
+import { MemberPicker, type PickedMember } from "@/components/member-picker";
 
 type FirstTimerIntent = "JUST_VISITING" | "UNDECIDED" | "WANTS_TO_JOIN";
 
@@ -16,8 +17,10 @@ type FirstTimerDraft = {
   lastName:   string;
   phone:      string;
   location:   string;
-  referredBy: string;
+  referredBy: string;          // free-text fallback, for someone who isn't a member
+  broughtBy:  PickedMember | null;   // the member who brought them — what Recognition counts
   intent:     FirstTimerIntent;
+  contactId:  string | null;   // linked evangelism contact (picked from Expected guests, or matched by phone)
 };
 
 const INTENT_LABELS: Record<FirstTimerIntent, string> = {
@@ -27,8 +30,15 @@ const INTENT_LABELS: Record<FirstTimerIntent, string> = {
 };
 
 function emptyDraft(key: number): FirstTimerDraft {
-  return { _key: key, firstName: "", lastName: "", phone: "", location: "", referredBy: "", intent: "UNDECIDED" };
+  return { _key: key, firstName: "", lastName: "", phone: "", location: "", referredBy: "", broughtBy: null, intent: "UNDECIDED", contactId: null };
 }
+
+type Guest = {
+  id: string; firstName: string; lastName: string | null; phone: string | null; homeArea: string | null; stage: string;
+  invitedFor?: string | null; due?: "TODAY" | "MISSED" | "LATER";
+};
+type Returning = { id: string; firstName: string; lastName: string | null; homeArea: string | null; visitsThisMonth: number; lastVisit: string | null };
+type PhoneMatch = { id: string; firstName: string; lastName: string | null; stage: string; homeArea: string | null; attendedBefore: boolean };
 
 type Member = {
   id:        string;
@@ -130,7 +140,11 @@ export default function NewAttendancePage() {
   const router = useRouter();
   const { data: session }     = useSession();
   const { activeView, ready } = useActiveRole();
-  const actingCellId = activeView?.isActing && activeView.cellId ? activeView.cellId : null;
+  // A buscentre head records for any cell in their buscentre, so they choose which one
+  const isHead = activeView?.role === "buscentre_head";
+  const [pickedCell, setPickedCell] = useState("");
+  const [headCells,  setHeadCells]  = useState<{ id: string; name: string }[]>([]);
+  const actingCellId = isHead ? (pickedCell || null) : activeView?.isActing && activeView.cellId ? activeView.cellId : null;
 
   // Service fields — pre-fill from URL params when navigating from a gaps row
   const [serviceType, setServiceType] = useState<ServiceType>(suggestServiceType());
@@ -142,14 +156,28 @@ export default function NewAttendancePage() {
     const date = sp.get("date");
     const type = sp.get("type") as ServiceType | null;
     if (date) setServiceDate(date);
+    const cell = sp.get("cell");
+    if (cell) setPickedCell(cell);
     if (type && Object.keys(SERVICE_CONFIG).includes(type)) setServiceType(type);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   const [serviceMode, setServiceMode] = useState<ServiceMode>("IN_PERSON");
   const [speaker,     setSpeaker]     = useState("");
   const [notes,       setNotes]       = useState("");
 
-  // The cell this user belongs to (primary or acting)
-  const cellId = activeView?.cellId ?? null;
+  // The cell being recorded: the user's own (primary or acting), or the one a buscentre head picked
+  const cellId = isHead ? (pickedCell || null) : (activeView?.cellId ?? null);
+
+  // The cells a buscentre head can choose from
+  useEffect(() => {
+    if (!ready || !isHead || !activeView?.buscentreId) return;
+    fetch(`/api/org/cells?buscentreId=${activeView.buscentreId}`)
+      .then((r) => r.json())
+      .then((d) => setHeadCells(Array.isArray(d) ? d : []))
+      .catch(() => setHeadCells([]));
+  }, [ready, isHead, activeView?.buscentreId]);
+
+  // Switching cell starts the guest lists afresh
+  useEffect(() => { setFirstTimers([]); setGuestIds([]); }, [cellId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Members + attendance map
   const [allMembers,        setAllMembers]        = useState<Member[]>([]);
@@ -160,6 +188,17 @@ export default function NewAttendancePage() {
   // First timers (not shown for Shepherds Meeting)
   const [firstTimers,  setFirstTimers]  = useState<FirstTimerDraft[]>([]);
   const [ftKeyCounter, setFtKeyCounter] = useState(0);
+
+  // Evangelism: invited guests expected at this service, a name/number search,
+  // and phone numbers that match someone we already know
+  const [expected,      setExpected]      = useState<Guest[]>([]);
+  const [guestQuery,    setGuestQuery]    = useState("");
+  const [guestResults,  setGuestResults]  = useState<Guest[]>([]);
+  // Guests who aren't members yet, here again today
+  const [returning,      setReturning]      = useState<Returning[]>([]);
+  const [guestIds,       setGuestIds]       = useState<string[]>([]);
+  const [phoneMatches,  setPhoneMatches]  = useState<Record<number, PhoneMatch>>({});
+  const [savedNotices,  setSavedNotices]  = useState<string[]>([]);
 
   const [saving, setSaving] = useState(false);
   const [error,  setError]  = useState("");
@@ -178,6 +217,37 @@ export default function NewAttendancePage() {
   }
   function removeFT(key: number) {
     setFirstTimers((prev) => prev.filter((ft) => ft._key !== key));
+    setPhoneMatches((prev) => { const n = { ...prev }; delete n[key]; return n; });
+  }
+
+  // One tap: an invited guest turned up
+  function addFromContact(g: Guest) {
+    if (firstTimers.some((ft) => ft.contactId === g.id)) return;
+    const key = ftKeyCounter + 1;
+    setFtKeyCounter(key);
+    setFirstTimers((prev) => [...prev, {
+      ...emptyDraft(key), contactId: g.id, firstName: g.firstName, lastName: g.lastName ?? "",
+      phone: g.phone ?? "", location: g.homeArea ?? "",
+    }]);
+    setGuestQuery(""); setGuestResults([]);
+  }
+
+  // Typed a number for a "new" first timer — do we already know this person?
+  async function checkPhone(key: number, phone: string) {
+    if (!cellId || phone.replace(/\D/g, "").length < 7) return;
+    try {
+      const r = await fetch(`/api/evangelism/expected-guests?cellId=${cellId}&phone=${encodeURIComponent(phone)}`);
+      const d = await r.json();
+      setPhoneMatches((prev) => {
+        const n = { ...prev };
+        if (d.match) n[key] = d.match; else delete n[key];
+        return n;
+      });
+    } catch { /* the server still links by number on save */ }
+  }
+  function linkMatch(key: number, m: PhoneMatch) {
+    updateFT(key, { contactId: m.id, firstName: m.firstName, lastName: m.lastName ?? "" });
+    setPhoneMatches((prev) => { const n = { ...prev }; delete n[key]; return n; });
   }
 
   // Load regular cell members — scoped to the active cell.
@@ -198,6 +268,47 @@ export default function NewAttendancePage() {
       })
       .catch(() => setLoadingMembers(false));
   }, [ready, cellId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Someone added in another tab while this page was open: pick them up when the user comes back,
+  // keeping every mark already entered.
+  useEffect(() => {
+    if (!ready || !cellId) return;
+    function refresh() {
+      if (document.visibilityState !== "visible") return;
+      fetch(`/api/members?cellId=${cellId}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data: Member[] | null) => {
+          if (!Array.isArray(data)) return;
+          const active = data.filter((m) => m.isActive);
+          setAllMembers(active);
+          setAttendance((prev) => {
+            const next: Record<string, AttendanceStatus | null> = {};
+            active.forEach((m) => { next[m.id] = prev[m.id] ?? null; });
+            return isShepherdsMeeting ? prev : next;
+          });
+        })
+        .catch(() => {});
+    }
+    document.addEventListener("visibilitychange", refresh);
+    return () => document.removeEventListener("visibilitychange", refresh);
+  }, [ready, cellId, isShepherdsMeeting]);
+
+  // Has this cell already recorded this service on this date? Say so, and point to it,
+  // instead of letting someone fill in a form that can't be saved.
+  const [recorded, setRecorded] = useState<{ id: string } | null>(null);
+  useEffect(() => {
+    if (!ready || !cellId) { setRecorded(null); return; }
+    let live = true;
+    fetch(`/api/services?take=60${actingCellId ? `&actingCellId=${actingCellId}` : ""}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list: { id: string; type: string; date: string }[]) => {
+        if (!live) return;
+        const hit = Array.isArray(list) ? list.find((s) => s.type === serviceType && s.date.slice(0, 10) === serviceDate) : undefined;
+        setRecorded(hit ? { id: hit.id } : null);
+      })
+      .catch(() => { if (live) setRecorded(null); });
+    return () => { live = false; };
+  }, [ready, cellId, actingCellId, serviceType, serviceDate]);
 
   // Load shepherd slot holders for Shepherds Meeting — same dep-array fix
   useEffect(() => {
@@ -235,6 +346,29 @@ export default function NewAttendancePage() {
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [serviceType]);
+
+  // Expected guests for this cell + date (not for Shepherds Meeting)
+  useEffect(() => {
+    if (!ready || !cellId || isShepherdsMeeting) { setExpected([]); setReturning([]); setGuestIds([]); return; }
+    let live = true;
+    fetch(`/api/evangelism/expected-guests?cellId=${cellId}&date=${serviceDate}`)
+      .then((r) => (r.ok ? r.json() : { expected: [] }))
+      .then((d) => { if (live) { setExpected(d.expected ?? []); setReturning(d.returning ?? []); setGuestIds([]); } })
+      .catch(() => { if (live) setExpected([]); });
+    return () => { live = false; };
+  }, [ready, cellId, serviceDate, isShepherdsMeeting]);
+
+  // Search people held by this cell / its buscentre who weren't invited through the app
+  useEffect(() => {
+    if (!cellId || guestQuery.trim().length < 2) { setGuestResults([]); return; }
+    const t = setTimeout(() => {
+      fetch(`/api/evangelism/expected-guests?cellId=${cellId}&q=${encodeURIComponent(guestQuery.trim())}`)
+        .then((r) => (r.ok ? r.json() : { results: [] }))
+        .then((d) => setGuestResults(d.results ?? []))
+        .catch(() => setGuestResults([]));
+    }, 250);
+    return () => clearTimeout(t);
+  }, [cellId, guestQuery]);
 
   // Group displayed members by shepherd
   const grouped = members.reduce<Record<string, { label: string; members: Member[] }>>((acc, m) => {
@@ -274,11 +408,13 @@ export default function NewAttendancePage() {
         notes:        notes.trim() || null,
         attendance:   records,
         actingCellId,
-        firstTimers: isShepherdsMeeting ? [] : validFTs.map(({ firstName, lastName, phone, location, referredBy, intent }) => ({
-          firstName, lastName,
+        guestVisits: isShepherdsMeeting ? [] : guestIds,
+        firstTimers: isShepherdsMeeting ? [] : validFTs.map(({ firstName, lastName, phone, location, referredBy, broughtBy, intent, contactId }) => ({
+          firstName, lastName, contactId,
           phone:      phone || null,
           location:   location || null,
-          referredBy: referredBy || null,
+          referredBy: broughtBy ? null : (referredBy || null),
+          broughtByMemberId: broughtBy?.id ?? null,
           intent,
         })),
       }),
@@ -286,7 +422,10 @@ export default function NewAttendancePage() {
 
     setSaving(false);
     if (res.ok) {
-      router.push("/attendance");
+      const saved = await res.json().catch(() => ({}));
+      // Anything the server skipped (e.g. someone who'd already attended) — show it before leaving
+      if (Array.isArray(saved.notices) && saved.notices.length > 0) setSavedNotices(saved.notices);
+      else router.push("/attendance");
     } else {
       const d = await res.json().catch(() => ({}));
       setError(d.error ?? "Failed to save attendance.");
@@ -308,6 +447,34 @@ export default function NewAttendancePage() {
           Record Attendance
         </h1>
       </div>
+
+      {/* ── Already recorded: go and edit it ── */}
+      {recorded && (
+        <div className="rounded-xl p-4 mb-6 flex flex-col gap-2" style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
+          <p className="text-[14px] font-semibold">This service has already been recorded</p>
+          <p className="text-[13px]">
+            {SERVICE_CONFIG[serviceType].label} for this cell on {new Date(serviceDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })} is saved.
+            To change anyone&apos;s attendance, or to mark a member you added since, open it.
+          </p>
+          <Link href={`/attendance/${recorded.id}`} className="self-start h-9 px-4 inline-flex items-center rounded-lg text-[13px] font-medium"
+                style={{ background: "var(--brand-navy)", color: "#fff" }}>Open it to edit</Link>
+        </div>
+      )}
+
+      {/* ── Which cell (buscentre heads) ── */}
+      {isHead && (
+        <div className="rounded-xl p-5 mb-6 flex flex-col gap-2" style={{ border: "1px solid var(--brand-border)" }}>
+          <label htmlFor="head-cell" className="text-[11px] font-medium uppercase tracking-[0.06em]" style={{ color: "var(--brand-muted)" }}>
+            Recording for
+          </label>
+          <select id="head-cell" value={pickedCell} onChange={(e) => setPickedCell(e.target.value)}
+                  className="h-10 px-3 text-[14px] rounded-lg"
+                  style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}>
+            <option value="">— Choose a cell —</option>
+            {headCells.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+      )}
 
       {/* ── Service details ── */}
       <div className="rounded-xl p-5 mb-6 flex flex-col gap-4"
@@ -456,7 +623,11 @@ export default function NewAttendancePage() {
       </div>
 
       {/* ── Member / shepherd list ── */}
-      {loadingMembers ? (
+      {isHead && !cellId ? (
+        <div className="rounded-xl p-8 text-center" style={{ border: "1px dashed var(--brand-border)" }}>
+          <p className="text-[14px]" style={{ color: "var(--brand-text)" }}>Choose a cell above to see its members.</p>
+        </div>
+      ) : loadingMembers ? (
         <div className="rounded-xl p-8 flex flex-col items-center gap-3 text-center"
              style={{ border: "1px solid var(--brand-border)" }}>
           <Loader2 className="h-7 w-7 animate-spin" style={{ color: "var(--brand-link)" }} />
@@ -577,6 +748,92 @@ export default function NewAttendancePage() {
             </button>
           </div>
 
+          {/* Invited through evangelism — one tap turns them into a first timer */}
+          {(expected.length > 0 || cellId) && (
+            <div className="rounded-xl p-3 mb-3 flex flex-col gap-2.5"
+                 style={{ border: "1px solid var(--brand-border)", background: "var(--brand-navy-light)" }}>
+              <div className="flex items-center gap-1.5">
+                <Megaphone className="h-3.5 w-3.5" style={{ color: "var(--brand-link)" }} />
+                <span className="text-[12px] font-semibold uppercase tracking-[0.05em]" style={{ color: "var(--brand-link)" }}>
+                  Invited guests
+                </span>
+              </div>
+
+              {expected.filter((g) => !firstTimers.some((ft) => ft.contactId === g.id)).map((g) => (
+                <div key={g.id} className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-[13px] font-medium truncate" style={{ color: "var(--brand-text)" }}>
+                      {g.firstName} {g.lastName}
+                    </p>
+                    <p className="text-[11px]" style={{ color: g.due === "MISSED" ? "var(--brand-warning)" : "var(--brand-muted)" }}>
+                      {g.due === "TODAY" ? "Invited for this service"
+                        : g.due === "MISSED" ? `Missed an earlier invite${g.invitedFor ? ` (${g.invitedFor})` : ""}`
+                        : `Invited for ${g.invitedFor}`}
+                      {g.homeArea ? ` · ${g.homeArea}` : ""}
+                    </p>
+                  </div>
+                  <button type="button" onClick={() => addFromContact(g)}
+                          className="h-8 px-3 rounded-lg text-[12px] font-medium shrink-0"
+                          style={{ background: "var(--brand-navy)", color: "#fff" }}>
+                    Came
+                  </button>
+                </div>
+              ))}
+              {expected.length === 0 && (
+                <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>No one is marked as invited to this cell right now.</p>
+              )}
+
+              {returning.length > 0 && (
+                <div className="flex flex-col gap-2 pt-1" style={{ borderTop: "1px solid var(--brand-border)" }}>
+                  <span className="text-[11px] font-medium uppercase tracking-[0.05em] pt-2" style={{ color: "var(--brand-muted)" }}>
+                    Returning guests · not yet members
+                  </span>
+                  {returning.map((g) => {
+                    const here = guestIds.includes(g.id);
+                    const after = g.visitsThisMonth + (here ? 1 : 0);
+                    return (
+                      <div key={g.id} className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="text-[13px] font-medium truncate" style={{ color: "var(--brand-text)" }}>{g.firstName} {g.lastName}</p>
+                          <p className="text-[11px]" style={{ color: after >= 2 ? "var(--brand-warning)" : "var(--brand-muted)" }}>
+                            {after} visit{after === 1 ? "" : "s"} this month{after === 2 ? " · one more reaches 3" : after >= 3 ? " · reaches the buscentre head" : ""}
+                          </p>
+                        </div>
+                        <button type="button" onClick={() => setGuestIds((p) => (here ? p.filter((x) => x !== g.id) : [...p, g.id]))}
+                                className="h-8 px-3 rounded-lg text-[12px] font-medium shrink-0"
+                                style={here
+                                  ? { background: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)", border: "1px solid var(--brand-border)" }
+                                  : { background: "var(--surface)", color: "var(--brand-link)", border: "1px solid var(--brand-border)" }}>
+                          {here ? "Here today ✓" : "Came again"}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: "var(--brand-muted)" }} />
+                <input value={guestQuery} onChange={(e) => setGuestQuery(e.target.value)}
+                       placeholder="Search someone from outreach by name or number"
+                       className="h-9 w-full pl-8 pr-3 text-[13px] rounded-lg"
+                       style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }} />
+              </div>
+              {guestResults.filter((g) => !firstTimers.some((ft) => ft.contactId === g.id)).map((g) => (
+                <div key={g.id} className="flex items-center justify-between gap-3">
+                  <p className="text-[13px] truncate" style={{ color: "var(--brand-text)" }}>
+                    {g.firstName} {g.lastName} <span style={{ color: "var(--brand-muted)" }}>· {g.stage.toLowerCase()}</span>
+                  </p>
+                  <button type="button" onClick={() => addFromContact(g)}
+                          className="h-8 px-3 rounded-lg text-[12px] font-medium shrink-0"
+                          style={{ background: "var(--surface)", color: "var(--brand-link)", border: "1px solid var(--brand-border)" }}>
+                    Came
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
           {firstTimers.length === 0 ? (
             <button
               type="button"
@@ -599,6 +856,11 @@ export default function NewAttendancePage() {
                           style={{ color: "var(--brand-link)" }}>
                       First Timer #{idx + 1}
                     </span>
+                    {ft.contactId && (
+                      <span className="text-[11px] px-2 py-0.5 rounded-full ml-2" style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
+                        From outreach
+                      </span>
+                    )}
                     <button type="button" onClick={() => removeFT(ft._key)}
                             className="p-1 rounded hover:opacity-70 transition-opacity"
                             style={{ color: "var(--brand-danger)" }}>
@@ -620,6 +882,7 @@ export default function NewAttendancePage() {
                           value={ft[field]}
                           onChange={(e) => updateFT(ft._key, { [field]: e.target.value })}
                           placeholder={placeholder}
+                          readOnly={!!ft.contactId}
                           className="h-9 px-3 text-[13px] rounded-lg"
                           style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
                         />
@@ -640,6 +903,7 @@ export default function NewAttendancePage() {
                         <input
                           value={ft[field]}
                           onChange={(e) => updateFT(ft._key, { [field]: e.target.value })}
+                          onBlur={field === "phone" && !ft.contactId ? (e) => checkPhone(ft._key, e.target.value) : undefined}
                           placeholder={placeholder}
                           className="h-9 px-3 text-[13px] rounded-lg"
                           style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
@@ -648,18 +912,38 @@ export default function NewAttendancePage() {
                     ))}
                   </div>
 
+                  {phoneMatches[ft._key] && !ft.contactId && (
+                    <div className="rounded-lg px-3 py-2 flex items-center justify-between gap-3"
+                         style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
+                      <span className="text-[12px]">
+                        {phoneMatches[ft._key].attendedBefore
+                          ? `${phoneMatches[ft._key].firstName} ${phoneMatches[ft._key].lastName ?? ""} has attended before — not a first timer.`
+                          : `This number belongs to ${phoneMatches[ft._key].firstName} ${phoneMatches[ft._key].lastName ?? ""} (${phoneMatches[ft._key].stage.toLowerCase()}).`}
+                      </span>
+                      {phoneMatches[ft._key].attendedBefore ? (
+                        <button type="button" className="text-[12px] font-medium underline shrink-0" onClick={() => removeFT(ft._key)}>Remove</button>
+                      ) : (
+                        <button type="button" className="text-[12px] font-medium underline shrink-0" onClick={() => linkMatch(ft._key, phoneMatches[ft._key])}>Same person</button>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex flex-col gap-1">
                     <label className="text-[11px] font-medium uppercase tracking-[0.04em]"
                            style={{ color: "var(--brand-muted)" }}>
-                      Brought by (shepherd / member name)
+                      Brought by
                     </label>
-                    <input
-                      value={ft.referredBy}
-                      onChange={(e) => updateFT(ft._key, { referredBy: e.target.value })}
-                      placeholder="e.g. Kwame Asante"
-                      className="h-9 px-3 text-[13px] rounded-lg"
-                      style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
-                    />
+                    <MemberPicker value={ft.broughtBy} onChange={(m) => updateFT(ft._key, { broughtBy: m })}
+                                  placeholder="Search the member who brought them" />
+                    {!ft.broughtBy && (
+                      <input
+                        value={ft.referredBy}
+                        onChange={(e) => updateFT(ft._key, { referredBy: e.target.value })}
+                        placeholder="Not a member? Type the name of whoever brought them"
+                        className="h-9 px-3 text-[13px] rounded-lg"
+                        style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
+                      />
+                    )}
                   </div>
 
                   <div className="flex flex-col gap-1.5">
@@ -699,7 +983,19 @@ export default function NewAttendancePage() {
         </div>
       )}
 
+      {/* Attendance saved, but the server skipped or flagged something */}
+      {savedNotices.length > 0 && (
+        <div className="mt-6 rounded-xl p-4 flex flex-col gap-3" style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
+          <p className="text-[14px] font-semibold">Attendance saved</p>
+          {savedNotices.map((n, i) => <p key={i} className="text-[13px]">{n}</p>)}
+          <Button onClick={() => router.push("/attendance")} className="h-10" style={{ background: "var(--brand-navy)", color: "#fff", borderRadius: 8 }}>
+            Continue
+          </Button>
+        </div>
+      )}
+
       {/* Submit */}
+      {savedNotices.length === 0 && (
       <div className="mt-6 flex flex-col gap-3">
         {error && <p className="text-[13px]" style={{ color: "var(--brand-danger)" }}>{error}</p>}
         {!allDone && total > 0 && (
@@ -709,7 +1005,7 @@ export default function NewAttendancePage() {
         )}
         <Button
           onClick={handleSubmit}
-          disabled={saving || !allDone}
+          disabled={saving || !allDone || !!recorded}
           className="h-12 text-[15px] font-medium w-full flex flex-col items-center justify-center gap-0.5"
           style={{ background: "var(--brand-navy)", color: "#fff", borderRadius: 8 }}
         >
@@ -727,6 +1023,7 @@ export default function NewAttendancePage() {
           )}
         </Button>
       </div>
+      )}
     </div>
   );
 }

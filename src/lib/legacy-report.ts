@@ -112,7 +112,7 @@ export function mapColumns(headers: string[]): { map: Partial<Record<Field, stri
 }
 
 /** "M/D/YYYY" (optionally with a time) → Date in UTC, or null. */
-function parseUsDate(v: string): Date | null {
+export function parseUsDate(v: string): Date | null {
   const m = v.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
   if (!m) return null;
   const [, mo, d, y, hh = "0", mm = "0", ss = "0"] = m;

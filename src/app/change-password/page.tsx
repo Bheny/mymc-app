@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function ChangePasswordPage() {
   const router = useRouter();
+  const { update } = useSession();
   const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -29,8 +31,11 @@ export default function ChangePasswordPage() {
     });
 
     if (res.ok) {
+      // Refresh the login session so it knows the temporary password is gone —
+      // otherwise the middleware would keep sending them back here
+      await update();
       router.push("/");
-      router.refresh(); // re-fetch server session so mustChangePassword clears
+      router.refresh();
     } else {
       const body = await res.json().catch(() => ({}));
       setError(body.error ?? "Something went wrong. Please try again.");

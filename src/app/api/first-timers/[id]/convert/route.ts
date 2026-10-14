@@ -20,18 +20,40 @@ export async function POST(
   if (!ft)                      return NextResponse.json({ error: "Not found" }, { status: 404 });
   if (ft.convertedToMemberId)   return NextResponse.json({ error: "Already converted" }, { status: 409 });
 
+  // If they came through evangelism (or were recorded as a walk-in) there's a
+  // Contact whose journey ends here
+  const contact = ft.contactId
+    ? await prisma.contact.findUnique({ where: { id: ft.contactId }, select: { id: true, gender: true } })
+    : null;
+
   const member = await prisma.$transaction(async (tx) => {
     const newMember = await tx.member.create({
       data: {
         firstName:  ft.firstName,
         lastName:   ft.lastName,
         phone:      ft.phone ?? null,
+        gender:     contact?.gender ?? null,
         cellId:     ft.cellId,
         joinedDate: ft.service.date,
         isActive:   true,
         isUser:     false,
       },
     });
+
+    if (contact) {
+      await tx.contact.update({
+        where: { id: contact.id },
+        data: {
+          stage:             "CONVERTED",
+          convertedMemberId: newMember.id,
+          convertedAt:       new Date(),
+          lastActivityAt:    new Date(),
+        },
+      });
+      await tx.contactActivity.create({
+        data: { contactId: contact.id, type: "STAGE_CHANGE", note: "Became a member", byUserId: session.user.id },
+      });
+    }
 
     await tx.firstTimer.update({
       where: { id: ft.id },

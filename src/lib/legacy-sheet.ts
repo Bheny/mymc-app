@@ -24,6 +24,8 @@ export type LegacySource = {
 };
 
 export type ChurchDirectory = { url: string; gid: string; tabName: string | null };
+/** A single shared tab elsewhere in a sheet (church directory, first-timers registrations) */
+export type SharedTab = ChurchDirectory;
 
 export type LegacyConfig = {
   label:   string | null;
@@ -31,6 +33,8 @@ export type LegacyConfig = {
   // Shared "which cell belongs to which bacenta / MC" tab — the source of truth
   // for structure, so one sheet can feed several MCs
   directory?: ChurchDirectory | null;
+  // The "First Timers" registration tab (names, MC, follow-up status) — summarised on the dashboard
+  firstTimers?: SharedTab | null;
 };
 
 export async function getLegacyConfig(): Promise<LegacyConfig | null> {
@@ -56,7 +60,9 @@ export async function getLegacyConfig(): Promise<LegacyConfig | null> {
       }],
     };
   }
-  return v.sources?.length ? { label: v.label ?? null, sources: v.sources, directory: v.directory ?? null } : null;
+  return v.sources?.length
+    ? { label: v.label ?? null, sources: v.sources, directory: v.directory ?? null, firstTimers: v.firstTimers ?? null }
+    : null;
 }
 
 export async function saveLegacyConfig(config: LegacyConfig | null, userId: string) {
@@ -105,10 +111,17 @@ export async function getLegacyData({ fresh = false } = {}): Promise<{
   config: LegacyConfig;
   results: SourceResult[];
   church: { directory: DirectoryEntry[]; directoryError?: string } | null;
+  firstTimers: { data?: SheetData; error?: string } | null;
 } | null> {
   const config = await getLegacyConfig();
   if (!config) return null;
   const church = config.directory ? readDirectory(config.directory, fresh) : Promise.resolve(null);
+  // Optional extra — a problem reading it is reported, never fatal
+  const firstTimers = config.firstTimers
+    ? readSource(config.firstTimers, fresh)
+        .then((data) => ({ data }))
+        .catch((e): { error: string } => ({ error: e instanceof SheetAccessError ? e.message : "Couldn't read the first timers tab." }))
+    : Promise.resolve(null);
   const results = await Promise.all(config.sources.map(async (source): Promise<SourceResult> => {
     // The directory is optional extra detail — its failure never blocks the reports
     const dir = source.directoryGid
@@ -121,5 +134,5 @@ export async function getLegacyData({ fresh = false } = {}): Promise<{
       return { source, error: e instanceof SheetAccessError ? e.message : "Couldn't read this sheet.", ...(await dir) };
     }
   }));
-  return { config, results, church: await church };
+  return { config, results, church: await church, firstTimers: await firstTimers };
 }

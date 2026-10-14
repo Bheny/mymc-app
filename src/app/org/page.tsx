@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { fetchJson } from "@/lib/fetch-json";
+import { LoadError } from "@/components/load-error";
 import Link from "next/link";
 import { ChevronDown, ChevronRight, Plus, AlertTriangle, Users, Network, Pencil, UserPlus, UserCog } from "lucide-react";
 import { AssignHeadSheet, type AssignHeadSheetProps } from "@/components/assign-head-sheet";
@@ -828,14 +830,24 @@ export default function OrgPage() {
   const [editingCell,       setEditingCell]        = useState<EditingCell | null>(null);
   const [assigningHead, setAssigningHead] = useState<Omit<AssignHeadSheetProps, "open" | "onClose" | "onAssigned"> | null>(null);
 
+  const [loadError, setLoadError] = useState("");
+
   async function loadTree() {
-    const res = await fetch("/api/org/tree");
-    const data = await res.json();
-    setBranches(data.branches ?? []);
-    setFlags(data.actingUpFlags ?? []);
-    setWarnings(data.capacityWarnings ?? []);
-    setOpenWarnings((data.actingUpFlags ?? []).length + (data.capacityWarnings ?? []).length);
-    setLoading(false);
+    setLoadError("");
+    try {
+      const data = await fetchJson<{
+        branches?: BranchNode[]; actingUpFlags?: Flag[]; capacityWarnings?: Warn[];
+      }>("/api/org/tree");
+      setBranches(data.branches ?? []);
+      setFlags(data.actingUpFlags ?? []);
+      setWarnings(data.capacityWarnings ?? []);
+      setOpenWarnings((data.actingUpFlags ?? []).length + (data.capacityWarnings ?? []).length);
+    } catch (e) {
+      // After the first load the tree on screen stays; only a first-load failure needs the retry screen
+      setLoadError((e as Error).message);
+    } finally {
+      setLoading(false);
+    }
   }
 
   useEffect(() => { loadTree(); }, []);
@@ -876,6 +888,9 @@ export default function OrgPage() {
       </div>
     );
   }
+
+  // First load failed with nothing to show — say so, rather than claiming there are no branches
+  if (loadError && branches.length === 0) return <LoadError message={loadError} onRetry={loadTree} />;
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[1200px] mx-auto pb-20 lg:pb-8">

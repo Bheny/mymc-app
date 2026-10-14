@@ -35,8 +35,11 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "No buscentre assigned to your account" }, { status: 400 });
   }
 
+  // These queries don't depend on each other, so they run together (Promise.all
+  // below) — each is a round trip to the database.
+
   // ── Buscentre info ────────────────────────────────────────────────────────
-  const buscentre = await prisma.buscentre.findUnique({
+  const buscentreQuery = prisma.buscentre.findUnique({
     where: { id: buscentreId },
     select: {
       id: true, name: true, location: true,
@@ -48,10 +51,8 @@ export async function GET(request: Request) {
     },
   });
 
-  if (!buscentre) return NextResponse.json({ error: "Buscentre not found" }, { status: 404 });
-
   // ── All cells in the buscentre with shepherds and member counts ───────────
-  const cells = await prisma.cell.findMany({
+  const cellsQuery = prisma.cell.findMany({
     where:   { buscentreId },
     include: {
       _count:    { select: { members: true, shepherds: true } },
@@ -71,7 +72,7 @@ export async function GET(request: Request) {
   });
 
   // ── All members in the buscentre for stats + birthdays ───────────────────
-  const allMembers = await prisma.member.findMany({
+  const allMembersQuery = prisma.member.findMany({
     where:  { cell: { buscentreId } },
     select: {
       id: true, firstName: true, lastName: true,
@@ -82,7 +83,7 @@ export async function GET(request: Request) {
   });
 
   // ── Recent members (last 6 added across the whole buscentre) ─────────────
-  const recentMembers = await prisma.member.findMany({
+  const recentMembersQuery = prisma.member.findMany({
     where:   { cell: { buscentreId } },
     orderBy: { createdAt: "desc" },
     take:    6,
@@ -92,6 +93,16 @@ export async function GET(request: Request) {
       cell: { select: { id: true, name: true } },
     },
   });
+
+  const [buscentre, cells, allMembers, recentMembers, membersInDepartment] = await Promise.all([
+    buscentreQuery,
+    cellsQuery,
+    allMembersQuery,
+    recentMembersQuery,
+    prisma.member.count({ where: { cell: { buscentreId }, departments: { some: {} } } }),
+  ]);
+
+  if (!buscentre) return NextResponse.json({ error: "Buscentre not found" }, { status: 404 });
 
   // ── Aggregate stats ───────────────────────────────────────────────────────
   const totalCells             = cells.length;
@@ -113,10 +124,6 @@ export async function GET(request: Request) {
   const newThisYear  = allMembers.filter((m) => new Date(m.createdAt) >= startOfYear).length;
 
   const birthdays = upcomingBirthdays(allMembers, 30);
-
-  const membersInDepartment = await prisma.member.count({
-    where: { cell: { buscentreId }, departments: { some: {} } },
-  });
 
   return NextResponse.json({
     buscentre: {

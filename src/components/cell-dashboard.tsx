@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import useSWR from "swr";
+import { FetchError } from "@/lib/fetch-json";
+import { LoadError, StaleNotice } from "@/components/load-error";
+import { useToast } from "@/hooks/use-toast";
 import { useCapacityLimits } from "@/hooks/use-capacity-limits";
 import Link from "next/link";
 import {
@@ -206,10 +210,10 @@ function UnassignedMemberRow({
 
     // Regular members (isUser: false) are put under a shepherd slot.
     // Supervisor chain for leadership roles is set automatically by the hierarchy.
-    const res = await fetch(`/api/members/${member.id}`, {
-      method:  "PATCH",
+    const res = await fetch(`/api/members/${member.id}/move`, {
+      method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ shepherdId: selected }),
+      body:    JSON.stringify({ level: "shepherd", shepherdId: selected }),
     });
 
     setSaving(false);
@@ -373,11 +377,13 @@ function UnassignedMemberRow({
 type MemberOption = { id: string; firstName: string; lastName: string };
 
 function ShepherdCard({
-  slot, index, onAssigned, canRecommend, readOnly, onPreview,
+  slot, index, onAssigned, onOptimistic, canRecommend, readOnly, onPreview,
 }: {
   slot:         ShepherdSlot;
   index:        number;
   onAssigned:   () => void;
+  /** Show the new shepherd (or none) on screen straight away, before the server confirms */
+  onOptimistic: (slotId: string, person: MemberOption | null) => void;
   canRecommend: boolean;
   readOnly:     boolean;
   onPreview:    (memberId: string) => void;
@@ -395,6 +401,7 @@ function ShepherdCard({
   const [results,   setResults]   = useState<MemberOption[]>([]);
   const [saving,    setSaving]    = useState(false);
   const [error,     setError]     = useState("");
+  const { toast } = useToast();
 
   // Debounced search
   useEffect(() => {
@@ -408,29 +415,50 @@ function ShepherdCard({
   }, [query, assigning]);
 
   async function assign(memberId: string) {
-    setSaving(true); setError("");
-    const res = await fetch(`/api/org/shepherds/${slot.id}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ memberId }),
-    });
-    setSaving(false);
-    if (res.ok) {
-      setAssigning(false); setQuery(""); setResults([]);
-      onAssigned();
-    } else {
-      const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "Failed to assign.");
+    setError("");
+    const picked = results.find((r) => r.id === memberId);
+    // Optimistic: the name appears at once; the server confirms (or we put things back)
+    if (picked) onOptimistic(slot.id, picked);
+    setAssigning(false); setQuery(""); setResults([]);
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/org/shepherds/${slot.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberId }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error ?? "Failed to assign.");
+      }
+    } catch (e) {
+      // Re-open the picker so they can try again, and re-sync with what the server really has
+      setAssigning(true);
+      setError((e as Error).message);
+      toast({ title: "Couldn't assign shepherd", description: (e as Error).message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+      onAssigned();   // quiet re-sync — confirms on success, restores on failure
     }
   }
 
   async function unassign() {
+    onOptimistic(slot.id, null);
     setSaving(true);
-    await fetch(`/api/org/shepherds/${slot.id}`, {
-      method: "PATCH", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ memberId: null }),
-    });
-    setSaving(false);
-    onAssigned();
+    try {
+      const res = await fetch(`/api/org/shepherds/${slot.id}`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ memberId: null }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error ?? "Failed to unassign.");
+      }
+    } catch (e) {
+      toast({ title: "Couldn't unassign shepherd", description: (e as Error).message, variant: "destructive" });
+    } finally {
+      setSaving(false);
+      onAssigned();
+    }
   }
 
   function cancelAssign() {
@@ -635,12 +663,9 @@ export function CellDashboard({ cellId }: { cellId?: string }) {
   // reserved for the cell's own page or a real acting-up grant.
   const readOnly = !!cellId;
 
-  const [data,    setData]    = useState<CellOverview | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState("");
   const [previewMemberId, setPreviewMemberId] = useState<string | null>(null);
 
-  const { activeView } = useActiveRole();
+  const { activeView, ready } = useActiveRole();
   const actingCellId = activeView?.isActing && activeView.cellId ? activeView.cellId : null;
   // An explicit cellId (drill-down route) always wins over the acting-up override —
   // it's a deliberate "go view this node" action, not a permission switch.
@@ -652,22 +677,27 @@ export function CellDashboard({ cellId }: { cellId?: string }) {
   // members forward as shepherd candidates — never while just drilled in to view.
   const canRecommend = !readOnly && activeView?.role === "cell_shepherd";
 
-  async function load() {
-    setLoading(true);
-    const res = await fetch(`/api/cell/overview${queryParam}`);
-    if (res.ok) {
-      setData(await res.json());
-    } else {
-      const d = await res.json().catch(() => ({}));
-      setError(d.error ?? "Failed to load cell data.");
-    }
-    setLoading(false);
-  }
+  // Cached by URL: coming back to this page shows the last data straight away and
+  // refreshes it quietly. Wait for the acting role so we never fetch the wrong scope first.
+  const { data, error: loadError, mutate } = useSWR<CellOverview>(ready ? `/api/cell/overview${queryParam}` : null);
+  const error = loadError instanceof FetchError && loadError.status ? loadError.message : "";
 
-  // Re-fetch whenever the active role or the drilled-into cell changes
-  useEffect(() => { load(); }, [cellId, actingCellId]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Quiet re-sync after an action — never swaps the page for a skeleton
+  const load = () => { mutate(); };
 
-  if (loading) return <Skeleton />;
+  // Put a shepherd on (or off) a slot immediately, without waiting for the server
+  const applyShepherd = (slotId: string, person: MemberOption | null) => {
+    mutate((current) => current && {
+      ...current,
+      shepherds: current.shepherds.map((s) => (s.id === slotId ? { ...s, person } : s)),
+    }, { revalidate: false });
+  };
+
+  // Couldn't reach the server and nothing cached to show
+  if (!data && loadError && !error) return <LoadError message={loadError.message} onRetry={() => mutate()} />;
+
+  // Skeleton only for the very first load of this view
+  if (!data && !error) return <Skeleton />;
 
   if (error || !data) {
     return (
@@ -688,6 +718,8 @@ export function CellDashboard({ cellId }: { cellId?: string }) {
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[1200px] mx-auto pb-20 lg:pb-8">
+
+      {loadError && <StaleNotice onRetry={() => mutate()} />}
 
       <BreadcrumbTrail items={[
         { label: cell.mc?.name ?? "—" },
@@ -831,7 +863,7 @@ export function CellDashboard({ cellId }: { cellId?: string }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           {shepherds.map((slot, i) => (
-            <ShepherdCard key={slot.id} slot={slot} index={i} onAssigned={load} canRecommend={canRecommend} readOnly={readOnly} onPreview={setPreviewMemberId} />
+            <ShepherdCard key={slot.id} slot={slot} index={i} onAssigned={load} onOptimistic={applyShepherd} canRecommend={canRecommend} readOnly={readOnly} onPreview={setPreviewMemberId} />
           ))}
         </div>
       )}

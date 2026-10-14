@@ -7,11 +7,12 @@ import {
   Tooltip, LabelList, type TooltipProps,
 } from "recharts";
 import {
-  RefreshCw, AlertTriangle, ClipboardCheck, Sheet as SheetIcon, ArrowUpDown, ChevronLeft,
+  RefreshCw, AlertTriangle, ClipboardCheck, UserPlus, Sheet as SheetIcon, ArrowUpDown, ChevronLeft,
   ChevronRight, Search, X, Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LegacyIntegritySheet } from "@/components/legacy-integrity-sheet";
+import { Card, Stat } from "@/components/legacy-ui";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -47,6 +48,8 @@ type ApiResponse =
       ambiguous: string[];  // cell names listed more than once that couldn't be told apart
       duplicates: DuplicateGroup[];  // same cell/date/service submitted more than once
       possibleDuplicates?: PossibleDuplicate[];  // same cell/service on two dates in one week
+      // Whether a First Timers tab is connected — the registrations themselves live on /legacy/first-timers
+      firstTimersConnected?: boolean;
     };
 
 type ServiceFilter = "all" | "MGS" | "LC LIVE";
@@ -64,36 +67,6 @@ const fmt = (n: number, digits = 0) =>
 type Period = "all" | string;
 
 // ─── Small pieces ─────────────────────────────────────────────────────────────
-
-function Card({ title, subtitle, action, children }: {
-  title: string; subtitle?: string; action?: React.ReactNode; children: React.ReactNode;
-}) {
-  return (
-    <section className="bg-[var(--surface)] rounded-xl p-4 sm:p-5 flex flex-col gap-3 min-w-0"
-             style={{ border: "1px solid var(--brand-border)" }}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold" style={{ color: "var(--brand-text)" }}>{title}</h2>
-          {subtitle && <p className="text-[12px] mt-0.5" style={{ color: "var(--brand-muted)" }}>{subtitle}</p>}
-        </div>
-        {action}
-      </div>
-      {children}
-    </section>
-  );
-}
-
-function Stat({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="bg-[var(--surface)] rounded-xl p-4 flex flex-col gap-2 min-w-0" style={{ border: "1px solid var(--brand-border)" }}>
-      <span className="text-[11px] font-medium uppercase tracking-[0.04em] leading-tight" style={{ color: "var(--brand-muted)" }}>
-        {label}
-      </span>
-      <span className="text-[28px] font-semibold leading-none" style={{ color: "var(--brand-text)" }}>{value}</span>
-      {sub && <span className="text-[12px]" style={{ color: "var(--brand-muted)" }}>{sub}</span>}
-    </div>
-  );
-}
 
 function Segmented<T extends string>({ value, options, onChange, ariaLabel }: {
   value: T; options: { key: T; label: string }[]; onChange: (v: T) => void; ariaLabel: string;
@@ -868,6 +841,13 @@ export default function LegacyPage() {
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
+          {data.firstTimersConnected && (
+            <Link href="/legacy/first-timers">
+              <Button variant="outline" className="h-9 text-[13px]" style={{ borderRadius: 8 }}>
+                <UserPlus className="h-3.5 w-3.5 mr-1.5" /> First timers
+              </Button>
+            </Link>
+          )}
           <Button variant="outline" onClick={() => setShowReport(true)} className="h-9 text-[13px]" style={{ borderRadius: 8 }}>
             <ClipboardCheck className="h-3.5 w-3.5 mr-1.5" /> Integrity report
           </Button>

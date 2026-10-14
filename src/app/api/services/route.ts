@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AttendanceStatus } from "@prisma/client";
+import { resolveRecordingCell } from "@/lib/recording-scope";
+import { applyFirstTimers, applyGuestVisits, isUniqueViolation, LinkError, prepareFirstTimers, prepareGuestVisits, type FirstTimerDraft, type GuestPrepared } from "@/lib/evangelism-attendance";
 
 // ── Absence notification helper ──────────────────────────────────────────────
 // Runs after the transaction; never throws (caller catches).
@@ -71,38 +73,15 @@ async function fireAbsenceNotifications(
   });
 }
 
-type FirstTimerInput = {
-  firstName:  string;
-  lastName:   string;
-  phone?:     string | null;
-  location?:  string | null;
-  referredBy?: string | null;
-  intent?:    "JUST_VISITING" | "UNDECIDED" | "WANTS_TO_JOIN";
-};
-
-// ── Shared helper — resolve cell ID, respecting acting-up override ────────────
-function resolveCell(
-  session: { user: { cellId?: string | null; actingAt?: Record<string, string> } },
-  override: string | null
-): string | { error: string } | null {
-  if (!override) return session.user.cellId ?? null;
-  const actingAt = (session.user.actingAt ?? {}) as Record<string, string>;
-  if (actingAt.cell_id === override) return override;
-  return { error: "No acting access to this cell" };
-}
-
 // ── GET — list services for the caller's cell ─────────────────────────────────
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const { searchParams } = new URL(request.url);
-  const cellResult = resolveCell(session, searchParams.get("actingCellId"));
-  if (cellResult && typeof cellResult === "object" && "error" in cellResult) {
-    return NextResponse.json(cellResult, { status: 403 });
-  }
-  const cellId = cellResult as string | null;
-  if (!cellId) return NextResponse.json({ error: "No cell assigned" }, { status: 400 });
+  const cellResult = await resolveRecordingCell(session.user, searchParams.get("actingCellId"));
+  if ("error" in cellResult) return NextResponse.json({ error: cellResult.error }, { status: cellResult.status });
+  const cellId = cellResult.cellId;
 
   const take = parseInt(searchParams.get("take") ?? "20");
 
@@ -138,14 +117,11 @@ export async function POST(request: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const body = await request.json();
-  const { type, date, mode, notes, speaker, cancelled = false, attendance, actingCellId, firstTimers = [] } = body;
+  const { type, date, mode, notes, speaker, cancelled = false, attendance, actingCellId, firstTimers = [], guestVisits = [] } = body;
 
-  const cellResult = resolveCell(session, actingCellId ?? null);
-  if (cellResult && typeof cellResult === "object" && "error" in cellResult) {
-    return NextResponse.json(cellResult, { status: 403 });
-  }
-  const cellId = cellResult as string | null;
-  if (!cellId) return NextResponse.json({ error: "No cell assigned" }, { status: 400 });
+  const cellResult = await resolveRecordingCell(session.user, actingCellId ?? null);
+  if ("error" in cellResult) return NextResponse.json({ error: cellResult.error }, { status: cellResult.status });
+  const cellId = cellResult.cellId;
 
   if (!type || !date) {
     return NextResponse.json({ error: "type and date are required" }, { status: 400 });
@@ -160,6 +136,29 @@ export async function POST(request: Request) {
     const invalid = attendance.find((a: { status: string }) => !validStatuses.includes(a.status as AttendanceStatus));
     if (invalid) {
       return NextResponse.json({ error: "Invalid status — must be PRESENT, ABSENT or EXCUSED" }, { status: 400 });
+    }
+  }
+
+  // Resolve first timers against evangelism contacts before opening the transaction
+  let prepared: Awaited<ReturnType<typeof prepareFirstTimers>> | null = null;
+  if (!cancelled && firstTimers.length > 0) {
+    try {
+      prepared = await prepareFirstTimers(cellId, firstTimers as FirstTimerDraft[]);
+    } catch (e) {
+      if (e instanceof LinkError) return NextResponse.json({ error: e.message }, { status: e.status });
+      throw e;
+    }
+  }
+
+  // Guests who aren't members yet coming back — recorded so we can see who has come 3+ times in a month
+  let guests: GuestPrepared | null = null;
+  if (!cancelled && Array.isArray(guestVisits) && guestVisits.length > 0) {
+    try {
+      const firstTimeToday = new Set<string>((prepared?.plans ?? []).map((p) => p.contactId).filter((x): x is string => !!x));
+      guests = await prepareGuestVisits(cellId, guestVisits as string[], firstTimeToday);
+    } catch (e) {
+      if (e instanceof LinkError) return NextResponse.json({ error: e.message }, { status: e.status });
+      throw e;
     }
   }
 
@@ -190,21 +189,13 @@ export async function POST(request: Request) {
         });
       }
 
-      if (!cancelled && firstTimers.length > 0) {
-        await tx.firstTimer.createMany({
-          data: (firstTimers as FirstTimerInput[]).map((ft) => ({
-            firstName:   ft.firstName.trim(),
-            lastName:    ft.lastName.trim(),
-            phone:       ft.phone?.trim() || null,
-            location:    ft.location?.trim() || null,
-            referredBy:  ft.referredBy?.trim() || null,
-            intent:      ft.intent ?? "UNDECIDED",
-            serviceId:   svc.id,
-            cellId,
-            recordedById: session.user.id,
-          })),
+      if (prepared) {
+        await applyFirstTimers(tx, prepared, {
+          serviceId: svc.id, serviceType: type, serviceDate: svc.date, userId: session.user.id, cellId,
         });
       }
+
+      if (guests) await applyGuestVisits(tx, guests, { serviceId: svc.id, userId: session.user.id, cellId });
 
       return svc;
     });
@@ -215,8 +206,15 @@ export async function POST(request: Request) {
       attendance.filter((a: { status: string }) => a.status === "ABSENT").map((a: { memberId: string }) => a.memberId)
     ).catch(console.error);
 
-    return NextResponse.json(service, { status: 201 });
+    return NextResponse.json({ ...service, notices: [...(prepared?.notices ?? []), ...(guests?.notices ?? [])] }, { status: 201 });
   } catch (e: unknown) {
+    // A first timer's contact / phone colliding with a concurrent save
+    if (isUniqueViolation(e) && /contact|phone/.test(String((e as { meta?: { target?: unknown } }).meta?.target ?? ""))) {
+      return NextResponse.json(
+        { error: "One of the first timers was just recorded by someone else — refresh and try again." },
+        { status: 409 }
+      );
+    }
     if (e instanceof Error && e.message.includes("Unique constraint")) {
       return NextResponse.json(
         { error: "Attendance for this service on this date has already been recorded." },

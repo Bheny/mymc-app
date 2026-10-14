@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import useSWR from "swr";
+import { FetchError } from "@/lib/fetch-json";
+import { LoadError } from "@/components/load-error";
+import { useToast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, XCircle, Clock, UserPlus, UserCheck, Phone, MapPin, Users, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { MemberPicker, type PickedMember } from "@/components/member-picker";
 
 type AttendanceStatus = "PRESENT" | "ABSENT" | "EXCUSED";
 type FirstTimerIntent = "JUST_VISITING" | "UNDECIDED" | "WANTS_TO_JOIN";
@@ -43,6 +48,8 @@ type ServiceDetail = {
   createdAt: string;
   stats: { total: number; present: number; absent: number; excused: number };
   firstTimers: FirstTimer[];
+  // Members of the cell with no mark for this service yet (e.g. added after it was saved)
+  missing?: (ServiceDetail["attendance"][number]["member"] & { joinedDate: string | null; joinedAfter: boolean })[];
   attendance: {
     id:     string;
     status: AttendanceStatus;
@@ -66,7 +73,7 @@ type ServiceDetail = {
 function StatusButton({
   value, current, onChange,
 }: {
-  value: AttendanceStatus; current: AttendanceStatus; onChange: (v: AttendanceStatus) => void;
+  value: AttendanceStatus; current: AttendanceStatus | null; onChange: (v: AttendanceStatus) => void;
 }) {
   const isActive = current === value;
   const labels = { PRESENT: "P", ABSENT: "A", EXCUSED: "E" };
@@ -87,6 +94,23 @@ function StatusButton({
   );
 }
 
+/** This service with one member's status changed and the totals recounted
+ *  (the server's stats are exactly these counts over the attendance rows). */
+function withStatus(cur: ServiceDetail | undefined, memberId: string, status: AttendanceStatus): ServiceDetail | undefined {
+  if (!cur) return cur;
+  let attendance = cur.attendance.map((a) => (a.member.id === memberId ? { ...a, status } : a));
+  // Someone who wasn't marked yet becomes marked, and leaves the "not marked" list
+  const late = cur.missing?.find((m) => m.id === memberId);
+  if (late) attendance = [...attendance, { id: `new-${memberId}`, status, notes: null, member: late }];
+  const count = (st: AttendanceStatus) => attendance.filter((a) => a.status === st).length;
+  return {
+    ...cur,
+    attendance,
+    missing: cur.missing?.filter((m) => m.id !== memberId),
+    stats: { total: attendance.length, present: count("PRESENT"), absent: count("ABSENT"), excused: count("EXCUSED") },
+  };
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-GB", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
@@ -102,31 +126,34 @@ function shepherdLabel(s: ServiceDetail["attendance"][0]["member"]["shepherd"]):
 
 export default function AttendanceDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [service,  setService]  = useState<ServiceDetail | null>(null);
-  const [overrides,   setOverrides]   = useState<Record<string, AttendanceStatus>>({});
+  const { toast } = useToast();
+  // Cached: reopening a service shows it at once and refreshes it quietly
+  const { data: service, error: loadErr, mutate } = useSWR<ServiceDetail>(id ? `/api/services/${id}` : null);
   const [saving,      setSaving]      = useState<string | null>(null);
   const [converting,  setConverting]  = useState<string | null>(null);
-  const [loading,     setLoading]     = useState(true);
+  const loading = !service && !loadErr;
 
   // Add-first-timer form state
   const [addingFT,    setAddingFT]    = useState(false);
   const [ftForm,      setFtForm]      = useState({ firstName: "", lastName: "", phone: "", location: "", referredBy: "", intent: "UNDECIDED" as FirstTimerIntent });
+  const [ftBroughtBy, setFtBroughtBy] = useState<PickedMember | null>(null);
   const [ftSaving,    setFtSaving]    = useState(false);
   const [ftError,     setFtError]     = useState("");
 
-  useEffect(() => {
-    fetch(`/api/services/${id}`)
-      .then((r) => r.json())
-      .then(setService)
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, [id]);
-
   async function convertFirstTimer(ftId: string) {
     setConverting(ftId);
-    await fetch(`/api/first-timers/${ftId}/convert`, { method: "POST" });
-    setConverting(null);
-    fetch(`/api/services/${id}`).then((r) => r.json()).then(setService);
+    try {
+      const res = await fetch(`/api/first-timers/${ftId}/convert`, { method: "POST" });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error ?? "Couldn't convert this first timer.");
+      }
+    } catch (e) {
+      toast({ title: "Couldn't convert", description: (e as Error).message, variant: "destructive" });
+    } finally {
+      setConverting(null);
+      mutate();
+    }
   }
 
   async function submitAddFT(e: React.FormEvent) {
@@ -138,13 +165,14 @@ export default function AttendanceDetailPage() {
     const res = await fetch("/api/first-timers", {
       method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ serviceId: id, ...ftForm }),
+      body: JSON.stringify({ serviceId: id, ...ftForm, broughtByMemberId: ftBroughtBy?.id ?? null }),
     });
     setFtSaving(false);
     if (res.ok) {
       setAddingFT(false);
       setFtForm({ firstName: "", lastName: "", phone: "", location: "", referredBy: "", intent: "UNDECIDED" });
-      fetch(`/api/services/${id}`).then((r) => r.json()).then(setService);
+      setFtBroughtBy(null);
+      mutate();
     } else {
       const d = await res.json().catch(() => ({}));
       setFtError(d.error ?? "Failed to add first timer.");
@@ -152,16 +180,32 @@ export default function AttendanceDetailPage() {
   }
 
   async function updateStatus(memberId: string, status: AttendanceStatus) {
-    setOverrides((prev) => ({ ...prev, [memberId]: status }));
     setSaving(memberId);
-    await fetch(`/api/services/${id}`, {
-      method:  "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body:    JSON.stringify({ memberId, status }),
-    });
-    setSaving(null);
-    // Refresh stats
-    fetch(`/api/services/${id}`).then((r) => r.json()).then(setService);
+    try {
+      // The tap shows at once and the totals recount at once. If the save fails (a dropped
+      // connection, say) it goes back to what was really saved and says so — it never
+      // leaves a tap that looks recorded but isn't.
+      await mutate(
+        async () => {
+          const res = await fetch(`/api/services/${id}`, {
+            method:  "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body:    JSON.stringify({ memberId, status }),
+          });
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            throw new Error(d.error ?? "The change wasn't saved.");
+          }
+          return undefined;
+        },
+        { optimisticData: (cur) => withStatus(cur, memberId, status) as ServiceDetail, rollbackOnError: true, populateCache: false, revalidate: false },
+      );
+    } catch (e) {
+      toast({ title: "Attendance not saved", description: (e as Error).message, variant: "destructive" });
+    } finally {
+      setSaving(null);
+      mutate();   // quiet re-sync with the server
+    }
   }
 
   if (loading) return (
@@ -173,11 +217,17 @@ export default function AttendanceDetailPage() {
     </div>
   );
 
-  if (!service) return (
-    <div className="px-4 sm:px-6 lg:px-8 py-12 text-center">
-      <p style={{ color: "var(--brand-muted)" }}>Service not found.</p>
-    </div>
-  );
+  if (!service) {
+    // A real "not found" is different from not being able to reach the server
+    if (loadErr instanceof FetchError && loadErr.status === undefined) {
+      return <LoadError message={loadErr.message} onRetry={() => mutate()} />;
+    }
+    return (
+      <div className="px-4 sm:px-6 lg:px-8 py-12 text-center">
+        <p style={{ color: "var(--brand-muted)" }}>Service not found.</p>
+      </div>
+    );
+  }
 
   const grouped = service.attendance.reduce<Record<string, { label: string; records: typeof service.attendance }>>((acc, a) => {
     const key   = a.member.shepherd?.id ?? "__none__";
@@ -267,7 +317,7 @@ export default function AttendanceDetailPage() {
             </div>
 
             {group.records.map((a, i) => {
-              const status   = overrides[a.member.id] ?? a.status;
+              const status   = a.status;
               const initials = `${a.member.firstName[0] ?? ""}${a.member.lastName[0] ?? ""}`.toUpperCase();
               return (
                 <div
@@ -315,6 +365,42 @@ export default function AttendanceDetailPage() {
           </div>
         ))}
       </div>
+
+      {/* ── Members with no mark yet — e.g. added after this service was saved ── */}
+      {(service.missing?.length ?? 0) > 0 && (
+        <div className="mt-8">
+          <h2 className="text-[16px] font-semibold" style={{ color: "var(--brand-text)" }}>
+            Not marked yet
+            <span className="ml-2 rounded-pill text-[11px] font-medium px-2 py-0.5" style={{ background: "var(--brand-navy)", color: "#fff" }}>{service.missing!.length}</span>
+          </h2>
+          <p className="text-[12px] mt-1 mb-3" style={{ color: "var(--brand-muted)" }}>
+            Members of this cell who weren&apos;t marked when this service was saved, such as someone added afterwards. Mark them here to include them.
+          </p>
+          <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
+            {service.missing!.map((m) => (
+              <div key={m.id} className="flex items-center gap-3 px-4 py-2.5 border-t first:border-t-0" style={{ borderColor: "var(--brand-border)" }}>
+                <span className="flex-1 min-w-0 text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>
+                  {m.firstName} {m.lastName}
+                  {m.joinedAfter && m.joinedDate && (
+                    <span className="block text-[11px] font-normal" style={{ color: "var(--brand-warning)" }}>
+                      Joined {formatDate(m.joinedDate)}, after this service
+                    </span>
+                  )}
+                </span>
+                <div className="flex items-center gap-1 shrink-0">
+                  {saving === m.id ? (
+                    <span className="text-[12px]" style={{ color: "var(--brand-muted)" }}>…</span>
+                  ) : (
+                    (["PRESENT", "ABSENT", "EXCUSED"] as AttendanceStatus[]).map((s) => (
+                      <StatusButton key={s} value={s} current={null} onChange={(v) => updateStatus(m.id, v)} />
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* ── First Timers section ── */}
       <div className="mt-8">
@@ -378,13 +464,16 @@ export default function AttendanceDetailPage() {
             <div className="flex flex-col gap-1">
               <label className="text-[10px] font-medium uppercase tracking-[0.04em]"
                      style={{ color: "var(--brand-muted)" }}>Brought by</label>
-              <input
-                value={ftForm.referredBy}
-                onChange={(e) => setFtForm((f) => ({ ...f, referredBy: e.target.value }))}
-                placeholder="Name of shepherd / member who brought them"
-                className="h-9 px-3 text-[13px] rounded-lg"
-                style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
-              />
+              <MemberPicker value={ftBroughtBy} onChange={setFtBroughtBy} placeholder="Search the member who brought them" />
+              {!ftBroughtBy && (
+                <input
+                  value={ftForm.referredBy}
+                  onChange={(e) => setFtForm((f) => ({ ...f, referredBy: e.target.value }))}
+                  placeholder="Not a member? Type the name of whoever brought them"
+                  className="h-9 px-3 text-[13px] rounded-lg"
+                  style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
+                />
+              )}
             </div>
 
             <div className="flex gap-2">
