@@ -21,8 +21,10 @@ import {
   Search, Pencil, Trash2, Users, UserCheck, UserX,
   ShieldCheck, Phone, Mail, Calendar, MapPin,
   UserCircle, ShieldAlert, ChevronRight, ChevronLeft,
-  Briefcase, Wallet, GraduationCap,
+  Briefcase, Wallet, GraduationCap, KeyRound,
 } from "lucide-react";
+import { ResetPasswordSheet } from "@/components/reset-password-sheet";
+import { isBelowRole } from "@/lib/password-reset";
 import { AddMemberModal } from "@/components/add-member-modal";
 import { SummaryCard } from "@/components/summary-card";
 import { DepartmentPicker } from "@/components/department-picker";
@@ -374,6 +376,7 @@ function MemberDetailSheet({
   const [loading,   setLoading]   = useState(false);
   const [deleting,  setDeleting]  = useState(false);
   const [attendance, setAttendance] = useState<AttendanceRecord[]>([]);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     if (!memberId) { setDetail(null); setAttendance([]); return; }
@@ -627,6 +630,22 @@ function MemberDetailSheet({
                     value={detail.user?.supervisor
                       ? `${detail.user.supervisor.name}${detail.user.supervisor.role ? ` (${detail.user.supervisor.role.role.replace(/_/g, " ")})` : ""}`
                       : "Not yet assigned"} />
+
+                  {/* Forgot their password? Only someone above them can reset it (the server checks scope too) */}
+                  {detail.user && detail.user.id !== session?.user?.id && isBelowRole(session?.user?.role, detail.user.role?.role) && (
+                    <>
+                      <Button variant="outline" onClick={() => setResetting(true)}
+                              className="h-9 text-[13px] self-start mt-1" style={{ borderRadius: 8 }}>
+                        <KeyRound className="h-3.5 w-3.5 mr-1.5" /> Reset password
+                      </Button>
+                      <ResetPasswordSheet
+                        open={resetting}
+                        onClose={() => setResetting(false)}
+                        userId={detail.user.id}
+                        displayName={`${detail.firstName} ${detail.lastName}`}
+                      />
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center justify-between rounded-xl px-4 py-3"

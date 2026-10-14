@@ -120,6 +120,8 @@ model User {
   memberStatusChanges  MemberStatusChange[] @relation("StatusChangedBy")
   memberMovesMade      MemberMove[]         @relation("MemberMovedBy")
   libraryItems         LibraryItem[]        @relation("LibraryItemCreatedBy")
+  passwordResets       PasswordReset[]      @relation("PasswordResetTarget")
+  passwordResetsDone   PasswordReset[]      @relation("PasswordResetBy")
   outreachesCreated    Outreach[]           @relation("OutreachCreatedBy")
   encountersRecorded   Encounter[]          @relation("EncounterRecordedBy")
   contactActivities    ContactActivity[]    @relation("ContactActivityBy")
@@ -1050,4 +1052,21 @@ model GuestVisit {
   @@unique([contactId, serviceId])
   @@index([serviceId])
   @@map("guest_visits")
+}
+
+// ─── Password resets ──────────────────────────────────────────────────────────
+
+// One row each time a leader resets someone's password (the temporary password
+// itself is never stored). Lets an admin see who reset whom, and when.
+model PasswordReset {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")        // whose password was reset
+  resetById String?  @map("reset_by_id")    // who did it
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user    User  @relation("PasswordResetTarget", fields: [userId], references: [id], onDelete: Cascade)
+  resetBy User? @relation("PasswordResetBy", fields: [resetById], references: [id], onDelete: SetNull)
+
+  @@index([userId, createdAt])
+  @@map("password_resets")
 }

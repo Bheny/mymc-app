@@ -127,7 +127,7 @@ export function LoginForm() {
         </Button>
 
         <p className="text-[13px] text-center mt-1" style={{ color: "var(--brand-muted)" }}>
-          Forgot your password? Contact your admin.
+          Forgot your password? Ask your leader or admin to reset it for you.
         </p>
       </form>
     </>
