@@ -32,8 +32,8 @@ type ScopeContext = {
 const LEVELS: { value: MemberLevel; label: string; description: string }[] = [
   { value: "shepherd",  label: "Regular member",  description: "Belongs to a shepherd within a cell." },
   { value: "cell",      label: "Cell level",       description: "Attached to a cell directly (e.g. acting cell shepherd, not yet activated)." },
-  { value: "buscentre", label: "Buscentre level",  description: "Senior leader not in a cell — e.g. Buscentre Head." },
-  { value: "mc",        label: "MC level",         description: "MC-wide leader not in a buscentre — e.g. MC Pastor." },
+  { value: "buscentre", label: "Bacenta level",  description: "Senior leader not in a cell — e.g. Bacenta Head." },
+  { value: "mc",        label: "MC level",         description: "MC-wide leader not in a bacenta — e.g. MC Pastor." },
 ];
 
 const GENDERS = ["Male", "Female", "Other"] as const;
@@ -240,7 +240,7 @@ export function AddMemberModal({ onAdded }: { onAdded?: () => void }) {
     const validation: Record<MemberLevel, () => string | null> = {
       shepherd:  () => !shepherdId  ? "Please select a shepherd."  : null,
       cell:      () => !cellId      ? "Please select a cell."      : null,
-      buscentre: () => !buscentreId ? "Please select a buscentre." : null,
+      buscentre: () => !buscentreId ? "Please select a bacenta." : null,
       mc:        () => !mcId        ? "Please select an MC."       : null,
     };
     const err = validation[level]();
@@ -339,14 +339,14 @@ export function AddMemberModal({ onAdded }: { onAdded?: () => void }) {
             </Field>
           )}
 
-          {/* ── Buscentre ── */}
+          {/* ── Bacenta ── */}
           {showBuscentre && (
-            <Field label="Buscentre" required={level === "buscentre"}>
+            <Field label="Bacenta" required={level === "buscentre"}>
               {lockedBuscentre && scopeCtx?.buscentre ? (
                 <LockedField name={scopeCtx.buscentre.name} />
               ) : (
                 <NativeSelect value={buscentreId} onChange={setBuscentreId}
-                  placeholder={!mcId ? "Select an MC first" : buscentres.length === 0 ? "No buscentres" : "— Select buscentre —"}
+                  placeholder={!mcId ? "Select an MC first" : buscentres.length === 0 ? "No bacentas" : "— Select bacenta —"}
                   options={buscentres}
                   disabled={!mcId || buscentres.length === 0}
                   displayFn={(o) => (o as Option).name} />
@@ -362,7 +362,7 @@ export function AddMemberModal({ onAdded }: { onAdded?: () => void }) {
               ) : (
                 <NativeSelect value={cellId} onChange={setCellId}
                   disabled={!buscentreId || cells.length === 0}
-                  placeholder={!buscentreId ? "Select a buscentre first" : cells.length === 0 ? "No cells yet" : "— Select cell —"}
+                  placeholder={!buscentreId ? "Select a bacenta first" : cells.length === 0 ? "No cells yet" : "— Select cell —"}
                   options={cells}
                   displayFn={(o) => (o as Option).name} />
               )}

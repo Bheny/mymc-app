@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { signOut } from "next-auth/react";
+import { clearPersistedCache } from "@/lib/persist-cache";
 
 const IDLE_LIMIT_MS = 15 * 60 * 1000; // 15 minutes
 const STORAGE_KEY   = "mymc:lastActivity";
@@ -34,6 +35,7 @@ export function useIdleLogout(enabled: boolean) {
       if (Date.now() - last >= IDLE_LIMIT_MS) {
         // Come back to this exact page (path + query) after logging in again
         const here = `${window.location.pathname}${window.location.search}`;
+        clearPersistedCache();
         signOut({ callbackUrl: `/login?reason=idle&callbackUrl=${encodeURIComponent(here)}` });
       }
     };

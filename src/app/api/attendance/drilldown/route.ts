@@ -60,7 +60,7 @@ export async function GET(request: Request) {
     rows: groupRows(cellSnaps, (s: CellSnap) => ({ id: s.mcId, name: s.mcName })),
   });
   levels.push({
-    key: "buscentre", label: "By buscentre",
+    key: "buscentre", label: "By bacenta",
     rows: groupRows(cellSnaps, (s: CellSnap) => ({ id: s.buscentreId, name: s.buscentreName })),
   });
   levels.push({

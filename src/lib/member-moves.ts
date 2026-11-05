@@ -101,9 +101,9 @@ async function resolveDest(d: Dest): Promise<ResolvedDest | { error: string; sta
     return { placement, node, shepherdId: null, label: await labelPlacement(placement), notifyUserIds: head ? [head.userId] : [] };
   }
   if (d.level === "buscentre") {
-    if (!d.buscentreId) return { error: "Choose a buscentre", status: 400 };
+    if (!d.buscentreId) return { error: "Choose a bacenta", status: 400 };
     const node = await resolveNode("BUSCENTRE", d.buscentreId);
-    if (!node) return notFound("Buscentre");
+    if (!node) return notFound("Bacenta");
     const placement = { ...none, buscentreId: d.buscentreId };
     const head = await prisma.userRole.findFirst({ where: { role: "buscentre_head", buscentreId: d.buscentreId }, select: { userId: true } });
     return { placement, node, shepherdId: null, label: await labelPlacement(placement), notifyUserIds: head ? [head.userId] : [] };

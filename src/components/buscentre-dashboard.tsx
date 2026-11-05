@@ -12,7 +12,7 @@ import {
   Building2, Phone, Mail, ChevronRight, ArrowUpRight,
   Plus, Loader2, Search, X, UserMinus,
 } from "lucide-react";
-import { SummaryCard } from "@/components/summary-card";
+import { SummaryCard, membersLink } from "@/components/summary-card";
 import { AddMemberModal } from "@/components/add-member-modal";
 import { BirthdaySection } from "@/components/birthday-section";
 import { AttendanceStatsSection } from "@/components/attendance-stats-section";
@@ -528,7 +528,7 @@ function Skeleton() {
 
 export function BuscentreDashboard({ buscentreId }: { buscentreId?: string }) {
   // A drilled-in dashboard (explicit buscentreId) is read-only — write actions stay
-  // reserved for the buscentre's own page or a real acting-up grant.
+  // reserved for the bacenta's own page or a real acting-up grant.
   const readOnly = !!buscentreId;
 
   const { activeView, ready } = useActiveRole();
@@ -557,16 +557,18 @@ export function BuscentreDashboard({ buscentreId }: { buscentreId?: string }) {
       <div className="px-4 sm:px-6 lg:px-8 py-12 max-w-[600px] mx-auto text-center">
         <Building2 style={{ width: 40, height: 40, color: "var(--brand-muted)", margin: "0 auto 12px" }} />
         <p className="text-[14px] font-medium mb-1" style={{ color: "var(--brand-text)" }}>
-          {error || "No buscentre assigned"}
+          {error || "No bacenta assigned"}
         </p>
         <p className="text-[13px]" style={{ color: "var(--brand-muted)" }}>
-          Your account needs to be scoped to a buscentre. Contact your MC Pastor or administrator.
+          Your account needs to be scoped to a bacenta. Contact your MC Pastor or administrator.
         </p>
       </div>
     );
   }
 
   const { buscentre, stats, recentMembers, birthdays } = overview;
+  // A drilled-in view carries its buscentre to the Members page; your own is scoped by your role there
+  const mLink = (f: "all" | "active" | "inactive" | "system") => membersLink(f, { buscentreId });
 
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[1200px] mx-auto pb-20 lg:pb-8">
@@ -591,15 +593,15 @@ export function BuscentreDashboard({ buscentreId }: { buscentreId?: string }) {
 
       {/* ── Primary KPIs ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <SummaryCard title="Total Members"  value={stats.totalMembers}
+        <SummaryCard title="Total Members"  value={stats.totalMembers} href={mLink("all")}
           icon={<Users className="h-4 w-4" />}
           subtitle={`${stats.membersInDepartment} in a department (${stats.totalMembers > 0 ? Math.round((stats.membersInDepartment / stats.totalMembers) * 100) : 0}%)`} />
-        <SummaryCard title="Active"         value={stats.activeMembers}
+        <SummaryCard title="Active"         value={stats.activeMembers} href={mLink("active")}
           icon={<UserCheck className="h-4 w-4" />}
           subtitle={`${stats.totalMembers > 0 ? Math.round((stats.activeMembers / stats.totalMembers) * 100) : 0}% of total`} />
-        <SummaryCard title="Inactive"       value={stats.inactiveMembers}
+        <SummaryCard title="Inactive"       value={stats.inactiveMembers} href={mLink("inactive")}
           icon={<UserX className="h-4 w-4" />} />
-        <SummaryCard title="System Users"   value={stats.systemUsers}
+        <SummaryCard title="System Users"   value={stats.systemUsers} href={mLink("system")}
           icon={<ShieldCheck className="h-4 w-4" />} />
       </div>
 

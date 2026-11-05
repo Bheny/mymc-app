@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { useSession } from "next-auth/react";
 import { MemberPicker, type PickedMember } from "@/components/member-picker";
+import { LeaderAttendancePicker } from "@/components/leader-attendance-picker";
+import type { LeaderOption } from "@/lib/leader-attendance";
 
 type FirstTimerIntent = "JUST_VISITING" | "UNDECIDED" | "WANTS_TO_JOIN";
 
@@ -140,7 +142,7 @@ export default function NewAttendancePage() {
   const router = useRouter();
   const { data: session }     = useSession();
   const { activeView, ready } = useActiveRole();
-  // A buscentre head records for any cell in their buscentre, so they choose which one
+  // A bacenta head records for any cell in their bacenta, so they choose which one
   const isHead = activeView?.role === "buscentre_head";
   const [pickedCell, setPickedCell] = useState("");
   const [headCells,  setHeadCells]  = useState<{ id: string; name: string }[]>([]);
@@ -164,10 +166,10 @@ export default function NewAttendancePage() {
   const [speaker,     setSpeaker]     = useState("");
   const [notes,       setNotes]       = useState("");
 
-  // The cell being recorded: the user's own (primary or acting), or the one a buscentre head picked
+  // The cell being recorded: the user's own (primary or acting), or the one a bacenta head picked
   const cellId = isHead ? (pickedCell || null) : (activeView?.cellId ?? null);
 
-  // The cells a buscentre head can choose from
+  // The cells a bacenta head can choose from
   useEffect(() => {
     if (!ready || !isHead || !activeView?.buscentreId) return;
     fetch(`/api/org/cells?buscentreId=${activeView.buscentreId}`)
@@ -347,6 +349,20 @@ export default function NewAttendancePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [serviceType]);
 
+  // Senior shepherds / MC pastors who can be counted here (LC Live and MGS only)
+  const [leaderOptions, setLeaderOptions] = useState<LeaderOption[]>([]);
+  const [leaderIds,     setLeaderIds]     = useState<Set<string>>(new Set());
+  useEffect(() => {
+    setLeaderIds(new Set());
+    if (!ready || !cellId || (serviceType !== "LC_LIVE" && serviceType !== "MGS")) { setLeaderOptions([]); return; }
+    let live = true;
+    fetch(`/api/attendance/leaders?cellId=${cellId}&type=${serviceType}&date=${serviceDate}`)
+      .then((r) => (r.ok ? r.json() : []))
+      .then((d) => { if (live) setLeaderOptions(Array.isArray(d) ? d : []); })
+      .catch(() => { if (live) setLeaderOptions([]); });
+    return () => { live = false; };
+  }, [ready, cellId, serviceType, serviceDate]);
+
   // Expected guests for this cell + date (not for Shepherds Meeting)
   useEffect(() => {
     if (!ready || !cellId || isShepherdsMeeting) { setExpected([]); setReturning([]); setGuestIds([]); return; }
@@ -408,6 +424,7 @@ export default function NewAttendancePage() {
         notes:        notes.trim() || null,
         attendance:   records,
         actingCellId,
+        leaders: leaderOptions.filter((o) => leaderIds.has(o.id)).map((o) => ({ memberId: o.id })),
         guestVisits: isShepherdsMeeting ? [] : guestIds,
         firstTimers: isShepherdsMeeting ? [] : validFTs.map(({ firstName, lastName, phone, location, referredBy, broughtBy, intent, contactId }) => ({
           firstName, lastName, contactId,
@@ -461,7 +478,7 @@ export default function NewAttendancePage() {
         </div>
       )}
 
-      {/* ── Which cell (buscentre heads) ── */}
+      {/* ── Which cell (bacenta heads) ── */}
       {isHead && (
         <div className="rounded-xl p-5 mb-6 flex flex-col gap-2" style={{ border: "1px solid var(--brand-border)" }}>
           <label htmlFor="head-cell" className="text-[11px] font-medium uppercase tracking-[0.06em]" style={{ color: "var(--brand-muted)" }}>
@@ -695,7 +712,7 @@ export default function NewAttendancePage() {
                   >
                     {/* Avatar — hidden on very small screens to give name more room */}
                     <div
-                      className="hidden xs:flex items-center justify-center rounded-lg text-[12px] font-semibold shrink-0"
+                      className="hidden min-[400px]:flex items-center justify-center rounded-lg text-[12px] font-semibold shrink-0"
                       style={{
                         width: 32, height: 32,
                         background: status === "PRESENT" ? "var(--brand-success)" : status === "ABSENT" ? "var(--brand-danger)" : status === "EXCUSED" ? "var(--brand-warning)" : "var(--brand-navy)",
@@ -726,6 +743,12 @@ export default function NewAttendancePage() {
         </div>
       )}
 
+      {/* ── Senior shepherds / MC pastors (LC Live and MGS) ── */}
+      <LeaderAttendancePicker
+        options={leaderOptions} selected={leaderIds} serviceType={serviceType}
+        onToggle={(id) => setLeaderIds((prev) => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; })}
+      />
+
       {/* ── First Timers (hidden for Shepherds Meeting) ── */}
       {!isShepherdsMeeting && (
         <div className="mt-8">
@@ -739,7 +762,7 @@ export default function NewAttendancePage() {
             <button
               type="button"
               onClick={addFirstTimer}
-              className="flex items-center gap-1.5 h-9 px-3 rounded-lg text-[13px] font-medium transition-colors shrink-0"
+              className="flex items-center gap-1.5 h-10 sm:h-9 px-3 rounded-lg text-[13px] font-medium transition-colors shrink-0"
               style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)", border: "1px solid var(--brand-border)" }}
             >
               <Plus className="h-3.5 w-3.5" />
@@ -773,7 +796,7 @@ export default function NewAttendancePage() {
                     </p>
                   </div>
                   <button type="button" onClick={() => addFromContact(g)}
-                          className="h-8 px-3 rounded-lg text-[12px] font-medium shrink-0"
+                          className="h-10 sm:h-8 px-4 sm:px-3 rounded-lg text-[12px] font-medium shrink-0"
                           style={{ background: "var(--brand-navy)", color: "#fff" }}>
                     Came
                   </button>
@@ -796,11 +819,11 @@ export default function NewAttendancePage() {
                         <div className="min-w-0">
                           <p className="text-[13px] font-medium truncate" style={{ color: "var(--brand-text)" }}>{g.firstName} {g.lastName}</p>
                           <p className="text-[11px]" style={{ color: after >= 2 ? "var(--brand-warning)" : "var(--brand-muted)" }}>
-                            {after} visit{after === 1 ? "" : "s"} this month{after === 2 ? " · one more reaches 3" : after >= 3 ? " · reaches the buscentre head" : ""}
+                            {after} visit{after === 1 ? "" : "s"} this month{after === 2 ? " · one more reaches 3" : after >= 3 ? " · reaches the bacenta head" : ""}
                           </p>
                         </div>
                         <button type="button" onClick={() => setGuestIds((p) => (here ? p.filter((x) => x !== g.id) : [...p, g.id]))}
-                                className="h-8 px-3 rounded-lg text-[12px] font-medium shrink-0"
+                                className="h-10 sm:h-8 px-4 sm:px-3 rounded-lg text-[12px] font-medium shrink-0"
                                 style={here
                                   ? { background: "var(--tint-ok-bg)", color: "var(--tint-ok-fg)", border: "1px solid var(--brand-border)" }
                                   : { background: "var(--surface)", color: "var(--brand-link)", border: "1px solid var(--brand-border)" }}>
@@ -816,7 +839,7 @@ export default function NewAttendancePage() {
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: "var(--brand-muted)" }} />
                 <input value={guestQuery} onChange={(e) => setGuestQuery(e.target.value)}
                        placeholder="Search someone from outreach by name or number"
-                       className="h-9 w-full pl-8 pr-3 text-[13px] rounded-lg"
+                       className="h-11 sm:h-9 w-full pl-8 pr-3 text-[13px] rounded-lg"
                        style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }} />
               </div>
               {guestResults.filter((g) => !firstTimers.some((ft) => ft.contactId === g.id)).map((g) => (
@@ -825,7 +848,7 @@ export default function NewAttendancePage() {
                     {g.firstName} {g.lastName} <span style={{ color: "var(--brand-muted)" }}>· {g.stage.toLowerCase()}</span>
                   </p>
                   <button type="button" onClick={() => addFromContact(g)}
-                          className="h-8 px-3 rounded-lg text-[12px] font-medium shrink-0"
+                          className="h-10 sm:h-8 px-4 sm:px-3 rounded-lg text-[12px] font-medium shrink-0"
                           style={{ background: "var(--surface)", color: "var(--brand-link)", border: "1px solid var(--brand-border)" }}>
                     Came
                   </button>
@@ -862,7 +885,7 @@ export default function NewAttendancePage() {
                       </span>
                     )}
                     <button type="button" onClick={() => removeFT(ft._key)}
-                            className="p-1 rounded hover:opacity-70 transition-opacity"
+                            aria-label="Remove first timer" className="p-2.5 -m-1.5 sm:p-1 sm:m-0 rounded hover:opacity-70 transition-opacity"
                             style={{ color: "var(--brand-danger)" }}>
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -883,7 +906,7 @@ export default function NewAttendancePage() {
                           onChange={(e) => updateFT(ft._key, { [field]: e.target.value })}
                           placeholder={placeholder}
                           readOnly={!!ft.contactId}
-                          className="h-9 px-3 text-[13px] rounded-lg"
+                          className="h-11 sm:h-9 px-3 text-[13px] rounded-lg"
                           style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
                         />
                       </div>
@@ -905,7 +928,7 @@ export default function NewAttendancePage() {
                           onChange={(e) => updateFT(ft._key, { [field]: e.target.value })}
                           onBlur={field === "phone" && !ft.contactId ? (e) => checkPhone(ft._key, e.target.value) : undefined}
                           placeholder={placeholder}
-                          className="h-9 px-3 text-[13px] rounded-lg"
+                          className="h-11 sm:h-9 px-3 text-[13px] rounded-lg"
                           style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
                         />
                       </div>
@@ -940,7 +963,7 @@ export default function NewAttendancePage() {
                         value={ft.referredBy}
                         onChange={(e) => updateFT(ft._key, { referredBy: e.target.value })}
                         placeholder="Not a member? Type the name of whoever brought them"
-                        className="h-9 px-3 text-[13px] rounded-lg"
+                        className="h-11 sm:h-9 px-3 text-[13px] rounded-lg"
                         style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
                       />
                     )}
@@ -957,7 +980,7 @@ export default function NewAttendancePage() {
                           key={intent}
                           type="button"
                           onClick={() => updateFT(ft._key, { intent })}
-                          className="flex-1 py-2 rounded-lg text-[12px] font-medium transition-colors"
+                          className="flex-1 py-2.5 sm:py-2 rounded-lg text-[12px] font-medium transition-colors"
                           style={ft.intent === intent
                             ? { background: "var(--brand-navy)", color: "#fff" }
                             : { background: "var(--surface)", color: "var(--brand-muted)", border: "1px solid var(--brand-border)" }}
@@ -973,7 +996,7 @@ export default function NewAttendancePage() {
               <button
                 type="button"
                 onClick={addFirstTimer}
-                className="flex items-center justify-center gap-1.5 h-9 rounded-lg text-[13px] font-medium transition-colors"
+                className="flex items-center justify-center gap-1.5 h-11 sm:h-9 rounded-lg text-[13px] font-medium transition-colors"
                 style={{ border: "1px dashed var(--brand-border)", color: "var(--brand-muted)" }}
               >
                 <Plus className="h-3.5 w-3.5" /> Add another
@@ -996,7 +1019,7 @@ export default function NewAttendancePage() {
 
       {/* Submit */}
       {savedNotices.length === 0 && (
-      <div className="mt-6 flex flex-col gap-3">
+      <div className="mt-6 flex flex-col gap-3 max-lg:sticky max-lg:bottom-[calc(64px+env(safe-area-inset-bottom,0px))] max-lg:z-20 max-lg:-mx-4 max-lg:px-4 max-lg:pt-3 max-lg:pb-3 max-lg:bg-[var(--page-bg)] max-lg:border-t max-lg:border-[var(--brand-border)]">
         {error && <p className="text-[13px]" style={{ color: "var(--brand-danger)" }}>{error}</p>}
         {!allDone && total > 0 && (
           <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>

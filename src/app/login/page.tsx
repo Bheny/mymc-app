@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function LoginPage() {
   return (
-    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden">
+    <div className="relative min-h-dvh flex items-center justify-center px-4 overflow-hidden">
       <LoginBackdrop />
 
       <div className="relative z-10 w-full max-w-sm flex flex-col items-center">

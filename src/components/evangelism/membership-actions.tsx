@@ -5,7 +5,7 @@ import { api, inputCls, inputStyle, PrimaryButton } from "@/components/evangelis
 import { CONVERSATION_LABEL } from "@/lib/radar";
 
 // The two decisions about a guest who keeps coming:
-//   · the buscentre head's conversation — do they want to stay?
+//   · the bacenta head's conversation — do they want to stay?
 //   · adding them to their cell as a member. This is open at any time: most wait for the
 //     conversation, but some decide at the very first meeting.
 
@@ -13,7 +13,7 @@ const OUTCOMES = ["WANTS_TO_JOIN", "STILL_DECIDING", "NOT_STAYING"] as const;
 
 export function MembershipActions({ contactId, canConverse, canAdd, hasSurname, hasCell, onChanged, compact }: {
   contactId: string;
-  canConverse: boolean;       // buscentre head or above
+  canConverse: boolean;       // bacenta head or above
   canAdd: boolean;            // cell shepherd or above
   hasSurname: boolean;
   hasCell: boolean;

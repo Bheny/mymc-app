@@ -44,7 +44,7 @@ import {
             <DialogTitle>{cellInfo.name} Cell Information</DialogTitle>
             <DialogDescription>Quick summary of the cell&apos;s key metrics and information.</DialogDescription>
           </DialogHeader>
-          <ScrollArea className="h-[60vh] mt-4">
+          <ScrollArea className="h-[60dvh] mt-4">
             <div className="grid gap-4">
               <div className="grid grid-cols-2 items-center gap-4">
                 <div className="flex items-center">

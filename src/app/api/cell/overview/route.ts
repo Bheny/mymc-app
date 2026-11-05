@@ -18,7 +18,7 @@ export async function GET(request: Request) {
 
   let cellId = session.user.cellId;
 
-  // Acting-up override: allow a buscentre head / higher role to view a specific cell
+  // Acting-up override: allow a bacenta head / higher role to view a specific cell
   // they are temporarily filling as cell shepherd.
   if (actingCellId) {
     const actingAt = (session.user.actingAt ?? {}) as Record<string, string>;

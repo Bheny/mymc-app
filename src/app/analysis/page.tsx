@@ -30,7 +30,7 @@ type CellBreakdown = {
   id: string; name: string; cellShepherd: string | null; memberCount: number;
   lcLiveAvg: number; mgsAvg: number;
   firstTimers: number; retained: number; soulsWon: number;
-  buscentreName?: string; // MC/admin scope — which buscentre this cell belongs to
+  buscentreName?: string; // MC/admin scope — which bacenta this cell belongs to
   buscentreId?:  string;
 };
 
@@ -290,7 +290,7 @@ export default function AnalysisPage() {
     <div className="px-4 py-12 text-center">
       <BarChart2 style={{ width: 40, height: 40, color: "var(--brand-muted)", margin: "0 auto 12px" }} />
       <p className="text-[14px]" style={{ color: "var(--brand-muted)" }}>
-        No analysis data available. Make sure your account is scoped to a cell or buscentre.
+        No analysis data available. Make sure your account is scoped to a cell or bacenta.
       </p>
     </div>
   );
@@ -387,7 +387,7 @@ export default function AnalysisPage() {
             <Loader2 className="animate-spin h-4 w-4 shrink-0" style={{ color: "var(--brand-muted)" }} />
           )}
 
-          {/* Admin / Chief Shepherd: MC → Buscentre → Cell */}
+          {/* Admin / Chief Shepherd: MC → Bacenta → Cell */}
           {(activeRole === "admin" || activeRole === "chief_shepherd") && (
             <>
               <select
@@ -406,7 +406,7 @@ export default function AnalysisPage() {
                   className="h-9 px-3 text-[13px] rounded-lg"
                   style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
                 >
-                  <option value="">All buscentres</option>
+                  <option value="">All bacentas</option>
                   {buscentreOptions.map((bc) => <option key={bc.id} value={bc.id}>{bc.name}</option>)}
                 </select>
               )}
@@ -424,7 +424,7 @@ export default function AnalysisPage() {
             </>
           )}
 
-          {/* MC Pastor: Buscentre → Cell */}
+          {/* MC Pastor: Bacenta → Cell */}
           {activeRole === "mc_pastor" && (
             <>
               <select
@@ -433,7 +433,7 @@ export default function AnalysisPage() {
                 className="h-9 px-3 text-[13px] rounded-lg"
                 style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
               >
-                <option value="">All buscentres</option>
+                <option value="">All bacentas</option>
                 {buscentreOptions.map((bc) => <option key={bc.id} value={bc.id}>{bc.name}</option>)}
               </select>
               {filterBuscentreId && (dropdownOptions.length > 1 || !!filterId) && (
@@ -450,7 +450,7 @@ export default function AnalysisPage() {
             </>
           )}
 
-          {/* Buscentre Head: Cell filter */}
+          {/* Bacenta Head: Cell filter */}
           {activeRole === "buscentre_head" && (dropdownOptions.length > 1 || !!filterId) && (
             <select
               value={filterId}
@@ -702,11 +702,11 @@ export default function AnalysisPage() {
           <table className="w-full border-collapse">
             <thead>
               <tr style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--brand-border)" }}>
-                {/* Buscentre column — MC scope, or a chief_shepherd's branch-wide scope, without a buscentre filter */}
+                {/* Bacenta column — MC scope, or a chief_shepherd's branch-wide scope, without a bacenta filter */}
                 {!isCellScope && (scope.type === "mc" || scope.type === "branch") && !filterBuscentreId && (
                   <th className="px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-[0.06em] hidden sm:table-cell"
                       style={{ color: "var(--brand-muted)" }}>
-                    Buscentre
+                    Bacenta
                   </th>
                 )}
                 <th className="px-4 py-2.5 text-left text-[11px] font-medium uppercase tracking-[0.06em]"
@@ -778,7 +778,7 @@ export default function AnalysisPage() {
                     <tr key={row.id}
                         style={{ borderBottom: i < breakdown.length - 1 ? "1px solid var(--brand-border)" : "none",
                                  background: i % 2 === 0 ? "var(--surface)" : "var(--gray-50b)" }}>
-                      {/* Buscentre cell — MC scope, or a chief_shepherd's branch-wide scope */}
+                      {/* Bacenta cell — MC scope, or a chief_shepherd's branch-wide scope */}
                       {(scope.type === "mc" || scope.type === "branch") && !filterBuscentreId && (
                         <td className="px-4 py-3 hidden sm:table-cell">
                           <span className="text-[12px] font-medium rounded-pill px-2 py-0.5"

@@ -10,12 +10,12 @@ type Params = { params: { id: string } };
 const MC_SELECT = { id: true, name: true, branchId: true } as const;
 
 /**
- * POST — move a buscentre (with all its cells and everything under them)
+ * POST — move a bacenta (with all its cells and everything under them)
  * to a different MegaChurch in the same branch.
  * Body: { mcId }
  *
  * Cells hang off buscentreId, so they follow automatically. UserRole rows for
- * the buscentre head and every cell shepherd / shepherd beneath carry a
+ * the bacenta head and every cell shepherd / shepherd beneath carry a
  * denormalised mcId, which is rewritten here.
  */
 export async function POST(request: Request, { params }: Params) {
@@ -29,7 +29,7 @@ export async function POST(request: Request, { params }: Params) {
     where:  { id: params.id },
     select: { id: true, name: true, mc: { select: MC_SELECT } },
   });
-  if (!bc) return NextResponse.json({ error: "Buscentre not found" }, { status: 404 });
+  if (!bc) return NextResponse.json({ error: "Bacenta not found" }, { status: 404 });
 
   const from = bc.mc;
   if (from.id === mcId) {
@@ -40,11 +40,11 @@ export async function POST(request: Request, { params }: Params) {
   if (!to) return NextResponse.json({ error: "Destination MC not found" }, { status: 404 });
 
   if (from.branchId !== to.branchId) {
-    return NextResponse.json({ error: "Buscentres can only be moved within the same branch" }, { status: 400 });
+    return NextResponse.json({ error: "Bacentas can only be moved within the same branch" }, { status: 400 });
   }
 
   if (!canMoveBuscentre(session.user, from, to)) {
-    return NextResponse.json({ error: "You're not permitted to move this buscentre" }, { status: 403 });
+    return NextResponse.json({ error: "You're not permitted to move this bacenta" }, { status: 403 });
   }
 
   const cap = await checkCapacity("buscentre", to.id);
@@ -85,7 +85,7 @@ export async function POST(request: Request, { params }: Params) {
     to:           { id: to.id,   name: to.name },
     leadersMoved: rolesUpdated.count,
     ...(cap.atCapacity && {
-      warning: `${to.name} is now over its buscentre limit (${cap.count + 1}/${cap.max})`,
+      warning: `${to.name} is now over its bacenta limit (${cap.count + 1}/${cap.max})`,
     }),
   });
 }

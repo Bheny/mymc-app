@@ -24,7 +24,7 @@ const isEmpty = (c: Counts) => METRICS.every((m) => c[m] === 0);
 export type MemberRow = {
   id: string; name: string;
   role: string;                 // a Role, or "none" for members without a login
-  place: string;                // "Cell · Buscentre"
+  place: string;                // "Cell · Bacenta"
   cellId: string | null; buscentreId: string | null; mcId: string | null;
   counts: Counts;
 };
@@ -241,7 +241,7 @@ const memberVisible = (v: Viewer, m: MemberRow) => {
   }
 };
 
-// Groups are compared with their peers: a cell sees the cells of its buscentre, a buscentre the
+// Groups are compared with their peers: a cell sees the cells of its buscentre, a bacenta the
 // buscentres of its MC, and every MC is compared across the branch. Leaders above see their whole
 // area at the level they pick.
 const groupVisible = (v: Viewer, g: GroupRow) => {

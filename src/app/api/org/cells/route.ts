@@ -11,10 +11,11 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const buscentreId = searchParams.get("buscentreId");
+  const mcId = searchParams.get("mcId");
 
   const cells = await prisma.cell.findMany({
-    where:   buscentreId ? { buscentreId } : {},
-    include: { _count: { select: { shepherds: true, members: true } } },
+    where:   buscentreId ? { buscentreId } : mcId ? { buscentre: { mcId } } : {},
+    include: { _count: { select: { shepherds: true, members: true } }, buscentre: { select: { name: true } } },
     orderBy: { name: "asc" },
   });
   return NextResponse.json(cells);
@@ -33,7 +34,7 @@ export async function POST(request: Request) {
     where:  { id: buscentreId },
     select: { id: true, name: true, mcId: true, mc: { select: { branchId: true } } },
   });
-  if (!buscentre) return NextResponse.json({ error: "Buscentre not found" }, { status: 404 });
+  if (!buscentre) return NextResponse.json({ error: "Bacenta not found" }, { status: 404 });
 
   if (!canCreateCell(session.user, buscentre)) {
     return NextResponse.json({ error: "You're not permitted to create a cell here" }, { status: 403 });

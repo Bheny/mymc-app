@@ -154,8 +154,8 @@ export function GenerateReportModal({ onClose }: { onClose: () => void }) {
       return `Cell: ${name}`;
     }
     if (scope === "buscentre") {
-      const name = buscentreOptions.find((b) => b.id === scopeId)?.name ?? (lockedBuscentreId ? "My Buscentre" : scopeId);
-      return `Buscentre: ${name}`;
+      const name = buscentreOptions.find((b) => b.id === scopeId)?.name ?? (lockedBuscentreId ? "My Bacenta" : scopeId);
+      return `Bacenta: ${name}`;
     }
     if (scope === "mc") {
       const name = mcOptions.find((m) => m.id === scopeId)?.name ?? (lockedMcId ? "My MC" : scopeId);
@@ -174,7 +174,7 @@ export function GenerateReportModal({ onClose }: { onClose: () => void }) {
     >
       <div
         className="relative w-full rounded-2xl flex flex-col overflow-hidden"
-        style={{ maxWidth: 560, maxHeight: "90vh", background: "var(--surface)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
+        style={{ maxWidth: 560, maxHeight: "90dvh", background: "var(--surface)", boxShadow: "0 20px 60px rgba(0,0,0,0.2)" }}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4"
@@ -256,7 +256,7 @@ export function GenerateReportModal({ onClose }: { onClose: () => void }) {
                 <p className="text-[11px] font-medium uppercase tracking-[0.06em]"
                    style={{ color: "var(--brand-muted)" }}>Scope</p>
 
-                {/* Admin/Chief: MC → Buscentre → Cell */}
+                {/* Admin/Chief: MC → Bacenta → Cell */}
                 {showMcPicker && (
                   <select value={filterMcId}
                           onChange={(e) => { setFilterMcId(e.target.value); setFilterBuscentreId(""); setFilterCellId(""); }}
@@ -267,27 +267,27 @@ export function GenerateReportModal({ onClose }: { onClose: () => void }) {
                   </select>
                 )}
 
-                {/* MC Pastor: Buscentre → Cell (MC auto-scoped) */}
+                {/* MC Pastor: Bacenta → Cell (MC auto-scoped) */}
                 {showBuscentrePicker && !lockedBuscentreId && (
                   <select value={filterBuscentreId}
                           onChange={(e) => { setFilterBuscentreId(e.target.value); setFilterCellId(""); }}
                           disabled={showMcPicker && !filterMcId && !lockedMcId}
                           className="h-10 px-3 text-[14px] rounded-lg disabled:opacity-40"
                           style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}>
-                    <option value="">All buscentres</option>
+                    <option value="">All bacentas</option>
                     {buscentreOptions.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 )}
                 {lockedBuscentreId && (
                   <div className="h-10 px-3 flex items-center rounded-lg text-[14px]"
                        style={{ border: "1px solid var(--brand-border)", background: "var(--gray-50)", color: "var(--brand-text)" }}>
-                    {buscentreOptions.find((b) => b.id === lockedBuscentreId)?.name ?? "My Buscentre"}
+                    {buscentreOptions.find((b) => b.id === lockedBuscentreId)?.name ?? "My Bacenta"}
                     <span className="ml-auto text-[11px] px-2 py-0.5 rounded-pill"
                           style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>locked</span>
                   </div>
                 )}
 
-                {/* Buscentre Head + MC Pastor: Cell */}
+                {/* Bacenta Head + MC Pastor: Cell */}
                 {showCellPicker && !lockedCellId && (
                   <select value={filterCellId} onChange={(e) => setFilterCellId(e.target.value)}
                           disabled={!filterBuscentreId && !lockedBuscentreId}

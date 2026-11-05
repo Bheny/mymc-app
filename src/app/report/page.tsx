@@ -106,7 +106,7 @@ function CellsReadyToDivide({ data }: { data: Record<string, unknown> }) {
 
       <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--surface)", borderRadius: 12, overflow: "hidden", border: "1px solid var(--brand-border)" }}>
         <thead>
-          <tr><Th>Cell</Th><Th>Buscentre</Th><Th>Cell Shepherd</Th><Th right>Members</Th><Th right>Over Cap By</Th><Th>Status</Th></tr>
+          <tr><Th>Cell</Th><Th>Bacenta</Th><Th>Cell Shepherd</Th><Th right>Members</Th><Th right>Over Cap By</Th><Th>Status</Th></tr>
         </thead>
         <tbody>
           {rows.map((r) => (
@@ -180,7 +180,7 @@ function ShepherdLoad({ data }: { data: Record<string, unknown> }) {
 
       <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--surface)", border: "1px solid var(--brand-border)", borderRadius: 12, overflow: "hidden" }}>
         <thead>
-          <tr><Th>Shepherd</Th><Th>Cell</Th><Th>Buscentre</Th><Th right>Members</Th><Th>Load</Th><Th>Status</Th></tr>
+          <tr><Th>Shepherd</Th><Th>Cell</Th><Th>Bacenta</Th><Th right>Members</Th><Th>Load</Th><Th>Status</Th></tr>
         </thead>
         <tbody>
           {rows.map((r) => (
@@ -224,7 +224,7 @@ function FirstTimerConversion({ data }: { data: Record<string, unknown> }) {
 
       <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--surface)", border: "1px solid var(--brand-border)", borderRadius: 12, overflow: "hidden" }}>
         <thead>
-          <tr><Th>Cell</Th><Th>Buscentre</Th><Th right>First Timers</Th><Th right>Converted</Th><Th>Rate</Th></tr>
+          <tr><Th>Cell</Th><Th>Bacenta</Th><Th right>First Timers</Th><Th right>Converted</Th><Th>Rate</Th></tr>
         </thead>
         <tbody>
           {byCell.map((r, i) => (
@@ -261,7 +261,7 @@ function HighestAttendance({ data }: { data: Record<string, unknown> }) {
 
       <table style={{ width: "100%", borderCollapse: "collapse", background: "var(--surface)", border: "1px solid var(--brand-border)", borderRadius: 12, overflow: "hidden" }}>
         <thead>
-          <tr><Th>#</Th><Th>Service</Th><Th>Date</Th><Th>Cell</Th><Th>Buscentre</Th><Th right>Present</Th><Th>Rate</Th></tr>
+          <tr><Th>#</Th><Th>Service</Th><Th>Date</Th><Th>Cell</Th><Th>Bacenta</Th><Th right>Present</Th><Th>Rate</Th></tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (

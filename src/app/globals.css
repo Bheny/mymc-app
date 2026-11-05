@@ -245,6 +245,12 @@
   * {
     @apply border-border;
   }
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* a stray wide element must never make the whole page wobble sideways like a website */
+    overflow-x: clip;
+  }
   body {
     background-color: var(--page-bg);
     color: var(--brand-text);
@@ -253,7 +259,11 @@
     line-height: 1.6;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+    overflow-x: clip;
   }
+  /* Tapping should feel immediate: no 300ms double-tap-zoom wait on controls */
+  a, button, summary, label, [role="button"], input, select, textarea { touch-action: manipulation; }
   h1, h2, h3, h4, h5, h6 {
     line-height: 1.2;
     color: var(--brand-text);
@@ -287,11 +297,18 @@
   0%   { background-position: -200% 0; }
   100% { background-position:  200% 0; }
 }
+/* Placeholders stay invisible for the first 300ms. Most loads finish before that (cached pages, a quick
+   connection), so nothing flashes; the space is still reserved, so nothing jumps either. */
+@keyframes skeleton-in { to { opacity: 1; } }
 .skeleton {
   background: linear-gradient(90deg, #F3F4F6 25%, #E9EAEC 50%, #F3F4F6 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.4s ease infinite;
+  opacity: 0;
+  animation: skeleton-in 0.25s ease 0.3s forwards, shimmer 1.4s ease infinite;
   border-radius: 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton { animation: skeleton-in 0.25s ease 0.3s forwards; }
 }
 .dark .skeleton {
   background: linear-gradient(90deg, #1A202C 25%, #222938 50%, #1A202C 75%);
@@ -352,4 +369,48 @@
 
 @media (prefers-reduced-motion: reduce) {
   .login-blob { animation: none !important; }
+}
+
+/* ── Mobile / app-feel ─────────────────────────────────────────────────────── */
+
+/* Room for the fixed bottom nav (64px) plus the phone's home-indicator inset */
+.app-main { padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+.nav-safe-bottom { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+@media (max-width: 1023px) {
+  /* iOS Safari zooms the whole page when a field under 16px is focused, and
+     doesn't zoom back — the single most "this is a website" thing on a phone */
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Horizontal scrollers (tables, chip rows) that don't show a scrollbar on phones */
+.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.scroll-x::-webkit-scrollbar { display: none; }
+
+/* Wide data tables: keep the row's label in view while the rest scrolls sideways */
+.sticky-first th:first-child,
+.sticky-first td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+  box-shadow: 1px 0 0 var(--brand-border);
+}
+
+/* Touch screens: dense desktop-sized controls (32–36px) become comfortable 40px targets.
+   Scoped to interactive elements so avatars/icons that share the h-8/h-9 classes are untouched. */
+@media (max-width: 1023px) and (pointer: coarse) {
+  button.h-8, button.h-9, a.h-8, a.h-9, select.h-8, select.h-9, input.h-8, input.h-9, label.h-9 {
+    min-height: 40px;
+  }
+  button.w-8, button.w-9, a.w-8, a.w-9 { min-width: 40px; }
+}
+
+/* A <select> sizes to its longest option; never let one push a row wider than the screen */
+@media (max-width: 639px) {
+  select { max-width: 100%; }
 }

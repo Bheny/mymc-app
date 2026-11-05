@@ -12,7 +12,7 @@ import {
 const SUBJECTS: { key: Subject; label: string }[] = [
   { key: "members",   label: "Members" },
   { key: "cell",      label: "Cells" },
-  { key: "buscentre", label: "Buscentres" },
+  { key: "buscentre", label: "Bacentas" },
   { key: "mc",        label: "MCs" },
 ];
 

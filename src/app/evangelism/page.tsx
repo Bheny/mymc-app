@@ -71,7 +71,7 @@ function NewOutreachForm({ onDone, onCancel }: { onDone: () => void; onCancel: (
 export default function EvangelismPage() {
   const { activeView, ready } = useActiveRole();
   const canPlan = !!activeView && activeView.role !== "shepherd";
-  // Buscentre heads and above hold the conversations with guests who keep coming
+  // Bacenta heads and above hold the conversations with guests who keep coming
   const canTalk = ["buscentre_head", "mc_pastor", "chief_shepherd", "admin"].includes(activeView?.role ?? "");
   const radarActing = !activeView?.isActing ? ""
     : activeView.role === "buscentre_head" && activeView.buscentreId ? `actingBuscentreId=${activeView.buscentreId}`

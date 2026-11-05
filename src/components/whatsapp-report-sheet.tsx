@@ -107,7 +107,7 @@ export function WhatsAppReportSheet({
               <p className="text-[11px] font-semibold uppercase tracking-[0.07em]" style={{ color: "var(--brand-muted)" }}>
                 Preview <span className="normal-case tracking-normal font-normal">· {text.length.toLocaleString()} characters</span>
               </p>
-              <pre className="whitespace-pre-wrap break-words rounded-lg p-3 text-[12.5px] leading-relaxed font-sans max-h-[50vh] overflow-y-auto select-text"
+              <pre className="whitespace-pre-wrap break-words rounded-lg p-3 text-[12.5px] leading-relaxed font-sans max-h-[50dvh] overflow-y-auto select-text"
                    style={{ background: "var(--wa-bubble-bg)", color: "var(--wa-bubble-fg)", border: "1px solid var(--wa-bubble-border)" }}>
                 {text}
               </pre>
@@ -120,10 +120,10 @@ export function WhatsAppReportSheet({
           </div>
         </SheetBody>
         <SheetFooter>
-          <Button variant="outline" onClick={copy} disabled={!anySelected} className="h-9 text-[13px]" style={{ borderRadius: 8 }}>
+          <Button variant="outline" onClick={copy} disabled={!anySelected} className="h-10 sm:h-9 text-[13px]" style={{ borderRadius: 8 }}>
             {copied ? <><Check className="h-4 w-4 mr-1.5" /> Copied</> : <><Copy className="h-4 w-4 mr-1.5" /> Copy</>}
           </Button>
-          <Button onClick={share} disabled={!anySelected} className="h-9 text-[13px]"
+          <Button onClick={share} disabled={!anySelected} className="h-10 sm:h-9 text-[13px]"
                   style={{ background: "#128C7E", color: "#fff", borderRadius: 8 }}>
             <Share2 className="h-4 w-4 mr-1.5" /> Share to WhatsApp
           </Button>

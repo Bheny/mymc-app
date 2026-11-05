@@ -32,8 +32,8 @@ export function resolveAttendanceScope(user: SessionUser, sp: URLSearchParams): 
     }
     case "buscentre_head": {
       const r = pick(sp, "actingBuscentreId", "buscentre_id", user, user.buscentreId);
-      if (!r.ok)  return { error: "No acting access to this buscentre", status: 403 };
-      if (!r.id)  return { error: "No buscentre assigned", status: 400 };
+      if (!r.ok)  return { error: "No acting access to this bacenta", status: 403 };
+      if (!r.id)  return { error: "No bacenta assigned", status: 400 };
       return { level: "buscentre", scopeId: r.id, cellWhere: { buscentreId: r.id } };
     }
     case "mc_pastor": {

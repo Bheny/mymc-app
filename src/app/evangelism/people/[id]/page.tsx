@@ -133,7 +133,7 @@ export default function ContactPage() {
         </Field>
       </section>
 
-      {/* Membership — the guest's visits, the buscentre head's conversation, and adding them to their cell */}
+      {/* Membership — the guest's visits, the bacenta head's conversation, and adding them to their cell */}
       {d.stage === "ATTENDED" && (() => {
         const byService = new Map<string, string>();
         if (d.firstTimer) byService.set(d.firstTimer.service.id, d.firstTimer.service.date.slice(0, 10));
@@ -151,10 +151,10 @@ export default function ContactPage() {
             </p>
             {status.state === "radar" && (
               <p className="text-[12px] px-3 py-2 rounded-lg" style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}>
-                On the buscentre head&apos;s radar — {status.visits} services this month. Time to ask whether they would love to stay.
+                On the bacenta head&apos;s radar — {status.visits} services this month. Time to ask whether they would love to stay.
               </p>
             )}
-            {status.state === "nearly" && <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>One more service this month puts them on the buscentre head&apos;s radar.</p>}
+            {status.state === "nearly" && <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>One more service this month puts them on the bacenta head&apos;s radar.</p>}
             {d.conversationAt && (
               <p className="text-[12px] rounded-lg px-3 py-2" style={{ background: "var(--brand-navy-light)", color: "var(--brand-text)" }}>
                 Conversation on {fmtDate(d.conversationAt)}: <b>{CONVERSATION_LABEL[d.conversationOutcome ?? ""] ?? "recorded"}</b>{d.conversationNote ? ` — ${d.conversationNote}` : ""}

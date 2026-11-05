@@ -81,7 +81,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ gaps, cells: [] });
   }
 
-  // ── Buscentre scope — return per-cell gap summary ───────────────────────────
+  // ── Bacenta scope — return per-cell gap summary ───────────────────────────
   if (userRole === "buscentre_head" || actingBuscentreId) {
     if (!buscentreId) return NextResponse.json({ gaps: [], cells: [] });
 

@@ -201,7 +201,7 @@ export function isUniqueViolation(e: unknown): boolean {
 
 // ── Returning guests ──────────────────────────────────────────────────────────
 // Someone who isn't a member yet coming back after their first visit. Recorded as a GuestVisit so
-// we can see who has come 3+ times in a month — the point at which the buscentre head speaks to them.
+// we can see who has come 3+ times in a month — the point at which the bacenta head speaks to them.
 
 export type GuestPrepared = { cell: Node; ids: string[]; notices: string[] };
 

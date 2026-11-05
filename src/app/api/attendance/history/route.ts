@@ -57,6 +57,18 @@ export async function GET(request: Request) {
       AND s.cell_id IN (${Prisma.join(cellIds)})
     GROUP BY a.service_id, m.shepherd_id, a.status`);
 
+  // Senior shepherds / MC pastors counted at each service (kept in their own table, apart from the roster)
+  const leaderRows = await prisma.leaderAttendance.findMany({
+    where: { service: { ...serviceWhere, cancelled: false } },
+    select: { serviceId: true, member: { select: { mcId: true } } },
+  });
+  const leaders = new Map<string, { sr: number; mc: number }>();
+  for (const l of leaderRows) {
+    const e = leaders.get(l.serviceId) ?? { sr: 0, mc: 0 };
+    if (l.member.mcId) e.mc++; else e.sr++;
+    leaders.set(l.serviceId, e);
+  }
+
   const [services, rows, shepherds, firstTimers, joined, souls, scopeName] = await Promise.all([
     prisma.service.findMany({
       where: serviceWhere,
@@ -159,6 +171,8 @@ export async function GET(request: Request) {
         present: c?.present ?? 0, absent: c?.absent ?? 0, excused: c?.excused ?? 0,
         firstTimers: ft.get(s.id) ?? 0,
         guests: guests.get(s.id) ?? 0,
+        leaders: leaders.get(s.id)?.sr ?? 0,
+        mcLeaders: leaders.get(s.id)?.mc ?? 0,
         sh: c ? Array.from(c.sh.values()) : [],
       };
     }),
@@ -181,7 +195,7 @@ async function scopeNameFor(level: string, id: string | null): Promise<string> {
   if (!id) return "All branches";
   switch (level) {
     case "cell":      return (await prisma.cell.findUnique({ where: { id }, select: { name: true } }))?.name ?? "Cell";
-    case "buscentre": return (await prisma.buscentre.findUnique({ where: { id }, select: { name: true } }))?.name ?? "Buscentre";
+    case "buscentre": return (await prisma.buscentre.findUnique({ where: { id }, select: { name: true } }))?.name ?? "Bacenta";
     case "mc":        return (await prisma.megaChurch.findUnique({ where: { id }, select: { name: true } }))?.name ?? "Mega Church";
     default:          return (await prisma.branch.findUnique({ where: { id }, select: { name: true } }))?.name ?? "Branch";
   }

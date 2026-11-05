@@ -14,7 +14,7 @@ export const ACTING_UP_ALLOWED: Partial<Record<Role, Role[]>> = {
 
 const RECOMMENDATIONS: Partial<Record<Role, Partial<Record<Role, string>>>> = {
   mc_pastor: {
-    buscentre_head: "Assign a dedicated Senior Shepherd as Buscentre Head to free the MC Pastor.",
+    buscentre_head: "Assign a dedicated Senior Shepherd as Bacenta Head to free the MC Pastor.",
     cell_shepherd:  "Recruit a Cell Shepherd for this Cell as soon as possible.",
     shepherd:       "Assign a Shepherd — MC Pastor should not be in direct member care.",
   },

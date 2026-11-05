@@ -59,7 +59,7 @@ export default async function SharedItemPage({ params }: Params) {
   const isAudio  = item.mimeType?.startsWith("audio/");
 
   return (
-    <div className="min-h-screen px-4 py-8" style={{ background: "var(--brand-navy-light, var(--navy-25))" }}>
+    <div className="min-h-dvh px-4 py-8" style={{ background: "var(--brand-navy-light, var(--navy-25))" }}>
       <div className="mx-auto w-full max-w-[720px] flex flex-col gap-4">
         <p className="text-[12px] font-semibold uppercase tracking-[0.07em]" style={{ color: "var(--brand-muted)" }}>
           {item.mc?.name ?? item.branch.name} · Library
@@ -84,7 +84,7 @@ export default async function SharedItemPage({ params }: Params) {
           )}
           {item.kind === "FILE" && isPdf && (
             <iframe src={fileHref} title={item.title} className="w-full hidden sm:block"
-                    style={{ height: "70vh", border: 0, borderBottom: "1px solid var(--brand-border)" }} />
+                    style={{ height: "70dvh", border: 0, borderBottom: "1px solid var(--brand-border)" }} />
           )}
           {item.kind === "FILE" && isImage && (
             // eslint-disable-next-line @next/next/no-img-element

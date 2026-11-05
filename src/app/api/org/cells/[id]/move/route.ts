@@ -40,7 +40,7 @@ export async function POST(request: Request, { params }: Params) {
   }
 
   const to = await prisma.buscentre.findUnique({ where: { id: buscentreId }, select: BUSCENTRE_SELECT });
-  if (!to) return NextResponse.json({ error: "Destination buscentre not found" }, { status: 404 });
+  if (!to) return NextResponse.json({ error: "Destination bacenta not found" }, { status: 404 });
 
   // Departments are branch-scoped, so a cross-branch move would leave members
   // in another branch's departments

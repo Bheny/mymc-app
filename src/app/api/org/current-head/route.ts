@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 const ROLE_LABELS: Record<string, string> = {
   mc_pastor:      "MC Pastor",
-  buscentre_head: "Buscentre Head",
+  buscentre_head: "Bacenta Head",
   cell_shepherd:  "Cell Shepherd",
   shepherd:       "Shepherd",
   admin:          "Admin",

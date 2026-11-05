@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { checkCapacity, logCapacityWarning } from "@/lib/capacity";
 import { buildLeadershipIndex, resolveFromIndex } from "@/lib/leadership";
+import { isPosition, positionOf } from "@/lib/member-position";
 
 // ─── Shared include ───────────────────────────────────────────────────────────
 // Covers all four placement levels so the table always has what it needs.
@@ -13,6 +14,9 @@ const MEMBER_INCLUDE = {
   cell:      { select: { id: true, name: true, buscentre: { select: { id: true, name: true } } } },
   buscentre: { select: { id: true, name: true } },
   mc:        { select: { id: true, name: true } },
+  // What position they hold (system role, or a shepherd slot) — see lib/member-position
+  user:         { select: { role: { select: { role: true } } } },
+  shepherdRole: { select: { id: true } },
 } as const;
 
 // ─── GET ─────────────────────────────────────────────────────────────────────
@@ -31,6 +35,9 @@ export async function GET(request: Request) {
   const mcId        = searchParams.get("mcId")        ?? "";
   const isActive    = searchParams.get("isActive");
   const isUser      = searchParams.get("isUser");
+  const isTither    = searchParams.get("isTither");
+  // One or more roles, comma separated (?role=shepherd,cell_shepherd)
+  const positions   = (searchParams.get("role") ?? "").split(",").filter(isPosition);
 
   const members = await prisma.member.findMany({
     where: {
@@ -43,7 +50,8 @@ export async function GET(request: Request) {
             { lastName:  { contains: q, mode: "insensitive" as const } },
             { phone:     { contains: q, mode: "insensitive" as const } },
             { email:     { contains: q, mode: "insensitive" as const } },
-            { cell:      { name: { contains: q, mode: "insensitive" as const } } },
+            { titherId:  { contains: q, mode: "insensitive" as const } },
+            { cell:     { name: { contains: q, mode: "insensitive" as const } } },
             { cell:      { buscentre: { name: { contains: q, mode: "insensitive" as const } } } },
             { buscentre: { name: { contains: q, mode: "insensitive" as const } } },
           ],
@@ -59,6 +67,7 @@ export async function GET(request: Request) {
         ...(mcId        ? [{ mcId }]        : []),
         ...(isActive !== null ? [{ isActive: isActive === "true" }] : []),
         ...(isUser   !== null ? [{ isUser:   isUser   === "true" }] : []),
+        ...(isTither !== null ? [{ isTither: isTither === "true" }] : []),
       ],
     },
     include: MEMBER_INCLUDE,
@@ -67,10 +76,13 @@ export async function GET(request: Request) {
 
   const branchId = session.user.branchId;
   const index = branchId ? await buildLeadershipIndex(branchId) : null;
-  const withEffectiveShepherd = members.map((m) => ({
-    ...m,
-    effectiveShepherdName: index ? resolveFromIndex(m, index) : "Unassigned",
-  }));
+  const withEffectiveShepherd = members
+    .map((m) => ({
+      ...m,
+      position: positionOf(m),
+      effectiveShepherdName: index ? resolveFromIndex(m, index) : "Unassigned",
+    }))
+    .filter((m) => positions.length === 0 || positions.includes(m.position));
 
   return NextResponse.json(withEffectiveShepherd);
 }
@@ -136,9 +148,9 @@ export async function POST(request: Request) {
     placementData = { shepherdId: null, cellId, buscentreId: null, mcId: null };
 
   } else if (level === "buscentre") {
-    if (!buscentreId) return NextResponse.json({ error: "buscentreId required for buscentre-level members" }, { status: 400 });
+    if (!buscentreId) return NextResponse.json({ error: "buscentreId required for bacenta-level members" }, { status: 400 });
     const bc = await prisma.buscentre.findUnique({ where: { id: buscentreId } });
-    if (!bc) return NextResponse.json({ error: "Buscentre not found" }, { status: 404 });
+    if (!bc) return NextResponse.json({ error: "Bacenta not found" }, { status: 404 });
     placementData = { shepherdId: null, cellId: null, buscentreId, mcId: null };
 
   } else if (level === "mc") {

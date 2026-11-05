@@ -9,7 +9,7 @@ export function MainContentArea({ children }: { children: React.ReactNode }) {
   return (
     <div
       className={`transition-[padding-left] duration-200 ${collapsed ? "lg:pl-[76px]" : "lg:pl-[240px]"}`}
-      style={{ minHeight: "calc(100vh - 56px)" }}
+      style={{ minHeight: "calc(100dvh - 56px)" }}
     >
       {/* Context banner sits in the normal flow (sticky), so content
           below it is never overlapped */}

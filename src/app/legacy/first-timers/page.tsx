@@ -127,7 +127,7 @@ export default function FirstTimersPage() {
             {data.configured ? "No first timers tab is connected yet." : "No Google Sheets are connected yet."}
           </p>
           <Link href="/settings">
-            <Button className="h-9 text-[13px]" style={{ background: "var(--brand-navy)", color: "#fff", borderRadius: 8 }}>
+            <Button className="h-10 sm:h-9 text-[13px]" style={{ background: "var(--brand-navy)", color: "#fff", borderRadius: 8 }}>
               Open Settings
             </Button>
           </Link>
@@ -148,40 +148,40 @@ export default function FirstTimersPage() {
       </Link>
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
         <div className="min-w-0">
-          <h1 className="text-[24px] font-semibold" style={{ color: "var(--brand-text)" }}>First timers</h1>
+          <h1 className="text-[22px] sm:text-[24px] font-semibold" style={{ color: "var(--brand-text)" }}>First timers</h1>
           <p className="mt-0.5 text-[13px]" style={{ color: "var(--brand-muted)" }}>
             {data.label ?? "Registrations"} · {rows.length.toLocaleString("en-GB")} registered · updated{" "}
             {new Date(data.fetchedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
           </p>
         </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button onClick={() => setShowReport(true)} className="h-9 text-[13px]"
+        <div className="flex items-center gap-2 flex-wrap max-sm:[&>button]:flex-1">
+          <Button onClick={() => setShowReport(true)} className="h-10 sm:h-9 text-[13px]"
                   style={{ background: "var(--brand-navy)", color: "#fff", borderRadius: 8 }}>
             <ClipboardList className="h-3.5 w-3.5 mr-1.5" /> Generate report
           </Button>
-          <Button variant="outline" onClick={refresh} disabled={refreshing} className="h-9 text-[13px]" style={{ borderRadius: 8 }}>
+          <Button variant="outline" onClick={refresh} disabled={refreshing} className="h-10 sm:h-9 text-[13px]" style={{ borderRadius: 8 }}>
             <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${refreshing ? "animate-spin" : ""}`} /> Refresh
           </Button>
         </div>
       </div>
 
       {/* ── Filters ── */}
-      <div className="flex flex-wrap items-center gap-2 mb-5">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center mb-5">
         <select aria-label="Period" value={period} onChange={(e) => setPeriod(e.target.value)}
-                className="h-9 px-3 text-[13px] rounded-lg" style={selectStyle}>
+                className="h-10 sm:h-9 w-full sm:w-auto min-w-0 px-3 text-[13px] rounded-lg" style={selectStyle}>
           <option value="all">All time</option>
           {months.map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}
         </select>
         {mcs.length > 1 && (
           <select aria-label="MC" value={mc} onChange={(e) => setMc(e.target.value)}
-                  className="h-9 px-3 text-[13px] rounded-lg" style={selectStyle}>
+                  className="h-10 sm:h-9 w-full sm:w-auto min-w-0 px-3 text-[13px] rounded-lg" style={selectStyle}>
             <option value="">All MCs</option>
             {mcs.map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
         )}
         {hasFilters && (
           <button onClick={() => { setMc(""); setPeriod("all"); }}
-                  className="h-9 px-2 text-[12px] font-medium inline-flex items-center gap-1 hover:underline" style={{ color: "var(--brand-link)" }}>
+                  className="h-10 sm:h-9 px-2 max-sm:col-span-2 max-sm:justify-center text-[12px] font-medium inline-flex items-center gap-1 hover:underline" style={{ color: "var(--brand-link)" }}>
             <X className="h-3.5 w-3.5" /> Clear
           </button>
         )}

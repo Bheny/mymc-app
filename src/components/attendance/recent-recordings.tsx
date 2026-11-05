@@ -6,7 +6,7 @@ import { ChevronRight } from "lucide-react";
 import { Card, fmt } from "@/components/attendance/dash-ui";
 import { formatDay, TYPE_LABEL, type SvcType } from "@/lib/attendance-dashboard";
 
-// For buscentre heads: the services recorded across their buscentre, each one a link to its page
+// For bacenta heads: the services recorded across their bacenta, each one a link to its page
 // where attendance can be checked and corrected.
 
 type Row = {

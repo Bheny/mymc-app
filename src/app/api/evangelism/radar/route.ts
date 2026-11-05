@@ -7,12 +7,12 @@ import { CONVERSATION_ROLES, radarFor } from "@/lib/evangelism-radar";
 // GET /api/evangelism/radar (+ acting* params)
 // Guests who aren't members yet and have come to 3+ services this month and need a conversation,
 // those one service away, and those who said they want to join and are waiting to be added.
-// For the people who hold those conversations: buscentre heads and above.
+// For the people who hold those conversations: bacenta heads and above.
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   if (!CONVERSATION_ROLES.includes(session.user.role ?? "")) {
-    return NextResponse.json({ error: "The radar is for buscentre heads and above" }, { status: 403 });
+    return NextResponse.json({ error: "The radar is for bacenta heads and above" }, { status: 403 });
   }
 
   const scope = resolveAttendanceScope(session.user as never, new URL(request.url).searchParams);

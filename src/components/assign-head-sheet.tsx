@@ -56,14 +56,14 @@ const TARGET_ROLE: Record<NodeType, string> = {
 
 const NODE_LABEL: Record<NodeType, string> = {
   cell:      "Cell Shepherd",
-  buscentre: "Buscentre Head",
+  buscentre: "Bacenta Head",
   mc:        "MC Pastor",
   branch:    "Chief Shepherd",
 };
 
 const ROLE_LABEL: Record<string, string> = {
   cell_shepherd:  "Cell Shepherd",
-  buscentre_head: "Buscentre Head",
+  buscentre_head: "Bacenta Head",
   mc_pastor:      "MC Pastor",
   chief_shepherd: "Chief Shepherd",
   admin:          "Admin",

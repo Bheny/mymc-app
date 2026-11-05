@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { AttendanceStatus } from "@prisma/client";
 import { resolveRecordingCell } from "@/lib/recording-scope";
+import { prepareLeaderRows, type LeaderMark } from "@/lib/leader-attendance";
 import { applyFirstTimers, applyGuestVisits, isUniqueViolation, LinkError, prepareFirstTimers, prepareGuestVisits, type FirstTimerDraft, type GuestPrepared } from "@/lib/evangelism-attendance";
 
 // ── Absence notification helper ──────────────────────────────────────────────
@@ -37,7 +38,7 @@ async function fireAbsenceNotifications(
     select: { userId: true },
   });
 
-  // Find the buscentre head user for this cell's buscentre
+  // Find the bacenta head user for this cell's buscentre
   const cell = await prisma.cell.findUnique({
     where:  { id: cellId },
     select: { buscentreId: true },
@@ -117,7 +118,7 @@ export async function POST(request: Request) {
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
   const body = await request.json();
-  const { type, date, mode, notes, speaker, cancelled = false, attendance, actingCellId, firstTimers = [], guestVisits = [] } = body;
+  const { type, date, mode, notes, speaker, cancelled = false, attendance, actingCellId, firstTimers = [], guestVisits = [], leaders = [] } = body;
 
   const cellResult = await resolveRecordingCell(session.user, actingCellId ?? null);
   if ("error" in cellResult) return NextResponse.json({ error: cellResult.error }, { status: cellResult.status });
@@ -137,6 +138,14 @@ export async function POST(request: Request) {
     if (invalid) {
       return NextResponse.json({ error: "Invalid status — must be PRESENT, ABSENT or EXCUSED" }, { status: 400 });
     }
+  }
+
+  // Senior shepherds / MC pastors counted at this cell (kept apart from the cell's own attendance)
+  let leaderRows: { memberId: string; visiting: boolean }[] = [];
+  if (!cancelled && Array.isArray(leaders) && leaders.length > 0) {
+    const prepared = await prepareLeaderRows(cellId, type, String(date).slice(0, 10), leaders as LeaderMark[]);
+    if ("error" in prepared) return NextResponse.json({ error: prepared.error }, { status: 409 });
+    leaderRows = prepared.rows;
   }
 
   // Resolve first timers against evangelism contacts before opening the transaction
@@ -189,6 +198,15 @@ export async function POST(request: Request) {
         });
       }
 
+      if (leaderRows.length) {
+        await tx.leaderAttendance.createMany({
+          data: leaderRows.map((r) => ({
+            serviceId: svc.id, memberId: r.memberId, visiting: r.visiting,
+            serviceType: svc.type, date: svc.date, markedById: session.user.id,
+          })),
+        });
+      }
+
       if (prepared) {
         await applyFirstTimers(tx, prepared, {
           serviceId: svc.id, serviceType: type, serviceDate: svc.date, userId: session.user.id, cellId,
@@ -214,6 +232,10 @@ export async function POST(request: Request) {
         { error: "One of the first timers was just recorded by someone else — refresh and try again." },
         { status: 409 }
       );
+    }
+    // A leader counted at another cell between loading the list and saving
+    if (isUniqueViolation(e) && /member_id|service_type/.test(String((e as { meta?: { target?: unknown } }).meta?.target ?? ""))) {
+      return NextResponse.json({ error: "A senior shepherd or pastor was just counted at another cell — refresh and try again." }, { status: 409 });
     }
     if (e instanceof Error && e.message.includes("Unique constraint")) {
       return NextResponse.json(

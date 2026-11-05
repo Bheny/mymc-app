@@ -31,6 +31,9 @@ export async function GET(_req: Request, { params }: Params) {
         },
         orderBy: { member: { lastName: "asc" } },
       },
+      leaders: {
+        select: { visiting: true, member: { select: { id: true, firstName: true, lastName: true, mcId: true } } },
+      },
       firstTimers: {
         orderBy: { createdAt: "asc" },
         include: {

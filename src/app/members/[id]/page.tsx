@@ -64,10 +64,9 @@ export default function MemberDetailsPage() {
     console.log('Saving updated member:', updatedMember)
   }
   return (
-    <div className="min-h-screen h-full bg-background">
-      {/* <Header mcHeadName="Elder Favour" /> */}
-      <main className=" max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 mb-64">
-        <div className="px-4 py-6 sm:px-0">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto pb-20 lg:pb-8">
+      <main>
+        <div>
           <div className="flex justify-between items-center mb-6">
             <h1 className="text-xl font-semibold text-foreground">Member Details</h1>
             <EditMemberModal member={member} onSave={handleSaveMember} />
@@ -114,7 +113,7 @@ export default function MemberDetailsPage() {
             {/* Right column: Tabs with charts and activity */}
             <div className="md:col-span-2 space-y-6">
               <Tabs defaultValue="overview" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="attendance">Attendance</TabsTrigger>
                   <TabsTrigger value="activity">Activity</TabsTrigger>

@@ -84,11 +84,11 @@ const SheetContent = React.forwardRef<
     >
       {/* Close button */}
       <DialogPrimitive.Close
-        className="absolute right-4 top-4 rounded-lg p-1.5 transition-colors hover:bg-[var(--brand-navy-light)]"
+        className="absolute right-2.5 top-3.5 sm:right-4 sm:top-4 z-10 flex h-10 w-10 sm:h-8 sm:w-8 items-center justify-center rounded-lg transition-colors hover:bg-[var(--brand-navy-light)]"
         style={{ color: "var(--brand-muted)" }}
         aria-label="Close"
       >
-        <X className="h-4 w-4" />
+        <X className="h-5 w-5 sm:h-4 sm:w-4" />
       </DialogPrimitive.Close>
 
       {children}
@@ -102,7 +102,7 @@ SheetContent.displayName = "SheetContent";
 function SheetHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("flex flex-col gap-0.5 px-6 pt-6 pb-4 shrink-0", className)}
+      className={cn("flex flex-col gap-0.5 px-4 sm:px-6 pt-5 sm:pt-6 pb-4 shrink-0", className)}
       style={{ borderBottom: "1px solid var(--brand-border)" }}
       {...props}
     />
@@ -118,7 +118,7 @@ const SheetTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-[18px] font-semibold pr-8", className)}
+    className={cn("text-[18px] font-semibold pr-10", className)}
     style={{ color: "var(--brand-text)", lineHeight: 1.3 }}
     {...props}
   />
@@ -146,7 +146,7 @@ SheetDescription.displayName = "SheetDescription";
 function SheetBody({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("flex-1 overflow-y-auto px-6 py-5", className)}
+      className={cn("flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-6 py-5", className)}
       {...props}
     />
   );
@@ -158,7 +158,7 @@ SheetBody.displayName = "SheetBody";
 function SheetFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("flex items-center justify-end gap-2 px-6 pt-4 pb-4 shrink-0", className)}
+      className={cn("flex flex-wrap items-center justify-end gap-2 px-4 sm:px-6 pt-4 pb-4 shrink-0 [&>button]:max-sm:flex-1 [&>button]:max-sm:min-w-[120px]", className)}
       style={{ borderTop: "1px solid var(--brand-border)", paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
       {...props}
     />

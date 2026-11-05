@@ -36,6 +36,7 @@ const MEMBER_INCLUDE = {
   cell:      { select: { id: true, name: true, buscentre: { select: { id: true, name: true } } } },
   buscentre: { select: { id: true, name: true } },
   mc:        { select: { id: true, name: true } },
+  homeCell:  { select: { id: true, name: true } },
   // Whether this member IS a shepherd (back-relation via Shepherd.memberId)
   shepherdRole: {
     select: {
@@ -96,6 +97,7 @@ export async function PATCH(request: Request, { params }: Params) {
     isStudent, schoolLevel, schoolName, programOfStudy,
     departmentIds,
     statusReason, statusDetails,
+    isTither, titherId, homeCellId,
   } = body;
 
   // Where a member sits is changed only through the move endpoint, which sets
@@ -131,6 +133,32 @@ export async function PATCH(request: Request, { params }: Params) {
     if (details.length < STATUS_DETAILS_MIN) {
       return NextResponse.json({ error: "Add some details about the status change" }, { status: 400 });
     }
+  }
+
+  // ── Tither status: the ID is only kept while the member is a tither ──
+  const cleanTitherId = typeof titherId === "string" ? titherId.trim() : "";
+  if (isTither !== undefined && typeof isTither !== "boolean") {
+    return NextResponse.json({ error: "isTither must be true or false" }, { status: 400 });
+  }
+  if (cleanTitherId) {
+    const clash = await prisma.member.findFirst({
+      where:  { titherId: { equals: cleanTitherId, mode: "insensitive" }, NOT: { id: params.id } },
+      select: { firstName: true, lastName: true },
+    });
+    if (clash) {
+      return NextResponse.json({ error: `Tither ID ${cleanTitherId} already belongs to ${clash.firstName} ${clash.lastName}` }, { status: 409 });
+    }
+  }
+
+  // ── Home cell: only for senior shepherds (bacenta-level) and MC pastors (MC-level) ──
+  if (homeCellId !== undefined && homeCellId !== null) {
+    if (typeof homeCellId !== "string") return NextResponse.json({ error: "Invalid home cell" }, { status: 400 });
+    if (!current.buscentreId && !current.mcId) {
+      return NextResponse.json({ error: "Only senior shepherds and MC pastors have a home cell" }, { status: 400 });
+    }
+    const cell = await prisma.cell.findUnique({ where: { id: homeCellId }, select: { buscentreId: true, buscentre: { select: { mcId: true } } } });
+    const fits = !!cell && (current.mcId ? cell.buscentre.mcId === current.mcId : cell.buscentreId === current.buscentreId);
+    if (!fits) return NextResponse.json({ error: "Pick a cell in their own " + (current.mcId ? "MC" : "bacenta") }, { status: 400 });
   }
 
   if (departmentIds !== undefined) {
@@ -173,6 +201,10 @@ export async function PATCH(request: Request, { params }: Params) {
       ...(schoolLevel    !== undefined && { schoolLevel }),
       ...(schoolName     !== undefined && { schoolName }),
       ...(programOfStudy !== undefined && { programOfStudy }),
+      // Tither status. Turning it off clears the ID; an ID alone doesn't make someone a tither
+      ...(isTither !== undefined && { isTither, ...(isTither === false && { titherId: null }) }),
+      ...(homeCellId !== undefined && { homeCellId: homeCellId || null }),
+      ...(isTither !== false && titherId !== undefined && { titherId: cleanTitherId || null }),
     },
     include: MEMBER_INCLUDE,
   });

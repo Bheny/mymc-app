@@ -2,10 +2,10 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { radarStatus, type RadarStatus } from "@/lib/radar";
 
-// Who has come often enough that the buscentre head should speak to them, and who has said
+// Who has come often enough that the bacenta head should speak to them, and who has said
 // they want to join but hasn't been added to a cell yet.
 
-// Buscentre heads hold these conversations, and so do the leaders above them
+// Bacenta heads hold these conversations, and so do the leaders above them
 export const CONVERSATION_ROLES = ["buscentre_head", "mc_pastor", "chief_shepherd", "admin"];
 
 export type RadarPerson = {

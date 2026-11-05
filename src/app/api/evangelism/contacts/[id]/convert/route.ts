@@ -5,7 +5,7 @@ import { json, parseDate, readBody, requireEvangelismUser } from "@/lib/evangeli
 
 // POST /api/evangelism/contacts/[id]/convert   { lastName?, joinedDate? }
 // Add someone to their cell as a member. Allowed at any point after they've come to a service:
-// most wait for the conversation with the buscentre head, but some decide at the very first
+// most wait for the conversation with the bacenta head, but some decide at the very first
 // meeting, and that is fine too. Nothing here requires 3 visits or a conversation.
 export async function POST(request: Request, { params }: { params: { id: string } }) {
   const auth = await requireEvangelismUser();
@@ -48,7 +48,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     }
     await tx.contactActivity.create({
       data: { contactId: c.id, type: "STAGE_CHANGE", byUserId: auth.user.id,
-        note: spokeFirst ? "Became a member, after the conversation with the buscentre head" : "Became a member straight away, without waiting for a conversation" },
+        note: spokeFirst ? "Became a member, after the conversation with the bacenta head" : "Became a member straight away, without waiting for a conversation" },
     });
     return m;
   });

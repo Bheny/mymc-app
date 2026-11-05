@@ -110,7 +110,7 @@ export function canWorkNode(u: EvangelismUser, n: Node): boolean {
 }
 
 // Is this cell inside the part of the church the contact is currently held by?
-// A contact held at buscentre level is "covered" by every cell under it.
+// A contact held at bacenta level is "covered" by every cell under it.
 export function nodeCovers(held: Node, cell: Node): boolean {
   if (held.branchId !== cell.branchId) return false;
   if (held.cellId)      return held.cellId === cell.cellId;

@@ -72,11 +72,11 @@ function Segmented<T extends string>({ value, options, onChange, ariaLabel }: {
   value: T; options: { key: T; label: string }[]; onChange: (v: T) => void; ariaLabel: string;
 }) {
   return (
-    <div role="radiogroup" aria-label={ariaLabel} className="inline-flex rounded-lg overflow-hidden shrink-0"
+    <div role="radiogroup" aria-label={ariaLabel} className="inline-flex max-sm:flex max-sm:col-span-2 rounded-lg overflow-hidden shrink-0"
          style={{ border: "1px solid var(--brand-border)" }}>
       {options.map((o) => (
         <button key={o.key} role="radio" aria-checked={value === o.key} onClick={() => onChange(o.key)}
-                className="px-3 h-9 text-[12px] font-medium transition-colors whitespace-nowrap"
+                className="px-3 h-10 sm:h-9 max-sm:flex-1 text-[12px] font-medium transition-colors whitespace-nowrap"
                 style={value === o.key
                   ? { background: "var(--brand-navy)", color: "#fff" }
                   : { background: "var(--surface)", color: "var(--brand-muted)" }}>
@@ -792,7 +792,7 @@ export default function LegacyPage() {
               </Button>
             </Link>
             {data.configured && (
-              <Button variant="outline" onClick={() => load(true)} className="h-9 text-[13px]" style={{ borderRadius: 8 }}>
+              <Button variant="outline" onClick={() => load(true)} className="h-10 sm:h-9 text-[13px]" style={{ borderRadius: 8 }}>
                 Try again
               </Button>
             )}
@@ -834,7 +834,7 @@ export default function LegacyPage() {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
         <div className="min-w-0">
-          <h1 className="text-[24px] font-semibold" style={{ color: "var(--brand-text)" }}>Legacy</h1>
+          <h1 className="text-[22px] sm:text-[24px] font-semibold" style={{ color: "var(--brand-text)" }}>Legacy</h1>
           <p className="mt-0.5 text-[13px]" style={{ color: "var(--brand-muted)" }}>
             {data.label ?? "Cell service reports"} · {multiMc ? `${mcs.length} MCs · ` : ""}{fmt(all.length)} reports · updated{" "}
             {new Date(data.fetchedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
@@ -843,20 +843,20 @@ export default function LegacyPage() {
         <div className="flex items-center gap-2 flex-wrap">
           {data.firstTimersConnected && (
             <Link href="/legacy/first-timers">
-              <Button variant="outline" className="h-9 text-[13px]" style={{ borderRadius: 8 }}>
+              <Button variant="outline" className="h-10 sm:h-9 text-[13px]" style={{ borderRadius: 8 }}>
                 <UserPlus className="h-3.5 w-3.5 mr-1.5" /> First timers
               </Button>
             </Link>
           )}
-          <Button variant="outline" onClick={() => setShowReport(true)} className="h-9 text-[13px]" style={{ borderRadius: 8 }}>
+          <Button variant="outline" onClick={() => setShowReport(true)} className="h-10 sm:h-9 text-[13px]" style={{ borderRadius: 8 }}>
             <ClipboardCheck className="h-3.5 w-3.5 mr-1.5" /> Integrity report
           </Button>
           <Link href="/settings">
-            <Button variant="outline" className="h-9 text-[13px]" style={{ borderRadius: 8 }}>
+            <Button variant="outline" className="h-10 sm:h-9 text-[13px]" style={{ borderRadius: 8 }}>
               <SheetIcon className="h-3.5 w-3.5 mr-1.5" /> Sheets
             </Button>
           </Link>
-          <Button variant="outline" onClick={() => load(true)} disabled={refreshing} className="h-9 text-[13px]" style={{ borderRadius: 8 }}>
+          <Button variant="outline" onClick={() => load(true)} disabled={refreshing} className="h-10 sm:h-9 text-[13px]" style={{ borderRadius: 8 }}>
             <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${refreshing ? "animate-spin" : ""}`} /> Refresh
           </Button>
         </div>
@@ -874,9 +874,9 @@ export default function LegacyPage() {
       )}
 
       {/* ── Filters: one row, scoping everything below ── */}
-      <div className="flex flex-wrap items-center gap-2 mb-5">
+      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center mb-5">
         <select aria-label="Period" value={period} onChange={(e) => setPeriod(e.target.value)}
-                className="h-9 px-3 text-[13px] rounded-lg" style={selectStyle}>
+                className="h-10 sm:h-9 w-full sm:w-auto min-w-0 px-3 text-[13px] rounded-lg" style={selectStyle}>
           <option value="all">All time</option>
           {months.map((m) => <option key={m} value={m}>{monthLabel(m)}</option>)}
         </select>
@@ -884,23 +884,23 @@ export default function LegacyPage() {
           options={[{ key: "all", label: "All services" }, { key: "MGS", label: "MGS" }, { key: "LC LIVE", label: "LC Live" }]} />
         {multiMc && (
           <select aria-label="MC" value={mc} onChange={(e) => { setMc(e.target.value); setBacenta(""); setCell(""); }}
-                  className="h-9 px-3 text-[13px] rounded-lg" style={selectStyle}>
+                  className="h-10 sm:h-9 w-full sm:w-auto min-w-0 px-3 text-[13px] rounded-lg" style={selectStyle}>
             <option value="">All MCs</option>
             {mcs.map((m) => <option key={m} value={m}>{m}</option>)}
           </select>
         )}
         <select aria-label="Bacenta" value={bacenta} onChange={(e) => { setBacenta(e.target.value); setCell(""); }}
-                className="h-9 px-3 text-[13px] rounded-lg" style={selectStyle}>
+                className="h-10 sm:h-9 w-full sm:w-auto min-w-0 px-3 text-[13px] rounded-lg" style={selectStyle}>
           <option value="">All bacentas</option>
           {bacentas.map((b) => <option key={b} value={b}>{b}</option>)}
         </select>
         <select aria-label="Cell" value={cell} onChange={(e) => setCell(e.target.value)}
-                className="h-9 px-3 text-[13px] rounded-lg" style={selectStyle}>
+                className="h-10 sm:h-9 w-full sm:w-auto min-w-0 px-3 text-[13px] rounded-lg" style={selectStyle}>
           <option value="">All cells</option>
           {cells.map((c) => <option key={c} value={c}>{c}{isCollapsed(c) ? " (collapsed)" : ""}</option>)}
         </select>
         {collapsedCount > 0 && (
-          <label className="h-9 px-3 inline-flex items-center gap-2 rounded-lg text-[13px] cursor-pointer select-none"
+          <label className="h-10 sm:h-9 px-3 max-sm:col-span-2 inline-flex items-center gap-2 rounded-lg text-[13px] cursor-pointer select-none"
                  style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
                  title="Hide collapsed cells and all their reports">
             <Switch checked={activeOnly} onCheckedChange={setActiveOnly} aria-label="Active cells only" />
@@ -913,7 +913,7 @@ export default function LegacyPage() {
           </label>
         )}
         {hasFilters && (
-          <button onClick={clearFilters} className="h-9 px-2 text-[12px] font-medium inline-flex items-center gap-1 hover:underline"
+          <button onClick={clearFilters} className="h-10 sm:h-9 px-2 max-sm:col-span-2 max-sm:justify-center text-[12px] font-medium inline-flex items-center gap-1 hover:underline"
                   style={{ color: "var(--brand-link)" }}>
             <X className="h-3.5 w-3.5" /> Clear
           </button>
@@ -1162,7 +1162,7 @@ export default function LegacyPage() {
             {/* ── Per-cell table ── */}
             <Card title="Cells" subtitle="Median per report in the selected period">
               <div className="overflow-x-auto -mx-4 sm:mx-0">
-                <table className="w-full text-[13px] min-w-[640px]">
+                <table className="sticky-first w-full text-[13px] min-w-[640px]">
                   <thead>
                     <tr className="text-[11px] uppercase tracking-[0.04em]" style={{ color: "var(--brand-muted)" }}>
                       {sortHeader("cell", "Cell", "left")}
@@ -1215,7 +1215,7 @@ export default function LegacyPage() {
                       <Info className="h-3.5 w-3.5 mr-1.5" /> {showInfo ? "Hide info" : "View info"}
                     </Button>
                   ) : (
-                    <div className="relative w-[180px] sm:w-[220px]">
+                    <div className="relative w-full sm:w-[220px]">
                       <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5" style={{ color: "var(--brand-muted)" }} />
                       <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={multiMc ? "Search cell, bacenta or MC" : "Search cell or bacenta"}
                              aria-label="Search reports" className="h-8 pl-8 text-[13px]" style={{ borderColor: "var(--brand-border)" }} />
@@ -1223,7 +1223,7 @@ export default function LegacyPage() {
                   )}>
               {cell && showInfo && cellInfo && <CellInfoPanel cell={cell} info={cellInfo} />}
               <div className="overflow-x-auto -mx-4 sm:mx-0">
-                <table className={`w-full text-[13px] ${cell ? "min-w-[860px]" : "min-w-[1080px]"}`}>
+                <table className={`sticky-first w-full text-[13px] ${cell ? "min-w-[860px]" : "min-w-[1080px]"}`}>
                   <thead>
                     <tr className="text-[11px] uppercase tracking-[0.04em] text-left align-bottom" style={{ color: "var(--brand-muted)" }}>
                       <th className="px-3 py-2 font-medium">
@@ -1288,11 +1288,11 @@ export default function LegacyPage() {
                 <div className="flex items-center justify-end gap-2 text-[12px]" style={{ color: "var(--brand-muted)" }}>
                   Page {page + 1} of {pageCount}
                   <button aria-label="Previous page" disabled={page === 0} onClick={() => setPage((p) => p - 1)}
-                          className="p-1 rounded hover:bg-[var(--brand-navy-light)] disabled:opacity-30">
+                          className="p-2.5 sm:p-1 rounded hover:bg-[var(--brand-navy-light)] disabled:opacity-30">
                     <ChevronLeft className="h-4 w-4" />
                   </button>
                   <button aria-label="Next page" disabled={page >= pageCount - 1} onClick={() => setPage((p) => p + 1)}
-                          className="p-1 rounded hover:bg-[var(--brand-navy-light)] disabled:opacity-30">
+                          className="p-2.5 sm:p-1 rounded hover:bg-[var(--brand-navy-light)] disabled:opacity-30">
                     <ChevronRight className="h-4 w-4" />
                   </button>
                 </div>

@@ -62,7 +62,7 @@ const TYPE_COLOR: Record<string, string> = {
 };
 
 // Build a de-duplicated {id, name} option list from breakdown rows, keyed by
-// whichever id/name field pair the caller wants (mc or buscentre level).
+// whichever id/name field pair the caller wants (mc or bacenta level).
 function uniqueOptions(
   rows: BreakdownRow[],
   idKey: "mcId" | "buscentreId",
@@ -194,7 +194,7 @@ export function SummarySection({ scope }: { scope: Scope }) {
   const isWideScope = scope === "buscentre" || scope === "mc" || scope === "branch";
   const showCellColumn = isWideScope && !cellId;
   // Matches the API: full year is only auto-shown once narrowed to a single cell —
-  // narrowing to just a buscentre or MC still isn't enough to bound the query.
+  // narrowing to just a bacenta or MC still isn't enough to bound the query.
   const needsNarrowerScope = isWideScope && !cellId && month === null;
 
   const mcOptions = scope === "branch" ? uniqueOptions(allBreakdown, "mcId", "mcName") : [];
@@ -259,7 +259,7 @@ export function SummarySection({ scope }: { scope: Scope }) {
         <div className="flex items-center gap-2 ml-auto flex-wrap">
           {loading && <Loader2 className="animate-spin h-4 w-4 shrink-0" style={{ color: "var(--brand-muted)" }} />}
 
-          {/* Branch Pastor: MC → Buscentre → Cell cascade */}
+          {/* Branch Pastor: MC → Bacenta → Cell cascade */}
           {scope === "branch" && mcOptions.length > 0 && (
             <select
               value={filterMcId}
@@ -272,7 +272,7 @@ export function SummarySection({ scope }: { scope: Scope }) {
             </select>
           )}
 
-          {/* MC Pastor / Branch Pastor: Buscentre toggle */}
+          {/* MC Pastor / Branch Pastor: Bacenta toggle */}
           {(scope === "mc" || scope === "branch") && buscentreOptions.length > 0 && (
             <select
               value={filterBuscentreId}
@@ -280,12 +280,12 @@ export function SummarySection({ scope }: { scope: Scope }) {
               className="h-9 px-3 text-[13px] rounded-lg"
               style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
             >
-              <option value="">All buscentres (cumulative)</option>
+              <option value="">All bacentas (cumulative)</option>
               {buscentreOptions.map((bc) => <option key={bc.id} value={bc.id}>{bc.name}</option>)}
             </select>
           )}
 
-          {/* Buscentre Head / MC Pastor / Branch Pastor: Cell toggle */}
+          {/* Bacenta Head / MC Pastor / Branch Pastor: Cell toggle */}
           {isWideScope && cellOptions.length > 0 && (
             <select
               value={cellId}

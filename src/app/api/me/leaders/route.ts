@@ -8,7 +8,7 @@ const ROLE_LABELS: Record<string, string> = {
   admin:          "Admin",
   chief_shepherd: "Chief Shepherd",
   mc_pastor:      "MC Pastor",
-  buscentre_head: "Buscentre Head",
+  buscentre_head: "Bacenta Head",
   cell_shepherd:  "Cell Shepherd",
   shepherd:       "Shepherd",
 };
@@ -71,7 +71,7 @@ export async function GET() {
     buscentreId = cell?.buscentreId ?? null;
   }
 
-  // ── → Buscentre Head ──────────────────────────────────────────────────────
+  // ── → Bacenta Head ──────────────────────────────────────────────────────
   if (buscentreId && myRole.role !== "buscentre_head") {
     const bc = await prisma.buscentre.findUnique({
       where:  { id: buscentreId },

@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   Home, Users, Network, TrendingUp, Settings,
@@ -57,7 +57,7 @@ const MC_PASTOR_NAV: NavConfig = {
 const BUSCENTRE_HEAD_NAV: NavConfig = {
   primary: [
     { name: 'Overview',     href: '/',              icon: Home },
-    { name: 'My Buscentre', short: 'Buscentre',     href: '/buscentre',    icon: Building2 },
+    { name: 'My Bacenta', short: 'Bacenta',     href: '/buscentre',    icon: Building2 },
     { name: 'Members',      href: '/members',       icon: Users },
     { name: 'First Timers', short: '1st Timers',    href: '/first-timers', icon: UserPlus },
   ],
@@ -156,7 +156,7 @@ function HamburgerDrawer({
       <div
         className="lg:hidden fixed left-0 right-0 top-0 z-40 transition-opacity duration-200"
         style={{
-          bottom:        64,
+          bottom:        'calc(64px + env(safe-area-inset-bottom, 0px))',
           background:    'rgba(0,0,0,0.45)',
           opacity:       open ? 1 : 0,
           pointerEvents: open ? 'auto' : 'none',
@@ -168,10 +168,10 @@ function HamburgerDrawer({
       <div
         className="lg:hidden fixed left-0 right-0 z-50 bg-[var(--surface)] rounded-t-2xl flex flex-col transition-transform duration-300 ease-out"
         style={{
-          bottom:    64,
+          bottom:    'calc(64px + env(safe-area-inset-bottom, 0px))',
           transform: open ? 'translateY(0)' : 'translateY(110%)',
           boxShadow: '0 -4px 24px rgba(0,0,0,0.12)',
-          maxHeight: 'calc(70vh - 64px)',
+          maxHeight: 'calc(75dvh - 64px)',
         }}
       >
         {/* Handle bar */}
@@ -195,7 +195,8 @@ function HamburgerDrawer({
           <button
             onClick={onClose}
             className="flex items-center justify-center rounded-full"
-            style={{ width: 32, height: 32, background: 'var(--brand-navy-light)' }}
+            style={{ width: 40, height: 40, background: 'var(--brand-navy-light)' }}
+            aria-label="Close menu"
           >
             <X style={{ width: 16, height: 16, color: 'var(--brand-link)' }} />
           </button>
@@ -284,10 +285,21 @@ export function BottomNavbar() {
   const { activeView, allViews, switchToView } = useActiveRole();
   const { collapsed, toggle: toggleSidebar } = useSidebar();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const router                = useRouter();
 
   const role       = activeView?.role ?? session?.user?.role;
   const config     = navConfigForRole(role);
   const allItems   = [...config.primary, ...config.secondary];
+
+  // Preload the pages in the nav once the app is idle, so the first tap on each is quick
+  const navHrefs = allItems.map((i) => i.href).join(',');
+  useEffect(() => {
+    const run = () => navHrefs.split(',').forEach((h) => { try { router.prefetch(h); } catch { /* ignore */ } });
+    const w = window as unknown as { requestIdleCallback?: (cb: () => void) => number; cancelIdleCallback?: (id: number) => void };
+    if (w.requestIdleCallback) { const id = w.requestIdleCallback(run); return () => w.cancelIdleCallback?.(id); }
+    const t = setTimeout(run, 1500);
+    return () => clearTimeout(t);
+  }, [navHrefs, router]);
   const hasDrawer  = config.secondary.length > 0;
   const moreActive = hasDrawer && config.secondary.some((i) => isActive(pathname, i.href));
 
@@ -373,10 +385,10 @@ export function BottomNavbar() {
 
       {/* ── Mobile Bottom Nav ────────────────────────────────────────── */}
       <nav
-        className="lg:hidden fixed z-[60] bottom-0 left-0 right-0 bg-[var(--surface)]"
-        style={{ borderTop: '1px solid var(--brand-border)', height: 64 }}
+        className="lg:hidden fixed z-[60] bottom-0 left-0 right-0 bg-[var(--surface)] nav-safe-bottom"
+        style={{ borderTop: '1px solid var(--brand-border)', height: 'calc(64px + env(safe-area-inset-bottom, 0px))' }}
       >
-        <ul className="flex h-full justify-around items-center px-1">
+        <ul className="flex justify-around items-center px-1" style={{ height: 64 }}>
           {config.primary.map((item) => {
             const active = isActive(pathname, item.href);
             return (

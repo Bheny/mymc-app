@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useParams } from 'next/navigation'
-import { Header } from '@/components/header'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -35,13 +34,12 @@ export default function EventDetailsPage() {
   console.log("Event ID:", params.id)
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header mcHeadName="Elder Favour" />
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-semibold text-foreground">{event.title}</h1>
-            <div className="space-x-2">
+    <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-7xl mx-auto pb-20 lg:pb-8">
+      <main>
+        <div>
+          <div className="flex flex-wrap gap-3 justify-between items-center mb-6">
+            <h1 className="text-[22px] sm:text-3xl font-semibold text-foreground">{event.title}</h1>
+            <div className="flex flex-wrap gap-2">
               <Button variant="outline" onClick={() => setIsEditing(!isEditing)}>
                 <Edit className="mr-2 h-4 w-4" /> Edit Event
               </Button>

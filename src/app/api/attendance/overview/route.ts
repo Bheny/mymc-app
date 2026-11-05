@@ -49,8 +49,8 @@ export async function GET(request: Request) {
     }
     case "buscentre_head": {
       const r = resolveActing(searchParams, actingAt, "actingBuscentreId", "buscentre_id", session.user.buscentreId);
-      if (!r.ok) return NextResponse.json({ error: "No acting access to this buscentre" }, { status: 403 });
-      if (!r.id) return NextResponse.json({ error: "No buscentre assigned" }, { status: 400 });
+      if (!r.ok) return NextResponse.json({ error: "No acting access to this bacenta" }, { status: 403 });
+      if (!r.id) return NextResponse.json({ error: "No bacenta assigned" }, { status: 400 });
       level = "buscentre"; scopeId = r.id;
       cellWhere = { buscentreId: r.id };
       breakdownLabel = "By cell";
@@ -62,7 +62,7 @@ export async function GET(request: Request) {
       if (!r.id) return NextResponse.json({ error: "No mega church assigned" }, { status: 400 });
       level = "mc"; scopeId = r.id;
       cellWhere = { buscentre: { mcId: r.id } };
-      breakdownLabel = "By buscentre";
+      breakdownLabel = "By bacenta";
       break;
     }
     case "chief_shepherd": {
@@ -151,7 +151,7 @@ export async function GET(request: Request) {
     });
   }
 
-  // ── Buscentre and above: breakdown by the next level down ───────────────────
+  // ── Bacenta and above: breakdown by the next level down ───────────────────
   const cellSnaps = await snapshotsForFilter(cellWhere);
 
   let breakdown: LevelRow[];
@@ -169,7 +169,7 @@ export async function GET(request: Request) {
   let scopeName: string;
   switch (level) {
     case "buscentre":
-      scopeName = (await prisma.buscentre.findUnique({ where: { id: scopeId! }, select: { name: true } }))?.name ?? "Buscentre";
+      scopeName = (await prisma.buscentre.findUnique({ where: { id: scopeId! }, select: { name: true } }))?.name ?? "Bacenta";
       break;
     case "mc":
       scopeName = (await prisma.megaChurch.findUnique({ where: { id: scopeId! }, select: { name: true } }))?.name ?? "Mega Church";

@@ -25,7 +25,7 @@ export const ROLE_FILTERS: { value: string; label: string }[] = [
   { value: "none",           label: "Members (no role)" },
   { value: "shepherd",       label: "Shepherds" },
   { value: "cell_shepherd",  label: "Cell shepherds" },
-  { value: "buscentre_head", label: "Buscentre heads" },
+  { value: "buscentre_head", label: "Bacenta heads" },
   { value: "mc_pastor",      label: "MC pastors" },
   { value: "chief_shepherd", label: "Chief shepherds" },
   { value: "admin",          label: "Admins" },

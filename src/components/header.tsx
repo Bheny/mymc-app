@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
+import { clearPersistedCache } from "@/lib/persist-cache";
 
 type Notification = {
   id:        string;
@@ -52,6 +53,7 @@ export function Header({ mcHeadName }: { mcHeadName: string }) {
   }
 
   const handleLogout = async () => {
+    clearPersistedCache();
     await signOut({ redirect: true, callbackUrl: "/login" });
   };
 
@@ -118,7 +120,7 @@ export function Header({ mcHeadName }: { mcHeadName: string }) {
               </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent className="w-96" align="end" style={{ maxHeight: 480, overflowY: "auto" }}>
+            <DropdownMenuContent className="w-96 max-w-[calc(100vw-1rem)]" align="end" collisionPadding={8} style={{ maxHeight: "min(480px, 70dvh)", overflowY: "auto" }}>
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-2.5"
                    style={{ borderBottom: "1px solid var(--brand-border)" }}>

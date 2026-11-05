@@ -3,8 +3,8 @@
 
 export const CAPACITY = {
   // MegaChurch: no cap — unlimited MCs per Branch
-  buscentre: { parentField: "mcId",        max: 2, label: "Buscentres per MC" },
-  cell:      { parentField: "buscentreId", max: 2, label: "Cells per Buscentre" },
+  buscentre: { parentField: "mcId",        max: 2, label: "Bacentas per MC" },
+  cell:      { parentField: "buscentreId", max: 2, label: "Cells per Bacenta" },
   shepherd:  { parentField: "cellId",      max: 2, label: "Shepherds per Cell" },
   member:    { parentField: "shepherdId",  max: 5, label: "Members per Shepherd" },
 } as const;

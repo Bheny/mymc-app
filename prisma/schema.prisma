@@ -207,6 +207,9 @@ model Cell {
   outreaches         Outreach[]
   contacts           Contact[]
 
+  // Senior shepherds / MC pastors whose attendance is counted at this cell
+  homeLeaders Member[] @relation("MemberHomeCell")
+
   @@map("cells")
 }
 
@@ -275,6 +278,15 @@ model Member {
   schoolName     String?      @map("school_name")
   programOfStudy String?      @map("program_of_study")
 
+  // Tithing — the ID is issued outside this app and recorded here; unique so two members can't share one
+  isTither Boolean @default(false) @map("is_tither")
+  titherId String? @unique @map("tither_id")
+
+  // Buscentre-level (senior shepherd) and MC-level (pastor) members aren't on any cell's roster,
+  // so each gets a home cell where their attendance is counted. Cell-level members leave this empty.
+  homeCellId String? @map("home_cell_id")
+  homeCell   Cell?   @relation("MemberHomeCell", fields: [homeCellId], references: [id], onDelete: SetNull)
+
   shepherd  Shepherd?   @relation(fields: [shepherdId], references: [id])
   cell      Cell?       @relation(fields: [cellId], references: [id])
   buscentre Buscentre?  @relation(fields: [buscentreId], references: [id])
@@ -301,6 +313,9 @@ model Member {
 
   // Where this member has been placed over time
   moves MemberMove[]
+
+  // Services where this leader was counted (see LeaderAttendance)
+  leaderAttendance LeaderAttendance[]
 
   // Evangelism — outreaches led / joined, people met, contacts followed up,
   // and the contact (if any) this member originally came in as
@@ -452,6 +467,7 @@ model Service {
   attendance  Attendance[]
   firstTimers FirstTimer[]
   guestVisits GuestVisit[]
+  leaders     LeaderAttendance[]
 
   // One service record per cell per type per date
   @@unique([cellId, type, date])
@@ -1069,4 +1085,30 @@ model PasswordReset {
 
   @@index([userId, createdAt])
   @@map("password_resets")
+}
+
+// ─── Leader attendance ────────────────────────────────────────────────────────
+
+// Senior shepherds (buscentre-level) and MC pastors (MC-level) sit above the cells, so they
+// aren't on a cell roster and don't go in the attendance table. A row here means the leader
+// was PRESENT and counted at that cell's service. A leader is counted in only one cell per
+// service type per date — the unique key below is what stops two cells claiming the same person.
+// `visiting` is true when a senior shepherd was at a cell that isn't their home cell (LC Live rounds).
+model LeaderAttendance {
+  id          String      @id @default(cuid())
+  serviceId   String      @map("service_id")
+  memberId    String      @map("member_id")
+  serviceType ServiceType @map("service_type")
+  date        DateTime    @db.Date
+  visiting    Boolean     @default(false)
+  markedById  String?     @map("marked_by_id")
+  createdAt   DateTime    @default(now()) @map("created_at")
+
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  member  Member  @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  @@unique([memberId, serviceType, date])
+  @@unique([serviceId, memberId])
+  @@index([date])
+  @@map("leader_attendance")
 }

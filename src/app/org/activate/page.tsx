@@ -26,7 +26,7 @@ type ShepherdSlot = { id: string; user: { name: string } | null; _count: { membe
 
 const ROLE_OPTIONS: { value: Role; label: string; description: string }[] = [
   { value: "mc_pastor",      label: "MC Pastor",       description: "Leads a whole MegaChurch." },
-  { value: "buscentre_head", label: "Buscentre Head",  description: "Oversees all cells in a Buscentre." },
+  { value: "buscentre_head", label: "Bacenta Head",  description: "Oversees all cells in a Bacenta." },
   { value: "cell_shepherd",  label: "Cell Shepherd",   description: "Leads a Cell and all its shepherds." },
   { value: "shepherd",       label: "Shepherd",        description: "Oversees up to 5 members in a Cell. Occupies a Shepherd slot." },
 ];
@@ -347,7 +347,7 @@ export default function ActivatePage() {
 
           <ScopeSelect label="Branch"      value={branchId}    onChange={setBranchId}    options={branches}   required />
           <ScopeSelect label="MegaChurch"  value={mcId}        onChange={setMcId}        options={mcs}        disabled={!branchId} />
-          <ScopeSelect label="Buscentre"   value={buscentreId} onChange={setBuscentreId} options={buscentres} disabled={!mcId} />
+          <ScopeSelect label="Bacenta"   value={buscentreId} onChange={setBuscentreId} options={buscentres} disabled={!mcId} />
           <ScopeSelect label="Cell"        value={cellId}      onChange={setCellId}      options={cells}      disabled={!buscentreId}
             required={role === "cell_shepherd" || role === "shepherd"} />
 

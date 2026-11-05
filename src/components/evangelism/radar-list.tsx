@@ -8,7 +8,7 @@ import { formatDay, formatMonth } from "@/lib/attendance-dashboard";
 import { CONVERSATION_LABEL, RADAR_VISITS } from "@/lib/radar";
 import type { RadarPerson } from "@/lib/evangelism-radar";
 
-// Guests who aren't members yet and keep coming. The buscentre head speaks to anyone who has been to
+// Guests who aren't members yet and keep coming. The bacenta head speaks to anyone who has been to
 // 3+ services this month; people who said they want to join are ready to be added to their cell.
 
 type Data = { people: RadarPerson[]; counts: { radar: number; wants: number; nearly: number } };

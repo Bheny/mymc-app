@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 
 // Which cell a user may record attendance for.
 //   · cell shepherds and shepherds: their own cell, or a cell they're covering
-//   · buscentre heads (or anyone covering one): any cell in their buscentre
+//   · bacenta heads (or anyone covering one): any cell in their bacenta
 // Everyone else is refused. The cell is named by the client as `actingCellId` / `cellId`; here we
 // check it really is one they may record for.
 
@@ -25,7 +25,7 @@ export async function resolveRecordingCell(user: RecordingUser, requested: strin
   if ((user.role === "cell_shepherd" || user.role === "shepherd") && requested === user.cellId) return { cellId: requested };
   if (actingAt.cell_id === requested) return { cellId: requested };
 
-  // A buscentre head — permanent, or covering — records for any cell in that buscentre
+  // A bacenta head — permanent, or covering — records for any cell in that buscentre
   const buscentreIds = [
     user.role === "buscentre_head" ? user.buscentreId : null,
     user.actingAs?.includes("buscentre_head") ? actingAt.buscentre_id : null,

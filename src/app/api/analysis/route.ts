@@ -204,7 +204,7 @@ export async function GET(request: Request) {
 
   if (actingBuscentreId) {
     if (actingAt.buscentre_id === actingBuscentreId) buscentreId = actingBuscentreId;
-    else return NextResponse.json({ error: "No acting access to this buscentre" }, { status: 403 });
+    else return NextResponse.json({ error: "No acting access to this bacenta" }, { status: 403 });
   }
 
   if (actingMcId) {
@@ -349,13 +349,13 @@ export async function GET(request: Request) {
     });
   }
 
-  // ── Buscentre scope ──────────────────────────────────────────────────────────
+  // ── Bacenta scope ──────────────────────────────────────────────────────────
   if (!isBuscentreScope && !isBranchScope && !isMcScope) {
     return NextResponse.json({ error: "No scope available for your role" }, { status: 400 });
   }
 
   if (isBuscentreScope && !buscentreId) {
-    return NextResponse.json({ error: "No buscentre assigned to your account" }, { status: 400 });
+    return NextResponse.json({ error: "No bacenta assigned to your account" }, { status: 400 });
   }
 
   if (isBuscentreScope) {
@@ -363,7 +363,7 @@ export async function GET(request: Request) {
     where:  { id: buscentreId! },
     select: { id: true, name: true },
   });
-  if (!buscentre) return NextResponse.json({ error: "Buscentre not found" }, { status: 404 });
+  if (!buscentre) return NextResponse.json({ error: "Bacenta not found" }, { status: 404 });
 
   const cells = await prisma.cell.findMany({
     where:   { buscentreId: buscentreId!, ...(filterCellId ? { id: filterCellId } : {}) },
@@ -458,7 +458,7 @@ export async function GET(request: Request) {
   });
 
   // Per-service detail — a full year is only built when scoped to a single cell
-  // (via filterCellId). With every cell in the buscentre ("All cells"), a full year
+  // (via filterCellId). With every cell in the bacenta ("All cells"), a full year
   // would mean a year's worth of member-level attendance for every cell at once, so
   // that combination still requires picking a month to keep the query bounded.
   let bcServices: ServiceEntry[] = [];
@@ -678,7 +678,7 @@ export async function GET(request: Request) {
   });
   if (!mc) return NextResponse.json({ error: "MegaChurch not found" }, { status: 404 });
 
-  // Cells in this MC, optionally narrowed by buscentre or cell filter
+  // Cells in this MC, optionally narrowed by bacenta or cell filter
   const mcCells = await prisma.cell.findMany({
     where: {
       buscentre: {

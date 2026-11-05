@@ -44,7 +44,7 @@ export default function ChangePasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="min-h-dvh flex items-center justify-center px-4">
       <div
         className="w-full max-w-sm rounded-xl p-8"
         style={{ border: "1px solid var(--brand-border)" }}

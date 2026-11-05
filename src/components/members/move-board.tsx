@@ -48,8 +48,8 @@ export function MoveBoard({ query }: { query: string }) {
     }
     if (data?.buscentreId) {
       data.direct.forEach((m) => { home[m.id] = `b:${data.buscentreId}`; byId[m.id] = m; });
-      names[`b:${data.buscentreId}`] = "Held directly by the buscentre";
-      groups.push({ id: "direct", name: "Buscentre", lanes: [{ key: `b:${data.buscentreId}`, title: "Held directly", hint: "No cell yet", cap: false, members: data.direct }] });
+      names[`b:${data.buscentreId}`] = "Held directly by the bacenta";
+      groups.push({ id: "direct", name: "Bacenta", lanes: [{ key: `b:${data.buscentreId}`, title: "Held directly", hint: "No cell yet", cap: false, members: data.direct }] });
     }
     return { groups, home, byId, names };
   }, [data]);
@@ -180,7 +180,7 @@ export function MoveBoard({ query }: { query: string }) {
             </div>
             {review && (
               <>
-                <div className="max-h-[26vh] overflow-auto flex flex-col gap-1">
+                <div className="max-h-[26dvh] overflow-auto flex flex-col gap-1">
                   {moves.map((id) => (
                     <p key={id} className="text-[13px]" style={{ color: "var(--brand-text)" }}>
                       <b className="font-medium">{byId[id].name}</b>{" "}

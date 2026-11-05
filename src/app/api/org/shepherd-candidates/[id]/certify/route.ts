@@ -9,7 +9,7 @@ type Params = { params: { id: string } };
 /**
  * POST — certify a candidate as ready to serve as a shepherd.
  * Permitted for anyone who outranks a cell shepherd AND oversees the candidate's cell
- * (buscentre head, MC pastor, chief shepherd, admin).
+ * (bacenta head, MC pastor, chief shepherd, admin).
  */
 export async function POST(request: Request, { params }: Params) {
   const session = await getServerSession(authOptions);

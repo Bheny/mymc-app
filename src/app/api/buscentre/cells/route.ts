@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { authorizeBuscentreView } from "@/lib/view-scope";
 
 /**
- * Returns all cells in the buscentre with full shepherd + contact info.
+ * Returns all cells in the bacenta with full shepherd + contact info.
  * Used by the /buscentre management page.
  */
 export async function GET(request: Request) {
@@ -23,15 +23,15 @@ export async function GET(request: Request) {
     if (actingAt.buscentre_id === actingBuscentreId) {
       buscentreId = actingBuscentreId;
     } else {
-      return NextResponse.json({ error: "No acting access to this buscentre" }, { status: 403 });
+      return NextResponse.json({ error: "No acting access to this bacenta" }, { status: 403 });
     }
   } else if (viewBuscentreId) {
     const { id, status } = await authorizeBuscentreView(session.user.role, session.user, viewBuscentreId);
-    if (status !== 200) return NextResponse.json({ error: "You don't have access to this buscentre" }, { status });
+    if (status !== 200) return NextResponse.json({ error: "You don't have access to this bacenta" }, { status });
     buscentreId = id;
   }
 
-  if (!buscentreId) return NextResponse.json({ error: "No buscentre assigned" }, { status: 400 });
+  if (!buscentreId) return NextResponse.json({ error: "No bacenta assigned" }, { status: 400 });
 
   const buscentre = await prisma.buscentre.findUnique({
     where:  { id: buscentreId },
@@ -41,7 +41,7 @@ export async function GET(request: Request) {
     },
   });
 
-  if (!buscentre) return NextResponse.json({ error: "Buscentre not found" }, { status: 404 });
+  if (!buscentre) return NextResponse.json({ error: "Bacenta not found" }, { status: 404 });
 
   const cells = await prisma.cell.findMany({
     where:   { buscentreId },

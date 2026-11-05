@@ -10,6 +10,7 @@ import Link from "next/link";
 import { ArrowLeft, CheckCircle2, XCircle, Clock, UserPlus, UserCheck, Phone, MapPin, Users, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MemberPicker, type PickedMember } from "@/components/member-picker";
+import { ServiceLeaders, type ServiceLeader } from "@/components/service-leaders";
 
 type AttendanceStatus = "PRESENT" | "ABSENT" | "EXCUSED";
 type FirstTimerIntent = "JUST_VISITING" | "UNDECIDED" | "WANTS_TO_JOIN";
@@ -48,6 +49,8 @@ type ServiceDetail = {
   createdAt: string;
   stats: { total: number; present: number; absent: number; excused: number };
   firstTimers: FirstTimer[];
+  cellId:    string;
+  leaders?:  ServiceLeader[];
   // Members of the cell with no mark for this service yet (e.g. added after it was saved)
   missing?: (ServiceDetail["attendance"][number]["member"] & { joinedDate: string | null; joinedAfter: boolean })[];
   attendance: {
@@ -272,7 +275,7 @@ export default function AttendanceDetailPage() {
       </div>
 
       {/* Stats */}
-      <div className="rounded-xl px-5 py-4 mb-6 grid grid-cols-4 gap-4"
+      <div className="rounded-xl px-4 sm:px-5 py-4 mb-6 grid grid-cols-2 sm:grid-cols-4 gap-4"
            style={{ border: "1px solid var(--brand-border)" }}>
         {[
           { label: "Present", value: service.stats.present, color: "var(--brand-success)", icon: CheckCircle2 },
@@ -287,6 +290,10 @@ export default function AttendanceDetailPage() {
           </div>
         ))}
       </div>
+
+      {/* Senior shepherds / MC pastors counted here (kept apart from the roster) */}
+      <ServiceLeaders serviceId={service.id} cellId={service.cellId} type={service.type} date={service.date}
+                      leaders={service.leaders ?? []} onSaved={() => mutate()} />
 
       {/* Stats bar — add first timers count */}
       {(service.firstTimers?.length ?? 0) > 0 && (

@@ -86,7 +86,7 @@ export function AttendanceReviewSection({
     }
   }, [mcId, showMcFilter]);
 
-  // Buscentre selected → load its cells
+  // Bacenta selected → load its cells
   useEffect(() => {
     setCellId("");
     setCellOptions([]);
@@ -146,7 +146,7 @@ export function AttendanceReviewSection({
             <select value={buscentreId} onChange={(e) => setBuscentreId(e.target.value)}
                     disabled={showMcFilter && !mcId && mcOptions.length > 0 && buscentreOptions.length === 0}
                     className="h-9 px-3 rounded-lg text-[13px] disabled:opacity-50" style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)" }}>
-              <option value="">All buscentres</option>
+              <option value="">All bacentas</option>
               {buscentreOptions.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
             </select>
           )}

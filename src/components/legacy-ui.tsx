@@ -8,8 +8,8 @@ export function Card({ title, subtitle, action, children }: {
   return (
     <section className="bg-[var(--surface)] rounded-xl p-4 sm:p-5 flex flex-col gap-3 min-w-0"
              style={{ border: "1px solid var(--brand-border)" }}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
+      <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2">
+        <div className="min-w-0 flex-1 basis-[12rem]">
           <h2 className="text-[15px] font-semibold" style={{ color: "var(--brand-text)" }}>{title}</h2>
           {subtitle && <p className="text-[12px] mt-0.5" style={{ color: "var(--brand-muted)" }}>{subtitle}</p>}
         </div>

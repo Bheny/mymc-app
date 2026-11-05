@@ -42,6 +42,8 @@ type MemberPreview = {
   isStudent?:      boolean | null;
   schoolLevel?:    string | null;
   schoolName?:     string | null;
+  isTither?:       boolean;
+  titherId?:       string | null;
   programOfStudy?: string | null;
 
   effectiveShepherdName?: string;
@@ -111,7 +113,7 @@ function timeAgo(iso: string): string {
 function memberPosition(detail: MemberPreview): { badge: string; badgeBg: string; badgeColor: string } {
   const sysRole = detail.user?.role?.role;
   if (sysRole === "cell_shepherd")  return { badge: "Cell Shepherd",  badgeBg: "var(--brand-navy)", badgeColor: "#fff" };
-  if (sysRole === "buscentre_head") return { badge: "Buscentre Head", badgeBg: "var(--violet-600)",           badgeColor: "#fff" };
+  if (sysRole === "buscentre_head") return { badge: "Bacenta Head", badgeBg: "var(--violet-600)",           badgeColor: "#fff" };
   if (sysRole === "mc_pastor")      return { badge: "MC Pastor",      badgeBg: "var(--green-600)",           badgeColor: "#fff" };
   if (sysRole === "chief_shepherd") return { badge: "Chief Shepherd", badgeBg: "var(--amber-700)",           badgeColor: "#fff" };
   if (sysRole === "admin")          return { badge: "Admin",          badgeBg: "var(--gray-800)",           badgeColor: "#fff" };
@@ -260,6 +262,10 @@ export function MemberPreviewSheet({
               <DetailRow icon={Phone}       label="Phone"    value={detail.emergencyPhone} />
               <DetailRow icon={UserCircle}  label="Relation" value={detail.emergencyRelation} />
 
+              <SectionLabel>Giving</SectionLabel>
+              <DetailRow icon={Wallet} label="Tither"    value={detail.isTither ? "Yes" : "No"} />
+              {detail.isTither && <DetailRow icon={Wallet} label="Tither ID" value={detail.titherId ?? "Not recorded"} />}
+
               <SectionLabel>Employment</SectionLabel>
               <DetailRow icon={Briefcase} label="Employed"   value={detail.isEmployed == null ? null : detail.isEmployed ? "Yes" : "No"} />
               <DetailRow icon={Briefcase} label="Employer"   value={detail.employer} />
@@ -282,7 +288,7 @@ export function MemberPreviewSheet({
               <DetailRow icon={Users} label="Shepherd" value={detail.effectiveShepherdName ?? "Unassigned"} />
               {detail.cell && <DetailRow icon={MapPin} label="Cell" value={detail.cell.name} />}
               {(detail.cell?.buscentre || detail.buscentre) && (
-                <DetailRow icon={MapPin} label="Buscentre" value={detail.cell?.buscentre?.name ?? detail.buscentre?.name ?? null} />
+                <DetailRow icon={MapPin} label="Bacenta" value={detail.cell?.buscentre?.name ?? detail.buscentre?.name ?? null} />
               )}
               {detail.mc && <DetailRow icon={MapPin} label="MC" value={detail.mc.name} />}
 

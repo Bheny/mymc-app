@@ -230,16 +230,16 @@ function SoulRow({
 
       {/* Actions */}
       <td className="px-4 py-3">
-        <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 justify-end [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
           <button onClick={() => onEdit(soul)}
-                  className="p-1.5 rounded-lg hover:bg-[var(--brand-navy-light)] transition-colors"
-                  title="Edit">
+                  className="p-2.5 sm:p-1.5 rounded-lg hover:bg-[var(--brand-navy-light)] transition-colors"
+                  title="Edit" aria-label="Edit record">
             <Pencil className="h-3.5 w-3.5" style={{ color: "var(--brand-muted)" }} />
           </button>
           <button onClick={() => onDelete(soul.id)}
                   disabled={deleting === soul.id}
-                  className="p-1.5 rounded-lg hover:bg-[var(--tint-danger-bg)] transition-colors disabled:opacity-40"
-                  title="Delete">
+                  className="p-2.5 sm:p-1.5 rounded-lg hover:bg-[var(--tint-danger-bg)] transition-colors disabled:opacity-40"
+                  title="Delete" aria-label="Delete record">
             {deleting === soul.id
               ? <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "var(--brand-danger)" }} />
               : <Trash2 className="h-3.5 w-3.5" style={{ color: "var(--brand-danger)" }} />}

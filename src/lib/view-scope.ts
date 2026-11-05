@@ -12,7 +12,7 @@ type AuthorizeResult = { id: string | null; status: 200 | 400 | 403 };
 
 // Mirrors the roleScope() logic already used in /api/attendance/review and
 // /api/attendance/drilldown — what a role is allowed to see, generalized to
-// the buscentre and cell levels for read-only dashboard drill-down.
+// the bacenta and cell levels for read-only dashboard drill-down.
 function buscentreScope(role: string | null | undefined, user: SessionUser): Prisma.BuscentreWhereInput | null {
   switch (role) {
     case "buscentre_head": return user.buscentreId ? { id: user.buscentreId } : null;

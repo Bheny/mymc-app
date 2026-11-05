@@ -10,6 +10,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { Header } from '@/components/header'
 import { ThemeProvider, themeInitScript } from "@/hooks/use-theme"
 import { DataProvider } from "@/components/data-provider"
+import { RouteProgress } from "@/components/route-progress"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 
@@ -18,6 +19,20 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata = {
   title: 'MyMC App',
   description: 'Manage your MC efficiently',
+  // Lets "Add to Home Screen" open it full-screen like an app
+  appleWebApp: { capable: true, title: 'MyMC', statusBarStyle: 'default' as const },
+  formatDetection: { telephone: false },
+}
+
+// viewport-fit=cover is what makes env(safe-area-inset-*) work on notched phones
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover' as const,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#FFFFFF' },
+    { media: '(prefers-color-scheme: dark)',  color: '#0B1220' },
+  ],
 }
 
 export default async function RootLayout({
@@ -59,6 +74,7 @@ export default async function RootLayout({
         <SessionProvider session={session}>
           <ThemeProvider>
           <DataProvider>
+          <RouteProgress />
           <ActiveRoleProvider initialActing={initialActing}>
             {session ? (
               <SidebarProvider>
@@ -70,8 +86,8 @@ export default async function RootLayout({
 
                 {/* Main — offset for fixed top bar (56px) + mobile bottom nav (60px) */}
                 <main
-                  className="min-h-screen"
-                  style={{ paddingTop: 56, paddingBottom: 64 }}
+                  className="min-h-dvh app-main"
+                  style={{ paddingTop: 56 }}
                 >
                   <MainContentArea>{children}</MainContentArea>
                 </main>

@@ -1,4 +1,15 @@
+import Link from "next/link";
 import { TrendingUp, TrendingDown } from "lucide-react";
+
+/** Link into the Members page with a status filter, optionally limited to one bacenta or cell. */
+export function membersLink(filter: "all" | "active" | "inactive" | "system", scope: { buscentreId?: string; cellId?: string } = {}) {
+  const p = new URLSearchParams();
+  if (filter !== "all") p.set("filter", filter);
+  if (scope.buscentreId) p.set("buscentreId", scope.buscentreId);
+  if (scope.cellId) p.set("cellId", scope.cellId);
+  const qs = p.toString();
+  return qs ? `/members?${qs}` : "/members";
+}
 
 interface SummaryCardProps {
   title: string;
@@ -8,6 +19,7 @@ interface SummaryCardProps {
   trend?: number;       // e.g. 12 = +12%, -5 = -5% — shows coloured arrow
   trendLabel?: string;  // suffix after the trend number, e.g. "vs last month"
   subtitle?: string;    // plain grey text shown below the value, no arrow
+  href?: string;        // makes the whole card a link
 }
 
 export function SummaryCard({
@@ -18,13 +30,14 @@ export function SummaryCard({
   trend,
   trendLabel = "vs last month",
   subtitle,
+  href,
 }: SummaryCardProps) {
   const hasTrend = trend !== undefined;
   const isPositive = hasTrend && trend >= 0;
 
-  return (
+  const card = (
     <div
-      className="bg-[var(--surface)] rounded-xl p-5 flex flex-col gap-3"
+      className={`bg-[var(--surface)] rounded-xl p-5 flex flex-col gap-3 h-full ${href ? "transition-colors [@media(hover:hover)]:group-hover:border-[var(--brand-link)] group-active:bg-[var(--brand-navy-light)]" : ""}`}
       style={{ border: "1px solid var(--brand-border)" }}
     >
       {/* Label row */}
@@ -87,4 +100,10 @@ export function SummaryCard({
       )}
     </div>
   );
+
+  return href ? (
+    <Link href={href} className="group block rounded-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-[var(--brand-link)]">
+      {card}
+    </Link>
+  ) : card;
 }

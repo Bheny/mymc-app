@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveAttendanceScope } from "@/lib/attendance-scope";
 
 // GET /api/services/recent?take=20 (+ actingBuscentreId)
-// The services recorded across a buscentre, newest first, so a buscentre head can open one to
+// The services recorded across a bacenta, newest first, so a bacenta head can open one to
 // check or correct it. (A cell shepherd already sees their own cell's services on the Attendance page.)
 export async function GET(request: Request) {
   const session = await getServerSession(authOptions);
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   const sp = new URL(request.url).searchParams;
   const scope = resolveAttendanceScope(session.user as never, sp);
   if ("error" in scope) return NextResponse.json({ error: scope.error }, { status: scope.status });
-  if (scope.level !== "buscentre") return NextResponse.json({ error: "This list is for buscentre heads" }, { status: 403 });
+  if (scope.level !== "buscentre") return NextResponse.json({ error: "This list is for bacenta heads" }, { status: 403 });
 
   const take = Math.min(parseInt(sp.get("take") ?? "20") || 20, 60);
   const services = await prisma.service.findMany({

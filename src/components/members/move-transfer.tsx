@@ -10,7 +10,7 @@ import { Cascade, CapLine, useBoard, usePicker, type Level, type MoveResult } fr
 
 const LEVELS: { key: Level; label: string }[] = [
   { key: "shepherd", label: "A shepherd" }, { key: "cell", label: "A cell (no shepherd)" },
-  { key: "buscentre", label: "A buscentre" }, { key: "mc", label: "An MC" },
+  { key: "buscentre", label: "A bacenta" }, { key: "mc", label: "An MC" },
 ];
 
 export function MoveTransfer() {

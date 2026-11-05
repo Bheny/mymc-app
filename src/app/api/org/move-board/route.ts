@@ -9,7 +9,7 @@ import { actorViews, canManage } from "@/lib/member-moves";
 // GET /api/org/move-board?buscentreId=…  |  ?cellId=…  |  ?shepherdId=…
 // The people under one part of the structure, laid out for the Move members
 // screen: cells → shepherds → members, plus members with no shepherd (cell level)
-// and members held directly by the buscentre. You need to lead the part you ask for.
+// and members held directly by the bacenta. You need to lead the part you ask for.
 // Each member carries a `lock` reason when they can't be moved this way.
 
 const memberSelect = {

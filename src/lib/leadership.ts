@@ -56,7 +56,7 @@ export async function findRoleHolder(
 // ─── Member oversight fallback ────────────────────────────────────────────────
 // A member's "effective shepherd": their direct shepherd if assigned, otherwise
 // whoever currently leads the level the member sits at directly (Cell Shepherd /
-// Buscentre Head / MC Pastor) — skipping a level if it would just resolve back
+// Bacenta Head / MC Pastor) — skipping a level if it would just resolve back
 // to the member themselves, and walking up further in that case.
 
 export type MemberForShepherdResolution = {

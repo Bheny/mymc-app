@@ -67,7 +67,7 @@ export function RecommendShepherdDialog({ memberId, memberName, onDone }: Props)
               <CheckCircle2 className="h-10 w-10" style={{ color: "var(--brand-success)" }} />
               <p className="text-[15px] font-semibold" style={{ color: "var(--brand-text)" }}>Recommendation submitted</p>
               <p className="text-[13px]" style={{ color: "var(--brand-muted)" }}>
-                Buscentre, MC and branch leadership can now see {memberName} is ready to be considered.
+                Bacenta, MC and branch leadership can now see {memberName} is ready to be considered.
               </p>
             </div>
           ) : (

@@ -24,7 +24,7 @@ function toDraft(levels: LevelRow[]): Draft {
 
 /**
  * Admin / chief-shepherd control for hierarchy limits (buscentres per MC,
- * cells per buscentre, etc.). Renders nothing for users who can't edit.
+ * cells per bacenta, etc.). Renders nothing for users who can't edit.
  */
 export function StructureLimitsSettings() {
   const [levels,  setLevels]  = useState<LevelRow[] | null>(null);

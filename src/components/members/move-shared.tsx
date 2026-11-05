@@ -117,8 +117,8 @@ export function Cascade({ p, depth }: { p: Picker; depth: Level }) {
   return (
     <div className="flex flex-col gap-3">
       {sel(p.mcId, p.setMcId, "— MC —", p.mcs.map((o) => ({ id: o.id, label: o.name })), "MC")}
-      {depth !== "mc" && sel(p.buscentreId, p.setBuscentreId, p.mcId ? "— Buscentre —" : "Choose an MC first", p.bcs.map((o) => ({ id: o.id, label: o.name })), "Buscentre")}
-      {(depth === "cell" || depth === "shepherd") && sel(p.cellId, p.setCellId, p.buscentreId ? "— Cell —" : "Choose a buscentre first", p.cells.map((o) => ({ id: o.id, label: o.name })), "Cell")}
+      {depth !== "mc" && sel(p.buscentreId, p.setBuscentreId, p.mcId ? "— Bacenta —" : "Choose an MC first", p.bcs.map((o) => ({ id: o.id, label: o.name })), "Bacenta")}
+      {(depth === "cell" || depth === "shepherd") && sel(p.cellId, p.setCellId, p.buscentreId ? "— Cell —" : "Choose a bacenta first", p.cells.map((o) => ({ id: o.id, label: o.name })), "Cell")}
       {depth === "shepherd" && sel(p.shepherdId, p.setShepherdId, p.cellId ? "— Shepherd —" : "Choose a cell first", p.slots.map((s) => ({ id: s.id, label: `${slotName(s)} (${s._count.members})` })), "Shepherd")}
     </div>
   );

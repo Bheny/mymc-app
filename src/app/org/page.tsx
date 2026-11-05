@@ -119,8 +119,8 @@ function TreeRow({
   return (
     <div>
       <div
-        className="flex items-center gap-2 py-2.5 pr-3 cursor-pointer select-none hover:bg-[var(--brand-navy-light)] transition-colors rounded-lg"
-        style={{ paddingLeft: 8 + depth * 16 }}
+        className="flex flex-wrap sm:flex-nowrap items-center gap-x-2 gap-y-1 py-2.5 pr-2 sm:pr-3 cursor-pointer select-none hover:bg-[var(--brand-navy-light)] active:bg-[var(--brand-navy-light)] transition-colors rounded-lg"
+        style={{ paddingLeft: 6 + depth * 12 }}
         onClick={() => hasChildren && setOpen((o) => !o)}
       >
         {hasChildren
@@ -129,26 +129,34 @@ function TreeRow({
             : <ChevronRight style={{ width: 14, height: 14, color: "var(--brand-muted)", flexShrink: 0 }} />
           : <span style={{ width: 14, flexShrink: 0 }} />
         }
-        {href ? (
-          <Link
-            href={href}
-            onClick={(e) => e.stopPropagation()}
-            className="text-[13px] font-medium flex-1 min-w-0 truncate hover:underline"
-            style={{ color: "var(--brand-link)" }}
-          >
-            {label}
-          </Link>
-        ) : (
-          <span className="text-[13px] font-medium flex-1 min-w-0 truncate" style={{ color: "var(--brand-text)" }}>
-            {label}
-          </span>
-        )}
+        <div className="flex-1 min-w-0 basis-[calc(100%-28px)] sm:basis-auto">
+          {href ? (
+            <Link
+              href={href}
+              onClick={(e) => e.stopPropagation()}
+              className="block text-[14px] sm:text-[13px] font-medium truncate hover:underline"
+              style={{ color: "var(--brand-link)" }}
+            >
+              {label}
+            </Link>
+          ) : (
+            <span className="block text-[14px] sm:text-[13px] font-medium truncate" style={{ color: "var(--brand-text)" }}>
+              {label}
+            </span>
+          )}
+          {assigned !== undefined && (
+            <span className="sm:hidden block text-[12px] truncate" style={{ color: "var(--brand-muted)" }}>
+              {assigned ?? "Unassigned"}
+            </span>
+          )}
+        </div>
         {assigned !== undefined && (
           <span className="hidden sm:block shrink-0" style={{ color: "var(--brand-muted)", fontSize: 12 }}>
             {assigned ?? "Unassigned"}
           </span>
         )}
-        <div className="flex flex-wrap items-center gap-1 shrink-0">{badges}</div>
+        {/* On phones the badges/actions drop to their own line, lined up under the name */}
+        <div className="flex flex-wrap items-center gap-1 sm:shrink-0 max-sm:basis-full max-sm:pl-[22px]">{badges}</div>
       </div>
       {open && children && <div>{children}</div>}
     </div>
@@ -161,7 +169,7 @@ function ChangeHeadButton({ label, onClick, onDark = false }: { label: string; o
   return (
     <button
       onClick={(e) => { e.stopPropagation(); onClick(); }}
-      className={`p-1 rounded transition-colors ${onDark ? "hover:bg-white/15" : "hover:bg-[var(--brand-navy-light)]"}`}
+      className={`p-2.5 -m-1.5 sm:p-1 sm:m-0 rounded transition-colors ${onDark ? "hover:bg-white/15" : "hover:bg-[var(--brand-navy-light)]"}`}
       aria-label={label}
       title={label}
     >
@@ -196,7 +204,7 @@ function AddNodeRow({
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 text-[12px] font-medium py-1.5 px-3 rounded-lg transition-colors"
+        className="flex items-center gap-1.5 text-[13px] sm:text-[12px] font-medium py-2.5 sm:py-1.5 px-3 rounded-lg transition-colors"
         style={{ color: "var(--brand-link)", marginLeft: 14 }}
       >
         <Plus style={{ width: 12, height: 12 }} /> {label}
@@ -211,15 +219,15 @@ function AddNodeRow({
         value={name}
         onChange={(e) => setName(e.target.value)}
         placeholder="Name..."
-        className="h-8 px-3 text-[13px] rounded-lg flex-1 min-w-0"
+        className="h-10 sm:h-8 px-3 text-[13px] rounded-lg flex-1 min-w-0"
         style={{ border: "1px solid var(--brand-border)", outline: "none" }}
       />
-      <Button type="submit" disabled={busy} className="h-8 text-[12px] px-3 shrink-0"
+      <Button type="submit" disabled={busy} className="h-10 sm:h-8 text-[12px] px-3 shrink-0"
         style={{ background: "var(--brand-navy)", color: "#fff", borderRadius: 8 }}>
         {busy ? "…" : "Add"}
       </Button>
       <button type="button" onClick={() => setOpen(false)}
-        className="h-8 px-2 text-[12px] shrink-0" style={{ color: "var(--brand-muted)" }}>
+        className="h-10 sm:h-8 px-2 text-[12px] shrink-0" style={{ color: "var(--brand-muted)" }}>
         Cancel
       </button>
     </form>
@@ -372,13 +380,13 @@ function ShepherdRow({
     <div>
       {/* ── Shepherd row ── */}
       <div
-        className="flex items-center gap-2 py-2.5 pr-3 rounded-lg"
-        style={{ paddingLeft: 8 + 3 * 16 }}
+        className="flex flex-wrap items-center gap-x-2 gap-y-1 py-2 pr-2 sm:pr-3 rounded-lg"
+        style={{ paddingLeft: 6 + 3 * 12 }}
       >
         <span style={{ width: 14, flexShrink: 0 }} />
 
         {/* Name + status */}
-        <span className="text-[14px] flex-1" style={{
+        <span className="text-[14px] flex-1 min-w-[40%] break-words" style={{
           color:      isAssigned ? "var(--brand-text)" : "var(--brand-muted)",
           fontStyle:  isAssigned ? "normal" : "italic",
           fontWeight: hasLogin ? 500 : 400,
@@ -407,7 +415,7 @@ function ShepherdRow({
             <button
               onClick={handleUnassign}
               disabled={saving}
-              className="text-[11px] font-medium px-2 py-0.5 rounded-lg hover:opacity-80 transition-opacity"
+              className="text-[12px] sm:text-[11px] font-medium px-3 py-2 sm:px-2 sm:py-0.5 rounded-lg hover:opacity-80 transition-opacity"
               style={{ color: "var(--brand-danger)" }}
               title="Unassign shepherd"
             >
@@ -416,7 +424,7 @@ function ShepherdRow({
           ) : (
             <button
               onClick={() => setAssigning(true)}
-              className="flex items-center gap-1 text-[12px] font-medium px-2 py-0.5 rounded-lg transition-colors"
+              className="flex items-center gap-1 text-[13px] sm:text-[12px] font-medium px-3.5 py-2 sm:px-2 sm:py-0.5 rounded-lg transition-colors"
               style={{ color: "var(--brand-link)", background: "var(--brand-navy-light)" }}
             >
               Assign
@@ -443,7 +451,7 @@ function ShepherdRow({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Type a name…"
-              className="w-full h-9 px-3 text-[13px] rounded-lg"
+              className="w-full h-11 sm:h-9 px-3 text-[13px] rounded-lg"
               style={{ border: "1px solid var(--brand-border)", outline: "none", background: "var(--surface)" }}
             />
           </div>
@@ -456,7 +464,7 @@ function ShepherdRow({
                   type="button"
                   disabled={saving}
                   onClick={() => handleAssign(m.id)}
-                  className="w-full text-left px-3 py-2 text-[13px] hover:bg-white transition-colors"
+                  className="w-full text-left px-3 py-3 sm:py-2 text-[14px] sm:text-[13px] hover:bg-white active:bg-white transition-colors"
                   style={{
                     borderBottom: "1px solid var(--brand-border)",
                     color: "var(--brand-text)",
@@ -481,7 +489,7 @@ function ShepherdRow({
           <button
             type="button"
             onClick={() => { setAssigning(false); setQuery(""); setResults([]); setError(""); }}
-            className="text-[12px] self-start"
+            className="text-[13px] sm:text-[12px] self-start py-1.5"
             style={{ color: "var(--brand-muted)" }}
           >
             Cancel
@@ -510,7 +518,7 @@ function MoveToField({
   currentName: string;
   groups:      MoveGroup[];
   limit:       { max: number; enforce: boolean };
-  unit:        string;   // "cells" | "buscentres"
+  unit:        string;   // "cells" | "bacentas"
   carries:     string;   // what moves along, for the summary line
   value:       string;
   onChange:    (v: string) => void;
@@ -593,7 +601,7 @@ async function saveThenMove(
   return { error: null, moved: d };
 }
 
-// ─── Edit Buscentre sheet ─────────────────────────────────────────────────────
+// ─── Edit Bacenta sheet ─────────────────────────────────────────────────────
 
 type EditingBuscentre = {
   id:        string;
@@ -647,7 +655,7 @@ function EditBuscentreSheet({
     <Sheet open={!!bc} onOpenChange={(o) => !o && onClose()}>
       <SheetContent width={420}>
         <SheetHeader>
-          <SheetTitle>Edit Buscentre</SheetTitle>
+          <SheetTitle>Edit Bacenta</SheetTitle>
         </SheetHeader>
         <SheetBody>
           <form id="edit-bc-form" onSubmit={handleSave} className="flex flex-col gap-4">
@@ -674,7 +682,7 @@ function EditBuscentreSheet({
                 currentName={currentMc?.name ?? "current MC"}
                 groups={[{ options: bc.mcs.map((m) => ({ id: m.id, name: m.name, count: m.buscentreCount })) }]}
                 limit={limits.buscentre}
-                unit="buscentres"
+                unit="bacentas"
                 carries={`Its ${plural(bc.cellCount, "cell")} and everyone in them`}
                 value={target}
                 onChange={(v) => { setTarget(v); setError(""); }}
@@ -776,7 +784,7 @@ function EditCellSheet({
               <MoveToField
                 id="cell-move-target"
                 currentId={cell.buscentreId}
-                currentName={currentBc?.name ?? "current buscentre"}
+                currentName={currentBc?.name ?? "current bacenta"}
                 groups={cell.mcs.map((m) => ({
                   label:   m.name,
                   options: m.buscentres.map((b) => ({ id: b.id, name: b.name, count: b.cellCount })),
@@ -831,6 +839,60 @@ export default function OrgPage() {
   const [assigningHead, setAssigningHead] = useState<Omit<AssignHeadSheetProps, "open" | "onClose" | "onAssigned"> | null>(null);
 
   const [loadError, setLoadError] = useState("");
+
+  // Arriving from the Organogram with ?edit=cell:ID or ?head=mc:ID — open that sheet once the tree is in
+  const [pendingOpen, setPendingOpen] = useState<string | null>(null);
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const target = q.get("edit") ? `edit:${q.get("edit")}` : q.get("head") ? `head:${q.get("head")}` : null;
+    if (target) { setPendingOpen(target); window.history.replaceState(null, "", "/org"); }
+  }, []);
+  useEffect(() => {
+    if (!pendingOpen || roleLoading || !role || loading) return;
+    const [action, type, id] = pendingOpen.split(":");
+    setPendingOpen(null);
+    for (const branch of branches) {
+      for (const mc of branch.megaChurches) {
+        if (type === "mc" && mc.id === id) {
+          if (action === "edit") setEditingMC({ id: mc.id, name: mc.name });
+          else if (canChangeHeads) setAssigningHead({ nodeType: "mc", nodeId: mc.id, nodeName: mc.name, branchId: branch.id, mcId: mc.id });
+          return;
+        }
+        for (const bc of mc.buscentres) {
+          if (type === "bc" && bc.id === id) {
+            if (action === "edit") {
+              setEditingBuscentre({
+                id: bc.id, name: bc.name, location: bc.location, mcId: mc.id, cellCount: bc._count.cells,
+                ...(canMoveBuscentres && { mcs: branch.megaChurches.map((m) => ({ id: m.id, name: m.name, buscentreCount: m._count.buscentres })) }),
+              });
+            } else if (canChangeHeads) {
+              setAssigningHead({ nodeType: "buscentre", nodeId: bc.id, nodeName: bc.name, branchId: branch.id, mcId: mc.id, buscentreId: bc.id });
+            }
+            return;
+          }
+          for (const cell of bc.cells) {
+            if (type === "cell" && cell.id === id) {
+              if (action === "edit") {
+                setEditingCell({
+                  id: cell.id, name: cell.name, location: cell.location, buscentreId: bc.id,
+                  memberCount: cell._count.members, shepherdCount: cell._count.shepherds,
+                  ...(canMoveCells && {
+                    mcs: branch.megaChurches.map((m) => ({
+                      id: m.id, name: m.name,
+                      buscentres: m.buscentres.map((b) => ({ id: b.id, name: b.name, cellCount: b._count.cells })),
+                    })),
+                  }),
+                });
+              } else if (canChangeHeads) {
+                setAssigningHead({ nodeType: "cell", nodeId: cell.id, nodeName: cell.name, branchId: branch.id, mcId: mc.id, buscentreId: bc.id, cellId: cell.id });
+              }
+              return;
+            }
+          }
+        }
+      }
+    }
+  }, [pendingOpen, roleLoading, role, loading, branches]); // eslint-disable-line react-hooks/exhaustive-deps
 
   async function loadTree() {
     setLoadError("");
@@ -901,7 +963,7 @@ export default function OrgPage() {
             Organisation
           </h1>
           <p className="mt-0.5 text-[13px] hidden sm:block" style={{ color: "var(--brand-muted)" }}>
-            Branch → MC → Buscentre → Cell → Shepherd → Member
+            Branch → MC → Bacenta → Cell → Shepherd → Member
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -964,7 +1026,7 @@ export default function OrgPage() {
             style={{ border: "1px solid var(--brand-border)" }}
           >
             {/* Branch header */}
-            <div className="px-5 py-3 flex items-center gap-2 flex-wrap"
+            <div className="px-4 sm:px-5 py-3 flex items-center gap-2 flex-wrap"
                  style={{ background: "var(--brand-navy)", borderBottom: "1px solid rgba(255,255,255,0.1)" }}>
               <Network style={{ width: 16, height: 16, color: "rgba(255,255,255,0.7)" }} />
               <span className="text-[14px] font-semibold text-white">{branch.name}</span>
@@ -1029,7 +1091,7 @@ export default function OrgPage() {
                               mcId:     mc.id,
                             });
                           }}
-                          className="flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:opacity-80"
+                          className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 sm:px-1.5 sm:py-0.5 text-[11px] font-medium transition-colors hover:opacity-80"
                           style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}
                           aria-label={`Assign MC Pastor for ${mc.name}`}
                         >
@@ -1049,7 +1111,7 @@ export default function OrgPage() {
                           e.stopPropagation();
                           setEditingMC({ id: mc.id, name: mc.name });
                         }}
-                        className="p-1 rounded hover:bg-white/60 transition-colors"
+                        className="p-2.5 -m-1.5 sm:p-1 sm:m-0 rounded hover:bg-white/60 transition-colors"
                         aria-label={`Edit ${mc.name}`}
                       >
                         <Pencil style={{ width: 13, height: 13, color: "var(--brand-muted)" }} />
@@ -1057,7 +1119,7 @@ export default function OrgPage() {
                     </>
                   }
                 >
-                  {/* Buscentres */}
+                  {/* Bacentas */}
                   {mc.buscentres.map((bc) => (
                     <TreeRow
                       key={bc.id}
@@ -1070,13 +1132,13 @@ export default function OrgPage() {
                         <>
                           <CapacityBadge count={bc._count.cells} max={limits.cell.max} />
                           {hasFlag(bc.id) && <ActingUpBadge severity={hasFlag(bc.id)!.severity} />}
-                          {/* Assign Buscentre Head */}
+                          {/* Assign Bacenta Head */}
                           {!bc.userRoles[0]?.user && (
                             <button
                               onClick={(e) => { e.stopPropagation();
                                 setAssigningHead({ nodeType: "buscentre", nodeId: bc.id, nodeName: bc.name,
                                   branchId: branch.id, mcId: mc.id, buscentreId: bc.id }); }}
-                              className="flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:opacity-80"
+                              className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 sm:px-1.5 sm:py-0.5 text-[11px] font-medium transition-colors hover:opacity-80"
                               style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}
                               aria-label={`Assign head for ${bc.name}`}
                             >
@@ -1085,7 +1147,7 @@ export default function OrgPage() {
                           )}
                           {canChangeHeads && bc.userRoles[0]?.user && (
                             <ChangeHeadButton
-                              label={`Change Buscentre Head for ${bc.name}`}
+                              label={`Change Bacenta Head for ${bc.name}`}
                               onClick={() => setAssigningHead({
                                 nodeType: "buscentre", nodeId: bc.id, nodeName: bc.name,
                                 branchId: branch.id, mcId: mc.id, buscentreId: bc.id,
@@ -1099,7 +1161,7 @@ export default function OrgPage() {
                                 mcs: branch.megaChurches.map((m) => ({ id: m.id, name: m.name, buscentreCount: m._count.buscentres })),
                               }),
                             }); }}
-                            className="p-1 rounded hover:bg-[var(--brand-navy-light)] transition-colors"
+                            className="p-2.5 -m-1.5 sm:p-1 sm:m-0 rounded hover:bg-[var(--brand-navy-light)] transition-colors"
                             aria-label={`Edit ${bc.name}`}
                           >
                             <Pencil style={{ width: 13, height: 13, color: "var(--brand-muted)" }} />
@@ -1128,7 +1190,7 @@ export default function OrgPage() {
                                   onClick={(e) => { e.stopPropagation();
                                     setAssigningHead({ nodeType: "cell", nodeId: cell.id, nodeName: cell.name,
                                       branchId: branch.id, mcId: mc.id, buscentreId: bc.id, cellId: cell.id }); }}
-                                  className="flex items-center gap-1 rounded-lg px-1.5 py-0.5 text-[11px] font-medium transition-colors hover:opacity-80"
+                                  className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 sm:px-1.5 sm:py-0.5 text-[11px] font-medium transition-colors hover:opacity-80"
                                   style={{ background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" }}
                                   aria-label={`Assign shepherd for ${cell.name}`}
                                 >
@@ -1155,7 +1217,7 @@ export default function OrgPage() {
                                     })),
                                   }),
                                 }); }}
-                                className="p-1 rounded hover:bg-[var(--brand-navy-light)] transition-colors"
+                                className="p-2.5 -m-1.5 sm:p-1 sm:m-0 rounded hover:bg-[var(--brand-navy-light)] transition-colors"
                                 aria-label={`Edit ${cell.name}`}
                               >
                                 <Pencil style={{ width: 13, height: 13, color: "var(--brand-muted)" }} />
@@ -1179,8 +1241,8 @@ export default function OrgPage() {
                     </TreeRow>
                   ))}
 
-                  {/* Add buscentre */}
-                  <AddNodeRow label="Add buscentre" onAdd={(name) => addBuscentre(mc.id, name)} />
+                  {/* Add bacenta */}
+                  <AddNodeRow label="Add bacenta" onAdd={(name) => addBuscentre(mc.id, name)} />
                 </TreeRow>
               ))}
 
@@ -1199,7 +1261,7 @@ export default function OrgPage() {
       <EditBuscentreSheet
         bc={editingBuscentre}
         onClose={() => setEditingBuscentre(null)}
-        onSaved={(moved) => { if (moved) toast({ title: "Buscentre moved", description: moved }); loadTree(); }}
+        onSaved={(moved) => { if (moved) toast({ title: "Bacenta moved", description: moved }); loadTree(); }}
       />
       <EditCellSheet
         cell={editingCell}

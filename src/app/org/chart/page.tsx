@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, ChevronRight, Users, UserCircle, AlertTriangle, LayoutList, Network } from "lucide-react";
+import { ArrowLeft, ChevronRight, Users, UserCircle, AlertTriangle, LayoutList, Network, Pencil, UserCog } from "lucide-react";
+import { useActiveRole } from "@/hooks/use-active-role";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -45,6 +46,29 @@ function ActingDot({ severity }: { severity: string }) {
   );
 }
 
+// Edit / change-head buttons. The chart is a view; the editing sheets live on the Org page, so these
+// open the right one there (`/org?edit=cell:ID`, `/org?head=cell:ID`).
+type Editable = { heads: boolean } | undefined;
+type EditKind = "mc" | "bc" | "cell";
+
+function NodeActions({ kind, id, name, edit, dark = false }: { kind: EditKind; id: string; name: string; edit: Editable; dark?: boolean }) {
+  if (!edit) return null;
+  const color = dark ? "rgba(255,255,255,0.75)" : "var(--brand-muted)";
+  const cls = `p-2.5 sm:p-1.5 rounded-lg transition-colors ${dark ? "hover:bg-white/15" : "hover:bg-[var(--brand-navy-light)]"}`;
+  return (
+    <span className="flex items-center shrink-0" onClick={(e) => e.stopPropagation()}>
+      {edit.heads && (
+        <Link href={`/org?head=${kind}:${id}`} className={cls} aria-label={`Assign or change head for ${name}`} title="Assign / change head">
+          <UserCog style={{ width: 14, height: 14, color }} />
+        </Link>
+      )}
+      <Link href={`/org?edit=${kind}:${id}`} className={cls} aria-label={`Edit ${name}`} title="Edit">
+        <Pencil style={{ width: 14, height: 14, color }} />
+      </Link>
+    </span>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 // TREE VIEW  (horizontal — desktop default)
 // ══════════════════════════════════════════════════════════════════════════════
@@ -81,28 +105,30 @@ function BranchCard({ name, count, expanded, onToggle }: { name: string; count: 
   );
 }
 
-function MCCard({ mc, flag, expanded, onToggle }: { mc: MCNode; flag?: Flag; expanded: boolean; onToggle: () => void }) {
+function MCCard({ mc, flag, expanded, onToggle, edit }: { mc: MCNode; flag?: Flag; expanded: boolean; onToggle: () => void; edit: Editable }) {
   return (
-    <div className="rounded-xl px-4 py-3 text-center cursor-pointer select-none hover:opacity-90 transition-opacity"
+    <div className="relative rounded-xl px-4 py-3 text-center cursor-pointer select-none hover:opacity-90 transition-opacity"
          style={{ background: "var(--brand-navy-mid)", color: "#fff", minWidth: 148, boxShadow: "0 2px 6px rgba(15,31,61,.15)" }}
          onClick={onToggle}>
+      <div className="absolute top-0.5 right-0.5"><NodeActions kind="mc" id={mc.id} name={mc.name} edit={edit} dark /></div>
       <p className="text-[10px] font-medium uppercase tracking-[0.07em] mb-1 opacity-50">MC</p>
       <p className="text-[14px] font-semibold">{mc.name}{flag && <ActingDot severity={flag.severity} />}</p>
       <p className="text-[11px] mt-0.5 opacity-70">{mc.userRoles[0]?.user?.name ?? "No pastor"}</p>
       <div className="flex items-center justify-center gap-1 mt-1.5">
-        <p className="text-[10px] opacity-50">{mc._count.buscentres} buscentre{mc._count.buscentres !== 1 ? "s" : ""}</p>
+        <p className="text-[10px] opacity-50">{mc._count.buscentres} bacenta{mc._count.buscentres !== 1 ? "s" : ""}</p>
         {mc.buscentres.length > 0 && <ChevronRight style={{ width: 10, height: 10, opacity: .6, transform: expanded ? "rotate(90deg)" : "none" }} />}
       </div>
     </div>
   );
 }
 
-function BuscentreCard({ bc, flag, expanded, onToggle }: { bc: BuscentreNode; flag?: Flag; expanded: boolean; onToggle: () => void }) {
+function BuscentreCard({ bc, flag, expanded, onToggle, edit }: { bc: BuscentreNode; flag?: Flag; expanded: boolean; onToggle: () => void; edit: Editable }) {
   return (
-    <div className="rounded-xl px-4 py-3 text-center cursor-pointer select-none hover:shadow-sm transition-shadow"
+    <div className="relative rounded-xl px-4 py-3 text-center cursor-pointer select-none hover:shadow-sm transition-shadow"
          style={{ background: "var(--surface)", border: "2px solid var(--brand-navy)", minWidth: 136 }}
          onClick={onToggle}>
-      <p className="text-[10px] font-medium uppercase tracking-[0.07em] mb-1" style={{ color: "var(--brand-muted)" }}>Buscentre</p>
+      <div className="absolute top-0.5 right-0.5"><NodeActions kind="bc" id={bc.id} name={bc.name} edit={edit} /></div>
+      <p className="text-[10px] font-medium uppercase tracking-[0.07em] mb-1" style={{ color: "var(--brand-muted)" }}>Bacenta</p>
       <p className="text-[13px] font-semibold" style={{ color: "var(--brand-text)" }}>{bc.name}{flag && <ActingDot severity={flag.severity} />}</p>
       <p className="text-[11px] mt-0.5" style={{ color: "var(--brand-muted)" }}>{bc.userRoles[0]?.user?.name ?? "No head"}</p>
       <div className="flex items-center justify-center gap-1 mt-1.5">
@@ -113,11 +139,12 @@ function BuscentreCard({ bc, flag, expanded, onToggle }: { bc: BuscentreNode; fl
   );
 }
 
-function CellCard({ cell, flag, open, onToggle }: { cell: CellNode; flag?: Flag; open: boolean; onToggle: () => void }) {
+function CellCard({ cell, flag, open, onToggle, edit }: { cell: CellNode; flag?: Flag; open: boolean; onToggle: () => void; edit: Editable }) {
   return (
-    <div className="rounded-xl px-4 py-3 text-center cursor-pointer select-none hover:shadow-sm transition-shadow"
+    <div className="relative rounded-xl px-4 py-3 text-center cursor-pointer select-none hover:shadow-sm transition-shadow"
          style={{ background: "var(--surface)", border: "1px solid var(--brand-success)", borderLeft: "4px solid var(--brand-success)", minWidth: 128 }}
          onClick={onToggle}>
+      <div className="absolute top-0.5 right-0.5"><NodeActions kind="cell" id={cell.id} name={cell.name} edit={edit} /></div>
       <p className="text-[10px] font-medium uppercase tracking-[0.07em] mb-1" style={{ color: "var(--brand-success)" }}>Cell</p>
       <p className="text-[13px] font-semibold" style={{ color: "var(--brand-text)" }}>{cell.name}{flag && <ActingDot severity={flag.severity} />}</p>
       <p className="text-[11px] mt-0.5" style={{ color: "var(--brand-muted)" }}>{cell.userRoles[0]?.user?.name ?? "No shepherd"}</p>
@@ -146,8 +173,8 @@ function ShepherdCard({ shepherd, flag }: { shepherd: ShepherdNode; flag?: Flag 
   );
 }
 
-function TreeView({ branches, flags, expandedBranches, expandedMCs, expandedBuscentres, expandedCells, toggleBranch, toggleMC, toggleBuscentre, toggleCell }: {
-  branches: BranchNode[]; flags: Flag[];
+function TreeView({ branches, flags, edit, expandedBranches, expandedMCs, expandedBuscentres, expandedCells, toggleBranch, toggleMC, toggleBuscentre, toggleCell }: {
+  branches: BranchNode[]; flags: Flag[]; edit: Editable;
   expandedBranches: Set<string>; expandedMCs: Set<string>;
   expandedBuscentres: Set<string>; expandedCells: Set<string>;
   toggleBranch: (id: string) => void; toggleMC: (id: string) => void;
@@ -171,7 +198,7 @@ function TreeView({ branches, flags, expandedBranches, expandedMCs, expandedBusc
                       <div key={mc.id} className="org-child">
                         <Connector h={28} />
                         <div className="org-branch">
-                          <MCCard mc={mc} flag={flagMap[mc.id]} expanded={expandedMCs.has(mc.id)} onToggle={() => toggleMC(mc.id)} />
+                          <MCCard mc={mc} flag={flagMap[mc.id]} expanded={expandedMCs.has(mc.id)} onToggle={() => toggleMC(mc.id)} edit={edit} />
                           {expandedMCs.has(mc.id) && mc.buscentres.length > 0 && (
                             <div className="org-branch">
                               <Connector />
@@ -180,7 +207,7 @@ function TreeView({ branches, flags, expandedBranches, expandedMCs, expandedBusc
                                   <div key={bc.id} className="org-child">
                                     <Connector />
                                     <div className="org-branch">
-                                      <BuscentreCard bc={bc} flag={flagMap[bc.id]} expanded={expandedBuscentres.has(bc.id)} onToggle={() => toggleBuscentre(bc.id)} />
+                                      <BuscentreCard bc={bc} flag={flagMap[bc.id]} expanded={expandedBuscentres.has(bc.id)} onToggle={() => toggleBuscentre(bc.id)} edit={edit} />
                                       {expandedBuscentres.has(bc.id) && bc.cells.length > 0 && (
                                         <div className="org-branch">
                                           <Connector />
@@ -189,7 +216,7 @@ function TreeView({ branches, flags, expandedBranches, expandedMCs, expandedBusc
                                               <div key={cell.id} className="org-child">
                                                 <Connector />
                                                 <div className="org-branch">
-                                                  <CellCard cell={cell} flag={flagMap[cell.id]} open={expandedCells.has(cell.id)} onToggle={() => toggleCell(cell.id)} />
+                                                  <CellCard cell={cell} flag={flagMap[cell.id]} open={expandedCells.has(cell.id)} onToggle={() => toggleCell(cell.id)} edit={edit} />
                                                   {expandedCells.has(cell.id) && cell.shepherds.length > 0 && (
                                                     <div className="org-branch">
                                                       <Connector />
@@ -236,27 +263,31 @@ function TreeView({ branches, flags, expandedBranches, expandedMCs, expandedBusc
 const LEVEL_CFG = {
   branch:    { label: "Branch",    color: "var(--brand-link)", dark: true,  indent: 0 },
   mc:        { label: "MC",        color: "var(--brand-navy-mid)", dark: true,  indent: 1 },
-  buscentre: { label: "Buscentre", color: "var(--brand-link)", dark: false, indent: 2 },
+  buscentre: { label: "Bacenta", color: "var(--brand-link)", dark: false, indent: 2 },
   cell:      { label: "Cell",      color: "var(--brand-success)", dark: false, indent: 3 },
   shepherd:  { label: "Shepherd",  color: "var(--brand-warning)", dark: false, indent: 4 },
 };
 
-function ListRow({ level, title, subtitle, meta, flag, expandable, expanded, onToggle, children }: {
+function ListRow({ level, title, subtitle, meta, flag, actions, expandable, expanded, onToggle, children }: {
   level: keyof typeof LEVEL_CFG; title: string; subtitle?: string | null;
-  meta?: React.ReactNode; flag?: Flag; expandable: boolean;
+  meta?: React.ReactNode; flag?: Flag; actions?: React.ReactNode; expandable: boolean;
   expanded: boolean; onToggle: () => void; children?: React.ReactNode;
 }) {
   const cfg = LEVEL_CFG[level];
   return (
     <div>
+      <div className="flex items-center"
+           style={{
+             background: cfg.dark ? cfg.color : "var(--surface)",
+             borderLeft: `4px solid ${cfg.color}`,
+             borderBottom: "1px solid rgba(0,0,0,0.06)",
+             paddingRight: actions ? 8 : 0,
+           }}>
       <button type="button" onClick={expandable ? onToggle : undefined}
-              className="w-full flex items-center gap-3 text-left transition-opacity hover:opacity-90"
+              className="flex-1 min-w-0 flex items-center gap-3 text-left transition-opacity hover:opacity-90"
               style={{
-                paddingLeft: 16 + cfg.indent * 16, paddingRight: 16,
+                paddingLeft: 16 + cfg.indent * 16, paddingRight: actions ? 8 : 16,
                 paddingTop: 12, paddingBottom: 12,
-                background: cfg.dark ? cfg.color : "var(--surface)",
-                borderLeft: `4px solid ${cfg.color}`,
-                borderBottom: "1px solid rgba(0,0,0,0.06)",
                 cursor: expandable ? "pointer" : "default",
               }}>
         <span className="text-[9px] font-bold uppercase tracking-[0.08em] rounded px-1.5 py-0.5 shrink-0"
@@ -283,13 +314,15 @@ function ListRow({ level, title, subtitle, meta, flag, expandable, expanded, onT
                         style={{ color: cfg.dark ? "rgba(255,255,255,0.5)" : "var(--brand-muted)", transform: expanded ? "rotate(90deg)" : "none" }} />
         )}
       </button>
+      {actions}
+      </div>
       {expanded && children}
     </div>
   );
 }
 
-function ListView({ branches, flags, expandedBranches, expandedMCs, expandedBuscentres, expandedCells, toggleBranch, toggleMC, toggleBuscentre, toggleCell }: {
-  branches: BranchNode[]; flags: Flag[];
+function ListView({ branches, flags, edit, expandedBranches, expandedMCs, expandedBuscentres, expandedCells, toggleBranch, toggleMC, toggleBuscentre, toggleCell }: {
+  branches: BranchNode[]; flags: Flag[]; edit: Editable;
   expandedBranches: Set<string>; expandedMCs: Set<string>;
   expandedBuscentres: Set<string>; expandedCells: Set<string>;
   toggleBranch: (id: string) => void; toggleMC: (id: string) => void;
@@ -306,13 +339,15 @@ function ListView({ branches, flags, expandedBranches, expandedMCs, expandedBusc
           {branch.megaChurches.map((mc) => (
             <ListRow key={mc.id} level="mc" title={mc.name}
               subtitle={mc.userRoles[0]?.user?.name ?? "No pastor assigned"} flag={flagMap[mc.id]}
-              meta={<span className="text-[11px]">{mc._count.buscentres} bc</span>}
+              meta={<span className="text-[11px]">{mc._count.buscentres} bacenta{mc._count.buscentres !== 1 ? "s" : ""}</span>}
+              actions={<NodeActions kind="mc" id={mc.id} name={mc.name} edit={edit} dark />}
               expandable={mc.buscentres.length > 0}
               expanded={expandedMCs.has(mc.id)} onToggle={() => toggleMC(mc.id)}>
               {mc.buscentres.map((bc) => (
                 <ListRow key={bc.id} level="buscentre" title={bc.name}
                   subtitle={bc.userRoles[0]?.user?.name ?? "No head assigned"} flag={flagMap[bc.id]}
                   meta={<span className="text-[11px]">{bc._count.cells} cells</span>}
+                  actions={<NodeActions kind="bc" id={bc.id} name={bc.name} edit={edit} />}
                   expandable={bc.cells.length > 0}
                   expanded={expandedBuscentres.has(bc.id)} onToggle={() => toggleBuscentre(bc.id)}>
                   {bc.cells.map((cell) => (
@@ -324,6 +359,7 @@ function ListView({ branches, flags, expandedBranches, expandedMCs, expandedBusc
                           <span className="flex items-center gap-0.5"><UserCircle className="h-3 w-3" />{cell._count.shepherds}</span>
                         </div>
                       }
+                      actions={<NodeActions kind="cell" id={cell.id} name={cell.name} edit={edit} />}
                       expandable={cell.shepherds.length > 0}
                       expanded={expandedCells.has(cell.id)} onToggle={() => toggleCell(cell.id)}>
                       {cell.shepherds.map((sh) => (
@@ -350,6 +386,11 @@ function ListView({ branches, flags, expandedBranches, expandedMCs, expandedBusc
 // ══════════════════════════════════════════════════════════════════════════════
 
 export default function OrgChartPage() {
+  const { activeView } = useActiveRole();
+  const role = activeView?.role;
+  // Same people who can reach the Org page; changing a head is admin / chief shepherd only (as there)
+  const edit: Editable = role === "admin" || role === "chief_shepherd" ? { heads: true }
+    : role === "mc_pastor" || role === "buscentre_head" ? { heads: false } : undefined;
   const [branches,           setBranches]           = useState<BranchNode[]>([]);
   const [flags,              setFlags]              = useState<Flag[]>([]);
   const [loading,            setLoading]            = useState(true);
@@ -402,7 +443,7 @@ export default function OrgChartPage() {
     setExpandedMCs(new Set()); setExpandedBuscentres(new Set()); setExpandedCells(new Set());
   }
 
-  const sharedProps = { branches, flags, expandedBranches, expandedMCs, expandedBuscentres, expandedCells, toggleBranch, toggleMC, toggleBuscentre, toggleCell };
+  const sharedProps = { branches, flags, edit, expandedBranches, expandedMCs, expandedBuscentres, expandedCells, toggleBranch, toggleMC, toggleBuscentre, toggleCell };
 
   return (
     <div className="pb-20 lg:pb-8">
@@ -416,7 +457,7 @@ export default function OrgChartPage() {
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <h1 className="text-[22px] font-semibold" style={{ color: "var(--brand-text)" }}>Organogram</h1>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* View toggle */}
             <div className="flex rounded-lg overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
               <button
@@ -452,7 +493,7 @@ export default function OrgChartPage() {
           {([
             { color: "var(--brand-link)", label: "Branch" },
             { color: "var(--brand-navy-mid)", label: "MC" },
-            { color: "var(--brand-link)", label: "Buscentre", outline: true },
+            { color: "var(--brand-link)", label: "Bacenta", outline: true },
             { color: "var(--brand-success)", label: "Cell" },
             { color: "var(--brand-warning)", label: "Shepherd" },
           ] as { color: string; label: string; outline?: true }[]).map(({ color, label, outline }) => (

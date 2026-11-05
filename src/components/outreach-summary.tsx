@@ -7,7 +7,7 @@ import { Heart, Megaphone, PhoneCall, Radar } from "lucide-react";
 import { Segmented } from "@/components/attendance/dash-ui";
 
 // Outreach and follow-up numbers for the main overview: souls won, how far the people we've met
-// have got, who needs a follow-up, and — for buscentre heads and above — the guests who've come
+// have got, who needs a follow-up, and — for bacenta heads and above — the guests who've come
 // often enough that it's time for a conversation about staying.
 
 type Data = {
@@ -41,11 +41,14 @@ export function OutreachSummary({ actingParam = "" }: { actingParam?: string }) 
   const warn = "var(--brand-warning)";
   return (
     <section className="flex flex-col gap-3 mb-2">
-      <div className="flex items-center gap-3 my-6 mb-1">
+      {/* On a phone the label and toggle don't fit on one line, so the toggle drops below at full width */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 my-6 mb-1">
         <span className="text-[12px] font-medium uppercase tracking-[0.04em] whitespace-nowrap" style={{ color: "var(--brand-muted)" }}>Outreach &amp; follow-up</span>
-        <div className="flex-1 h-px" style={{ background: "var(--brand-border)" }} />
-        <Segmented<"launch" | "month"> ariaLabel="Period" value={period} onChange={setPeriod}
-          options={[{ key: "month", label: "This month" }, { key: "launch", label: "Since launch" }]} />
+        <div className="flex-1 h-px min-w-[24px]" style={{ background: "var(--brand-border)" }} />
+        <div className="max-sm:basis-full [&>div]:max-sm:flex [&>div]:max-sm:w-full [&_button]:max-sm:flex-1">
+          <Segmented<"launch" | "month"> ariaLabel="Period" value={period} onChange={setPeriod}
+            options={[{ key: "month", label: "This month" }, { key: "launch", label: "Since launch" }]} />
+        </div>
       </div>
 
       {error && !data ? (

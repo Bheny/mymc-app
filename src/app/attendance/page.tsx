@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { AttendanceDashboard } from "@/components/attendance-dashboard";
 import { RecentRecordings } from "@/components/attendance/recent-recordings";
+import { MissedThisWeek } from "@/components/attendance/missed-this-week";
 import { AttendanceDrilldownSection } from "@/components/attendance-drilldown-section";
 import { AttendanceReviewSection } from "@/components/attendance-review-section";
 
@@ -187,6 +188,7 @@ export default function AttendancePage() {
       ) : (
         <div className="flex flex-col gap-4">
           <AttendanceDashboard actingParam={overviewActingParam} canRecordFor={role === "buscentre_head"} />
+          <MissedThisWeek actingParam={overviewActingParam} />
           {role === "buscentre_head" && <RecentRecordings actingParam={overviewActingParam} />}
         </div>
       )}

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
+import { clearPersistedCache } from "@/lib/persist-cache";
 import {
   User, Mail, Briefcase, MapPin, Calendar,
   Award, KeyRound, LogOut, Pencil, Check, X, Loader2,
@@ -22,7 +22,7 @@ const ROLE_LABELS: Record<string, string> = {
   admin:          "Admin",
   chief_shepherd: "Chief Shepherd",
   mc_pastor:      "MC Pastor",
-  buscentre_head: "Buscentre Head",
+  buscentre_head: "Bacenta Head",
   cell_shepherd:  "Cell Shepherd",
   shepherd:       "Shepherd",
 };
@@ -64,11 +64,11 @@ function Row({ icon: Icon, label, children, last = false }: {
     <div className="flex items-center gap-3 px-4 py-3"
          style={{ borderBottom: last ? "none" : "1px solid var(--brand-border)" }}>
       <Icon className="h-4 w-4 shrink-0" style={{ color: "var(--brand-muted)" }} />
-      <span className="text-[12px] font-medium uppercase tracking-[0.04em] w-28 shrink-0"
+      <span className="text-[12px] font-medium uppercase tracking-[0.04em] leading-tight w-[84px] sm:w-28 shrink-0"
             style={{ color: "var(--brand-muted)" }}>
         {label}
       </span>
-      <div className="flex-1 flex items-center">
+      <div className="flex-1 min-w-0 flex flex-wrap items-center break-words">
         {children}
       </div>
     </div>
@@ -79,7 +79,6 @@ function Row({ icon: Icon, label, children, last = false }: {
 
 export default function SettingsPage() {
   useSession();
-  const router = useRouter();
 
   const [me,      setMe]      = useState<MeData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -146,7 +145,7 @@ export default function SettingsPage() {
   const roleName  = me?.role?.role ? ROLE_LABELS[me.role.role] ?? me.role.role : "—";
   const scopeParts = [
     me?.role?.cell?.name      && `Cell: ${me.role.cell.name}`,
-    me?.role?.buscentre?.name && `Buscentre: ${me.role.buscentre.name}`,
+    me?.role?.buscentre?.name && `Bacenta: ${me.role.buscentre.name}`,
     me?.role?.mc?.name        && `MC: ${me.role.mc.name}`,
   ].filter(Boolean) as string[];
 
@@ -175,7 +174,7 @@ export default function SettingsPage() {
               {!editingName && !editingRank && (
                 <button
                   onClick={() => { startEditName(); }}
-                  className="flex items-center gap-1.5 text-[12px] font-medium rounded-lg px-2.5 py-1 transition-colors hover:bg-[var(--brand-navy-light)]"
+                  className="flex items-center gap-1.5 text-[13px] sm:text-[12px] font-medium rounded-lg px-3 py-2 sm:px-2.5 sm:py-1 transition-colors hover:bg-[var(--brand-navy-light)]"
                   style={{ color: "var(--brand-link)" }}
                 >
                   <Pencil className="h-3 w-3" /> Edit
@@ -194,17 +193,17 @@ export default function SettingsPage() {
                       value={nameInput}
                       onChange={(e) => setNameInput(e.target.value)}
                       onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false); }}
-                      className="h-8 text-[14px] flex-1 mr-2"
+                      className="h-10 sm:h-8 text-[14px] flex-1 min-w-0 mr-2"
                       style={{ borderColor: nameError ? "var(--brand-danger)" : "var(--brand-border)" }}
                     />
                     <button onClick={saveName} disabled={savingName}
-                            className="p-1.5 rounded-lg hover:bg-[var(--brand-navy-light)] transition-colors">
+                            className="p-2.5 sm:p-1.5 rounded-lg hover:bg-[var(--brand-navy-light)] transition-colors" aria-label="Save">
                       {savingName
                         ? <Loader2 className="h-4 w-4 animate-spin" style={{ color: "var(--brand-link)" }} />
                         : <Check className="h-4 w-4" style={{ color: "var(--brand-success)" }} />}
                     </button>
                     <button onClick={() => setEditingName(false)}
-                            className="p-1.5 rounded-lg hover:bg-[var(--brand-navy-light)] transition-colors ml-0.5">
+                            className="p-2.5 sm:p-1.5 rounded-lg hover:bg-[var(--brand-navy-light)] transition-colors ml-0.5" aria-label="Cancel">
                       <X className="h-4 w-4" style={{ color: "var(--brand-muted)" }} />
                     </button>
                   </>
@@ -232,7 +231,7 @@ export default function SettingsPage() {
                       defaultValue={me?.rank ?? ""}
                       onChange={(e) => saveRank(e.target.value as Rank || null)}
                       onBlur={() => setEditingRank(false)}
-                      className="flex-1 h-8 px-2 text-[14px] rounded-lg mr-2"
+                      className="flex-1 min-w-0 h-10 sm:h-8 px-2 text-[14px] rounded-lg mr-2"
                       style={{ border: "1px solid var(--brand-border)", background: "var(--surface)", color: "var(--brand-text)" }}
                     >
                       <option value="">— Not set —</option>
@@ -301,8 +300,8 @@ export default function SettingsPage() {
           <section>
             <div className="mb-4"><SectionTitle>Security</SectionTitle></div>
             <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
-              <div className="flex items-center justify-between px-4 py-4">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3 px-4 py-4">
+                <div className="flex items-center gap-3 min-w-0">
                   <KeyRound className="h-4 w-4 shrink-0" style={{ color: "var(--brand-muted)" }} />
                   <div>
                     <p className="text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>Password</p>
@@ -312,7 +311,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <Link href="/change-password">
-                  <Button variant="outline" className="h-9 text-[13px]" style={{ borderRadius: 8 }}>
+                  <Button variant="outline" className="h-10 sm:h-9 text-[13px] shrink-0" style={{ borderRadius: 8 }}>
                     Change password
                   </Button>
                 </Link>
@@ -324,8 +323,8 @@ export default function SettingsPage() {
           <section>
             <div className="mb-4"><SectionTitle>Session</SectionTitle></div>
             <div className="rounded-xl overflow-hidden" style={{ border: "1px solid var(--brand-border)" }}>
-              <div className="flex items-center justify-between px-4 py-4">
-                <div className="flex items-center gap-3">
+              <div className="flex items-center justify-between gap-3 px-4 py-4">
+                <div className="flex items-center gap-3 min-w-0">
                   <LogOut className="h-4 w-4 shrink-0" style={{ color: "var(--brand-muted)" }} />
                   <div>
                     <p className="text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>Sign out</p>
@@ -336,8 +335,8 @@ export default function SettingsPage() {
                 </div>
                 <Button
                   variant="outline"
-                  onClick={() => router.push("/api/auth/signout")}
-                  className="h-9 text-[13px]"
+                  onClick={() => { clearPersistedCache(); signOut({ callbackUrl: "/login" }); }}
+                  className="h-10 sm:h-9 text-[13px] shrink-0"
                   style={{ borderRadius: 8, borderColor: "var(--brand-danger)", color: "var(--brand-danger)" }}
                 >
                   Sign out

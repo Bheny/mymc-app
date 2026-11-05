@@ -19,14 +19,14 @@ export async function GET(request: Request) {
   if (actingBuscentreId) {
     const actingAt = (session.user.actingAt ?? {}) as Record<string, string>;
     if (actingAt.buscentre_id === actingBuscentreId) buscentreId = actingBuscentreId;
-    else return NextResponse.json({ error: "No acting access to this buscentre" }, { status: 403 });
+    else return NextResponse.json({ error: "No acting access to this bacenta" }, { status: 403 });
   } else if (viewBuscentreId) {
     const { id, status } = await authorizeBuscentreView(session.user.role, session.user, viewBuscentreId);
-    if (status !== 200) return NextResponse.json({ error: "You don't have access to this buscentre" }, { status });
+    if (status !== 200) return NextResponse.json({ error: "You don't have access to this bacenta" }, { status });
     buscentreId = id;
   }
 
-  if (!buscentreId) return NextResponse.json({ error: "No buscentre assigned" }, { status: 400 });
+  if (!buscentreId) return NextResponse.json({ error: "No bacenta assigned" }, { status: 400 });
 
   const now  = new Date();
   const from = period === "month"
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     prisma.member.count({
       where: { cell: { buscentreId }, isActive: true },
     }),
-    // All services for all cells in the buscentre within the period
+    // All services for all cells in the bacenta within the period
     prisma.service.findMany({
       where: {
         cell: { buscentreId },

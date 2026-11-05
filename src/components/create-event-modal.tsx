@@ -62,36 +62,36 @@ export function CreateEventModal({ isOpen, onClose }: CreateEventModalProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="title" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="title" className="sm:text-right">
                 Title
               </Label>
-              <Input id="title" name="title" className="col-span-3" onChange={handleChange} />
+              <Input id="title" name="title" className="sm:col-span-3" onChange={handleChange} />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="date" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="date" className="sm:text-right">
                 Date
               </Label>
-              <Input id="date" name="date" type="date" className="col-span-3" onChange={handleChange} />
+              <Input id="date" name="date" type="date" className="sm:col-span-3" onChange={handleChange} />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="time" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="time" className="sm:text-right">
                 Time
               </Label>
-              <Input id="time" name="time" type="time" className="col-span-3" onChange={handleChange} />
+              <Input id="time" name="time" type="time" className="sm:col-span-3" onChange={handleChange} />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="location" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="location" className="sm:text-right">
                 Location
               </Label>
-              <Input id="location" name="location" className="col-span-3" onChange={handleChange} />
+              <Input id="location" name="location" className="sm:col-span-3" onChange={handleChange} />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="type" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="type" className="sm:text-right">
                 Type
               </Label>
               <Select onValueChange={handleSelectChange}>
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="sm:col-span-3">
                   <SelectValue placeholder="Select event type" />
                 </SelectTrigger>
                 <SelectContent>

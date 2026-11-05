@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { LoadError, StaleNotice } from "@/components/load-error";
 import { useCapacityLimits } from "@/hooks/use-capacity-limits";
 import Link from "next/link";
-import { SummaryCard } from "@/components/summary-card";
+import { SummaryCard, membersLink } from "@/components/summary-card";
 import { Button } from "@/components/ui/button";
 import { BirthdaySection } from "@/components/birthday-section";
 import { SummarySection } from "@/components/summary-section";
@@ -91,7 +91,7 @@ function timeAgo(iso: string): string {
 
 function memberLocation(m: RecentMember): string {
   if (m.cell)      return `${m.cell.name} · ${m.cell.buscentre.name}`;
-  if (m.buscentre) return `${m.buscentre.name} (buscentre level)`;
+  if (m.buscentre) return `${m.buscentre.name} (bacenta level)`;
   if (m.mc)        return `${m.mc.name} (MC level)`;
   return "Unassigned";
 }
@@ -256,10 +256,10 @@ function CellShepherdOverview() {
       {/* KPIs */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <SummaryCard title="Total Members" value={stats.totalMembers}   icon={<Users className="h-4 w-4" />}
+          <SummaryCard title="Total Members" value={stats.totalMembers}   icon={<Users className="h-4 w-4" />} href={membersLink("all")}
             subtitle={`${stats.membersInDepartment} in a department (${stats.totalMembers > 0 ? Math.round((stats.membersInDepartment / stats.totalMembers) * 100) : 0}%)`} />
-          <SummaryCard title="Active"        value={stats.activeMembers}  subtitle={`${stats.totalMembers > 0 ? Math.round((stats.activeMembers / stats.totalMembers) * 100) : 0}% of total`} icon={<UserCheck className="h-4 w-4" />} />
-          <SummaryCard title="Inactive"      value={stats.inactiveMembers} icon={<Users className="h-4 w-4" />} />
+          <SummaryCard title="Active"        value={stats.activeMembers}  href={membersLink("active")} subtitle={`${stats.totalMembers > 0 ? Math.round((stats.activeMembers / stats.totalMembers) * 100) : 0}% of total`} icon={<UserCheck className="h-4 w-4" />} />
+          <SummaryCard title="Inactive"      value={stats.inactiveMembers} icon={<Users className="h-4 w-4" />} href={membersLink("inactive")} />
           <SummaryCard title="Shepherds"     value={`${stats.occupiedSlots}/${stats.totalShepherds}`} subtitle={stats.unoccupiedSlots > 0 ? `${stats.unoccupiedSlots} unassigned` : "All filled"} icon={<UserCircle className="h-4 w-4" />} />
         </div>
       )}
@@ -402,7 +402,7 @@ function CellShepherdOverview() {
   );
 }
 
-// ─── Buscentre Head Overview ──────────────────────────────────────────────────
+// ─── Bacenta Head Overview ──────────────────────────────────────────────────
 
 type BCell = {
   id: string; name: string;
@@ -502,9 +502,9 @@ function BuscentreHeadOverview() {
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <SummaryCard title="Total Members"  value={stats.totalMembers}   icon={<Users className="h-4 w-4" />}
+        <SummaryCard title="Total Members"  value={stats.totalMembers}   icon={<Users className="h-4 w-4" />} href={membersLink("all")}
           subtitle={`${stats.membersInDepartment} in a department (${stats.totalMembers > 0 ? Math.round((stats.membersInDepartment / stats.totalMembers) * 100) : 0}%)`} />
-        <SummaryCard title="Active"         value={stats.activeMembers}  icon={<UserCheck className="h-4 w-4" />} subtitle={`${activePct}% of total`} />
+        <SummaryCard title="Active"         value={stats.activeMembers}  href={membersLink("active")} icon={<UserCheck className="h-4 w-4" />} subtitle={`${activePct}% of total`} />
         <SummaryCard title="Cells"          value={stats.totalCells}     icon={<Home className="h-4 w-4" />} subtitle={`${stats.cellShepherdsUnassigned} without cell shepherd`} />
         <SummaryCard title="Unoccupied Slots" value={stats.unoccupiedSlots} icon={<UserCircle className="h-4 w-4" />} subtitle="Shepherd slots needing assignment" />
       </div>
@@ -761,10 +761,10 @@ export default function OverviewPage() {
 
       {/* ── KPI cards ── */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <SummaryCard title="Total Members" value={data.totalMembers} icon={<Users className="h-4 w-4" />}
+        <SummaryCard title="Total Members" value={data.totalMembers} icon={<Users className="h-4 w-4" />} href={membersLink("all")}
           subtitle={`${data.membersInDepartment} in a department (${data.totalMembers > 0 ? Math.round((data.membersInDepartment / data.totalMembers) * 100) : 0}%)`} />
-        <SummaryCard title="Active"        value={data.activeMembers} subtitle={`${activePct}% of total`} icon={<UserCheck className="h-4 w-4" />} />
-        <SummaryCard title="System Users"  value={data.systemUsers}   icon={<ShieldCheck className="h-4 w-4" />} />
+        <SummaryCard title="Active"        value={data.activeMembers} href={membersLink("active")} subtitle={`${activePct}% of total`} icon={<UserCheck className="h-4 w-4" />} />
+        <SummaryCard title="System Users"  value={data.systemUsers}   icon={<ShieldCheck className="h-4 w-4" />} href={membersLink("system")} />
         <SummaryCard title="Open Warnings" value={data.totalOpenWarnings} icon={<AlertTriangle className="h-4 w-4" />} />
       </div>
 
@@ -773,7 +773,7 @@ export default function OverviewPage() {
            style={{ border: "1px solid var(--brand-border)" }}>
         {[
           { icon: Network,    label: "MegaChurches", value: data.totalMCs },
-          { icon: Building2,  label: "Buscentres",   value: data.totalBuscentres },
+          { icon: Building2,  label: "Bacentas",   value: data.totalBuscentres },
           { icon: Home,       label: "Cells",        value: data.totalCells },
           { icon: UserCircle, label: "Shepherds",    value: data.totalShepherds },
         ].map(({ icon: Icon, label, value }) => (
@@ -932,11 +932,11 @@ export default function OverviewPage() {
       ) : (
         <div className="rounded-xl overflow-hidden mb-4" style={{ border: "1px solid var(--brand-border)" }}>
           {/* Header */}
-          <div className="grid grid-cols-12 gap-3 px-4 py-2.5"
+          <div className="hidden md:grid grid-cols-12 gap-3 px-4 py-2.5"
                style={{ background: "var(--gray-50)", borderBottom: "1px solid var(--brand-border)" }}>
             {[
               { label: "Cell",          cols: "col-span-3" },
-              { label: "Buscentre",     cols: "col-span-2" },
+              { label: "Bacenta",     cols: "col-span-2" },
               { label: "Cell Shepherd", cols: "col-span-3" },
               { label: "Members",       cols: "col-span-2" },
               { label: "Shepherds",     cols: "col-span-2" },
@@ -949,15 +949,15 @@ export default function OverviewPage() {
           </div>
           {data.topCells.map((cell, i) => (
             <Link key={cell.id} href="/org">
-              <div className="grid grid-cols-12 gap-3 items-center px-4 py-3 hover:bg-[var(--brand-navy-light)] transition-colors cursor-pointer"
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2 md:grid-cols-12 md:gap-3 items-center px-4 py-3 hover:bg-[var(--brand-navy-light)] active:bg-[var(--brand-navy-light)] transition-colors cursor-pointer"
                    style={{ borderBottom: i < data.topCells.length - 1 ? "1px solid var(--brand-border)" : "none" }}>
-                <span className="col-span-3 text-[14px] font-medium truncate" style={{ color: "var(--brand-text)" }}>
+                <span className="col-span-1 md:col-span-3 text-[14px] font-medium truncate" style={{ color: "var(--brand-text)" }}>
                   {cell.name}
                 </span>
-                <span className="col-span-2 text-[13px] truncate" style={{ color: "var(--brand-muted)" }}>
+                <span className="col-span-1 md:col-span-2 text-[13px] truncate text-right md:text-left" style={{ color: "var(--brand-muted)" }}>
                   {cell.buscentre.name}
                 </span>
-                <span className="col-span-3 text-[13px] truncate">
+                <span className="col-span-2 md:col-span-3 text-[13px] truncate">
                   {cell.userRoles[0]?.user?.name ? (
                     <span style={{ color: "var(--brand-text)" }}>{cell.userRoles[0].user.name}</span>
                   ) : (
@@ -967,8 +967,14 @@ export default function OverviewPage() {
                     </span>
                   )}
                 </span>
-                <div className="col-span-2"><CapacityBar count={cell._count.members} max={10} mode="headcount" /></div>
-                <div className="col-span-2"><CapacityBar count={cell._count.shepherds} max={limits.shepherd.max} /></div>
+                <div className="col-span-1 md:col-span-2">
+                  <span className="md:hidden block text-[10px] uppercase tracking-[0.04em] mb-0.5" style={{ color: "var(--brand-muted)" }}>Members</span>
+                  <CapacityBar count={cell._count.members} max={10} mode="headcount" />
+                </div>
+                <div className="col-span-1 md:col-span-2">
+                  <span className="md:hidden block text-[10px] uppercase tracking-[0.04em] mb-0.5" style={{ color: "var(--brand-muted)" }}>Shepherds</span>
+                  <CapacityBar count={cell._count.shepherds} max={limits.shepherd.max} />
+                </div>
               </div>
             </Link>
           ))}

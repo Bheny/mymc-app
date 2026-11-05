@@ -101,8 +101,8 @@ export function EditMemberModal({ member, onSave }: EditMemberModalProps) {
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="firstName" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="firstName" className="sm:text-right">
                 First Name
               </Label>
               <Input
@@ -110,11 +110,11 @@ export function EditMemberModal({ member, onSave }: EditMemberModalProps) {
                 name="firstName"
                 value={editedMember.firstName}
                 onChange={handleInputChange}
-                className="col-span-3"
+                className="sm:col-span-3"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="lastName" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="lastName" className="sm:text-right">
                 Last Name
               </Label>
               <Input
@@ -122,11 +122,11 @@ export function EditMemberModal({ member, onSave }: EditMemberModalProps) {
                 name="lastName"
                 value={editedMember.lastName}
                 onChange={handleInputChange}
-                className="col-span-3"
+                className="sm:col-span-3"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="contact" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="contact" className="sm:text-right">
                 Contact
               </Label>
               <Input
@@ -134,14 +134,14 @@ export function EditMemberModal({ member, onSave }: EditMemberModalProps) {
                 name="contact"
                 value={editedMember.phone}
                 onChange={handleInputChange}
-                className="col-span-3"
+                className="sm:col-span-3"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="broughtBy" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="broughtBy" className="sm:text-right">
                 Brought By
               </Label>
-              <div className="col-span-3 relative">
+              <div className="sm:col-span-3 relative">
                 <Input
                   id="broughtBy"
                   name="broughtBy"
@@ -168,8 +168,8 @@ export function EditMemberModal({ member, onSave }: EditMemberModalProps) {
                 )}
               </div>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="location" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="location" className="sm:text-right">
                 Location
               </Label>
               <Input
@@ -177,18 +177,18 @@ export function EditMemberModal({ member, onSave }: EditMemberModalProps) {
                 name="location"
                 value={editedMember.location}
                 onChange={handleInputChange}
-                className="col-span-3"
+                className="sm:col-span-3"
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="cell" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="cell" className="sm:text-right">
                 Cell
               </Label>
               <Select
                 value={editedMember.cell}
                 onValueChange={(value) => handleSelectChange("cell", value)}
               >
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="sm:col-span-3">
                   <SelectValue placeholder="Select a cell" />
                 </SelectTrigger>
                 <SelectContent>
@@ -198,15 +198,15 @@ export function EditMemberModal({ member, onSave }: EditMemberModalProps) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="status" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="status" className="sm:text-right">
                 Status
               </Label>
               <Select
                 value={editedMember.status}
                 onValueChange={(value) => handleSelectChange("status", value)}
               >
-                <SelectTrigger className="col-span-3">
+                <SelectTrigger className="sm:col-span-3">
                   <SelectValue placeholder="Select a status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -215,8 +215,8 @@ export function EditMemberModal({ member, onSave }: EditMemberModalProps) {
                 </SelectContent>
               </Select>
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="joinDate" className="text-right">
+            <div className="grid grid-cols-1 sm:grid-cols-4 items-center gap-1.5 sm:gap-4">
+              <Label htmlFor="joinDate" className="sm:text-right">
                 Join Date
               </Label>
               <Input
@@ -225,7 +225,7 @@ export function EditMemberModal({ member, onSave }: EditMemberModalProps) {
                 type="date"
                 value={editedMember.joinDate}
                 onChange={handleInputChange}
-                className="col-span-3"
+                className="sm:col-span-3"
               />
             </div>
           </div>

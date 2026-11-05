@@ -32,7 +32,7 @@ const ROLE_STYLE: Record<string, { bg: string; color: string; avatarBg: string }
 const ROLE_LABELS: Record<string, string> = {
   chief_shepherd: "Chief Shepherd",
   mc_pastor:      "MC Pastor",
-  buscentre_head: "Buscentre Head",
+  buscentre_head: "Bacenta Head",
   cell_shepherd:  "Cell Shepherd",
   shepherd:       "Shepherd",
   admin:          "Admin",

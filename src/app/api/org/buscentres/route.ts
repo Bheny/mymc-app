@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   if (!mc) return NextResponse.json({ error: "MegaChurch not found" }, { status: 404 });
 
   if (!canCreateBuscentre(session.user, mc)) {
-    return NextResponse.json({ error: "You're not permitted to create a buscentre here" }, { status: 403 });
+    return NextResponse.json({ error: "You're not permitted to create a bacenta here" }, { status: 403 });
   }
 
   const cap = await checkCapacity("buscentre", mcId);
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   const buscentre = await prisma.buscentre.create({ data: { mcId, name, location } });
   return NextResponse.json(
     cap.atCapacity
-      ? { ...buscentre, warning: `${mc.name} is at buscentre capacity (${cap.count}/${cap.max})` }
+      ? { ...buscentre, warning: `${mc.name} is at bacenta capacity (${cap.count}/${cap.max})` }
       : buscentre,
     { status: 201 }
   );

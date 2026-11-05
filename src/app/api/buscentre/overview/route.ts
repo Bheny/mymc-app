@@ -23,22 +23,22 @@ export async function GET(request: Request) {
     if (actingAt.buscentre_id === actingBuscentreId) {
       buscentreId = actingBuscentreId;
     } else {
-      return NextResponse.json({ error: "No acting access to this buscentre" }, { status: 403 });
+      return NextResponse.json({ error: "No acting access to this bacenta" }, { status: 403 });
     }
   } else if (viewBuscentreId) {
     const { id, status } = await authorizeBuscentreView(session.user.role, session.user, viewBuscentreId);
-    if (status !== 200) return NextResponse.json({ error: "You don't have access to this buscentre" }, { status });
+    if (status !== 200) return NextResponse.json({ error: "You don't have access to this bacenta" }, { status });
     buscentreId = id;
   }
 
   if (!buscentreId) {
-    return NextResponse.json({ error: "No buscentre assigned to your account" }, { status: 400 });
+    return NextResponse.json({ error: "No bacenta assigned to your account" }, { status: 400 });
   }
 
   // These queries don't depend on each other, so they run together (Promise.all
   // below) — each is a round trip to the database.
 
-  // ── Buscentre info ────────────────────────────────────────────────────────
+  // ── Bacenta info ────────────────────────────────────────────────────────
   const buscentreQuery = prisma.buscentre.findUnique({
     where: { id: buscentreId },
     select: {
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
     },
   });
 
-  // ── All cells in the buscentre with shepherds and member counts ───────────
+  // ── All cells in the bacenta with shepherds and member counts ───────────
   const cellsQuery = prisma.cell.findMany({
     where:   { buscentreId },
     include: {
@@ -71,7 +71,7 @@ export async function GET(request: Request) {
     orderBy: { name: "asc" },
   });
 
-  // ── All members in the buscentre for stats + birthdays ───────────────────
+  // ── All members in the bacenta for stats + birthdays ───────────────────
   const allMembersQuery = prisma.member.findMany({
     where:  { cell: { buscentreId } },
     select: {
@@ -102,7 +102,7 @@ export async function GET(request: Request) {
     prisma.member.count({ where: { cell: { buscentreId }, departments: { some: {} } } }),
   ]);
 
-  if (!buscentre) return NextResponse.json({ error: "Buscentre not found" }, { status: 404 });
+  if (!buscentre) return NextResponse.json({ error: "Bacenta not found" }, { status: 404 });
 
   // ── Aggregate stats ───────────────────────────────────────────────────────
   const totalCells             = cells.length;

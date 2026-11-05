@@ -1,5 +1,5 @@
 // Permission checks for creating new nodes in the org hierarchy
-// (Branch → MegaChurch → Buscentre → Cell). A node can only be created by
+// (Branch → MegaChurch → Bacenta → Cell). A node can only be created by
 // someone whose scope already covers its intended parent.
 
 type ScopeUser = {
@@ -53,7 +53,7 @@ export function canMoveCell(
   }
 }
 
-// Moving a buscentre between MCs needs authority over both MCs — so not an MC pastor
+// Moving a bacenta between MCs needs authority over both MCs — so not an MC pastor
 export function canMoveBuscentre(
   user: ScopeUser,
   from: { branchId: string },

@@ -86,7 +86,7 @@ export function TakeAttendanceButton() {
                         value={member.status}
                         onValueChange={(value) => handleStatusChange(member.id, value)}
                       >
-                        <SelectTrigger className={`w-[180px] ${getStatusColor(member.status)}`}>
+                        <SelectTrigger className={`w-[130px] sm:w-[180px] ${getStatusColor(member.status)}`}>
                           <SelectValue placeholder="Select status" />
                         </SelectTrigger>
                         <SelectContent>

@@ -21,7 +21,7 @@ export default function MoveMembersPage() {
   const picker = usePicker("buscentre");
 
   const role = activeView?.role;
-  // Cell shepherds see their own cell, buscentre heads their buscentre; everyone above chooses
+  // Cell shepherds see their own cell, bacenta heads their bacenta; everyone above chooses
   const ownQuery =
     role === "cell_shepherd"  && activeView?.cellId      ? `cellId=${activeView.cellId}` :
     role === "buscentre_head" && activeView?.buscentreId ? `buscentreId=${activeView.buscentreId}` : null;
@@ -58,7 +58,7 @@ export default function MoveMembersPage() {
         <>
           {chooses && (
             <div className="max-w-sm">
-              <p className="text-[12px] font-medium uppercase tracking-[0.04em] mb-2" style={{ color: "var(--brand-muted)" }}>Which buscentre?</p>
+              <p className="text-[12px] font-medium uppercase tracking-[0.04em] mb-2" style={{ color: "var(--brand-muted)" }}>Which bacenta?</p>
               <Cascade p={picker} depth="buscentre" />
             </div>
           )}

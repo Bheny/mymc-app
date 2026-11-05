@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { POSITIONS, POSITION_LABEL, type Position } from "@/lib/member-position";
+import {
+  DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem,
+  DropdownMenuItem, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import useSWR from "swr";
 import { LoadError, StaleNotice } from "@/components/load-error";
 import { useToast } from "@/hooks/use-toast";
@@ -21,7 +27,7 @@ import {
   Search, Pencil, Trash2, Users, UserCheck, UserX,
   ShieldCheck, Phone, Mail, Calendar, MapPin,
   UserCircle, ShieldAlert, ChevronRight, ChevronLeft,
-  Briefcase, Wallet, GraduationCap, KeyRound,
+  Briefcase, Wallet, GraduationCap, KeyRound, ChevronDown,
 } from "lucide-react";
 import { ResetPasswordSheet } from "@/components/reset-password-sheet";
 import { isBelowRole } from "@/lib/password-reset";
@@ -42,6 +48,9 @@ type Member = {
   gender:     string | null;
   isActive:   boolean;
   isUser:     boolean;
+  isTither?:  boolean;
+  titherId?:  string | null;
+  position?:  Position;
   joinedDate: string | null;
   // Placement — exactly one level is set
   shepherd:   { id: string; user: { id: string; name: string } | null; person: { firstName: string; lastName: string } | null } | null;
@@ -53,6 +62,15 @@ type Member = {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function TitherBadge() {
+  return (
+    <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5"
+          style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
+      Tither
+    </span>
+  );
+}
 
 function StatusBadge({ active }: { active: boolean }) {
   return (
@@ -75,11 +93,22 @@ function SystemUserIcon() {
   );
 }
 
+// Shows the role for anyone who holds one — plain members get no badge
+function PositionBadge({ member }: { member: Member }) {
+  if (!member.position || member.position === "member") return null;
+  return (
+    <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5"
+          style={{ background: "var(--brand-navy-light)", color: "var(--brand-navy)" }}>
+      {POSITION_LABEL[member.position]}
+    </span>
+  );
+}
+
 function LevelBadge({ member }: { member: Member }) {
   if (member.shepherd)  return null; // regular member — no extra badge needed
   const styles = { background: "var(--tint-warn-bg)", color: "var(--tint-warn-fg)" };
   if (member.mc)        return <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5" style={styles}>MC level</span>;
-  if (member.buscentre) return <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5" style={styles}>Buscentre level</span>;
+  if (member.buscentre) return <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5" style={styles}>Bacenta level</span>;
   if (member.cell)      return <span className="rounded-pill text-[11px] font-medium px-2.5 py-0.5" style={styles}>Cell level</span>;
   return null;
 }
@@ -93,7 +122,7 @@ function memberPlacement(m: Member): { primary: string; secondary: string } {
     };
   }
   if (m.cell) return { primary: m.cell.name, secondary: m.cell.buscentre?.name ?? "—" };
-  if (m.buscentre) return { primary: m.buscentre.name, secondary: "Buscentre level" };
+  if (m.buscentre) return { primary: m.buscentre.name, secondary: "Bacenta level" };
   if (m.mc) return { primary: m.mc.name, secondary: "MC level" };
   return { primary: "—", secondary: "—" };
 }
@@ -146,7 +175,7 @@ function currentAssignmentText(m: Member): string {
 const LEVEL_LABELS: Record<MemberLevel, string> = {
   shepherd:  "Regular member",
   cell:      "Cell level",
-  buscentre: "Buscentre level",
+  buscentre: "Bacenta level",
   mc:        "MC level",
 };
 
@@ -250,6 +279,10 @@ type MemberDetail = Member & {
   schoolLevel?:     string | null;
   schoolName?:      string | null;
   programOfStudy?:  string | null;
+  isTither?:        boolean;
+  titherId?:        string | null;
+  homeCellId?:      string | null;
+  homeCell?:        { id: string; name: string } | null;
   departments?: { department: { id: string; name: string } }[];
   // Most recent active ⇄ inactive change (why they're inactive)
   lastStatusChange?: StatusChange | null;
@@ -276,7 +309,7 @@ type MemberDetail = Member & {
 function memberPosition(detail: MemberDetail): { label: string; badge: string; badgeBg: string; badgeColor: string } {
   const sysRole = detail.user?.role?.role;
   if (sysRole === "cell_shepherd")  return { label: "Cell Shepherd",  badge: "Cell Shepherd",  badgeBg: "var(--brand-navy)",      badgeColor: "#fff"     };
-  if (sysRole === "buscentre_head") return { label: "Buscentre Head", badge: "Buscentre Head", badgeBg: "var(--violet-600)",                badgeColor: "#fff"     };
+  if (sysRole === "buscentre_head") return { label: "Bacenta Head", badge: "Bacenta Head", badgeBg: "var(--violet-600)",                badgeColor: "#fff"     };
   if (sysRole === "mc_pastor")      return { label: "MC Pastor",      badge: "MC Pastor",      badgeBg: "var(--green-600)",                badgeColor: "#fff"     };
   if (sysRole === "chief_shepherd") return { label: "Chief Shepherd", badge: "Chief Shepherd", badgeBg: "var(--amber-700)",                badgeColor: "#fff"     };
   if (sysRole === "admin")          return { label: "Admin",          badge: "Admin",          badgeBg: "var(--gray-800)",                badgeColor: "#fff"     };
@@ -435,6 +468,7 @@ function MemberDetailSheet({
                       );
                     })()}
                     <StatusBadge active={detail.isActive} />
+                    {detail.isTither && <TitherBadge />}
                   </div>
                 </div>
               </div>
@@ -522,6 +556,12 @@ function MemberDetailSheet({
               <DetailRow icon={Phone} label="Phone"        value={detail.emergencyPhone} />
               <DetailRow icon={UserCircle} label="Relation" value={detail.emergencyRelation} />
 
+              {/* ── Giving ── */}
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em] pt-5 pb-3"
+                 style={{ color: "var(--brand-muted)" }}>Giving</p>
+              <DetailRow icon={Wallet} label="Tither"    value={detail.isTither ? "Yes" : "No"} />
+              {detail.isTither && <DetailRow icon={Wallet} label="Tither ID" value={detail.titherId ?? "Not recorded"} />}
+
               {/* ── Employment ── */}
               <p className="text-[11px] font-medium uppercase tracking-[0.06em] pt-5 pb-3"
                  style={{ color: "var(--brand-muted)" }}>Employment</p>
@@ -552,9 +592,10 @@ function MemberDetailSheet({
               <DetailRow icon={Users} label="Shepherd" value={detail.effectiveShepherdName ?? "Unassigned"} />
               {detail.cell && <DetailRow icon={MapPin} label="Cell" value={detail.cell.name} />}
               {(detail.cell?.buscentre || detail.buscentre) && (
-                <DetailRow icon={MapPin} label="Buscentre" value={detail.cell?.buscentre?.name ?? detail.buscentre?.name ?? null} />
+                <DetailRow icon={MapPin} label="Bacenta" value={detail.cell?.buscentre?.name ?? detail.buscentre?.name ?? null} />
               )}
               {detail.mc && <DetailRow icon={MapPin} label="MC" value={detail.mc.name} />}
+              {(detail.buscentre || detail.mc) && <DetailRow icon={MapPin} label="Home cell" value={detail.homeCell?.name ?? "Not set"} />}
 
               {/* ── Attendance history ── */}
               <p className="text-[11px] font-medium uppercase tracking-[0.06em] pt-5 pb-3"
@@ -736,6 +777,12 @@ function EditMemberSheet({
   const [schoolLevel,    setSchoolLevel]    = useState("");
   const [schoolName,     setSchoolName]     = useState("");
   const [programOfStudy, setProgramOfStudy] = useState("");
+  const [isTither,        setIsTither]        = useState(false);
+  const [titherId,        setTitherId]        = useState("");
+  // Senior shepherds (bacenta-level) and MC pastors (MC-level) are counted at a home cell
+  const isLeaderLevel = !!member && !member.shepherd && !member.cell && (!!member.buscentre || !!member.mc);
+  const [homeCellId,       setHomeCellId]      = useState("");
+  const [homeCells,       setHomeCells]       = useState<{ id: string; name: string; buscentre?: { name: string } }[]>([]);
 
   const { data: session } = useSession();
   const { activeView } = useActiveRole();
@@ -793,6 +840,8 @@ function EditMemberSheet({
     setIsEmployed(""); setEmployer(""); setOccupation(""); setSalaryRange("");
     setOwnsBusiness(""); setBusinessName(""); setBusinessType("");
     setIsStudent(""); setSchoolLevel(""); setSchoolName(""); setProgramOfStudy("");
+    setIsTither(!!member.isTither); setTitherId(member.titherId ?? "");
+    setHomeCellId(""); setHomeCells([]);
     setDepartmentIds([]);
     // Fetch full detail to get extended profile + dateOfBirth
     fetch(`/api/members/${member.id}`)
@@ -817,10 +866,18 @@ function EditMemberSheet({
         setSchoolLevel(d.schoolLevel ?? "");
         setSchoolName(d.schoolName ?? "");
         setProgramOfStudy(d.programOfStudy ?? "");
+        setIsTither(!!d.isTither);
+        setTitherId(d.titherId ?? "");
+        setHomeCellId(d.homeCellId ?? "");
         setDepartmentIds((d.departments ?? []).map((md) => md.department.id));
         setLastStatusChange(d.lastStatusChange ?? null);
       })
       .catch(() => {});
+
+    if (!member.shepherd && !member.cell && (member.buscentre || member.mc)) {
+      const q = member.mc ? `mcId=${member.mc.id}` : `buscentreId=${member.buscentre!.id}`;
+      fetch(`/api/org/cells?${q}`).then((r) => (r.ok ? r.json() : [])).then((d) => setHomeCells(Array.isArray(d) ? d : [])).catch(() => {});
+    }
 
     fetch("/api/org/departments")
       .then((r) => r.json())
@@ -871,7 +928,7 @@ function EditMemberSheet({
     if (reassigning) {
       if (level === "shepherd" && !shepherdId) { setError("Select a shepherd."); setBusy(false); return; }
       if (level === "cell"     && !cellId)     { setError("Select a cell."); setBusy(false); return; }
-      if (level === "buscentre"&& !buscentreId){ setError("Select a buscentre."); setBusy(false); return; }
+      if (level === "buscentre"&& !buscentreId){ setError("Select a bacenta."); setBusy(false); return; }
       if (level === "mc"       && !mcId)       { setError("Select an MC."); setBusy(false); return; }
 
       const moveRes = await fetch(`/api/members/${member!.id}/move`, {
@@ -922,6 +979,9 @@ function EditMemberSheet({
         schoolLevel:    schoolLevel    || null,
         schoolName:     schoolName     || null,
         programOfStudy: programOfStudy || null,
+        isTither,
+        titherId: isTither ? titherId.trim() || null : null,
+        ...(isLeaderLevel && { homeCellId: homeCellId || null }),
         departmentIds,
       }),
     });
@@ -1201,6 +1261,62 @@ function EditMemberSheet({
 
             <div className="h-px" style={{ background: "var(--brand-border)" }} />
 
+            {/* ── Home cell (senior shepherds and MC pastors) ── */}
+            {isLeaderLevel && (
+              <>
+                <section className="flex flex-col gap-3">
+                  <p className="text-[11px] font-medium uppercase tracking-[0.06em]"
+                     style={{ color: "var(--brand-muted)" }}>Attendance</p>
+                  <div className="flex flex-col gap-1.5">
+                    <FieldLabel>Home cell</FieldLabel>
+                    <select value={homeCellId} onChange={(e) => setHomeCellId(e.target.value)}
+                            className="h-10 px-3 text-[14px] rounded-lg"
+                            style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
+                      <option value="">— Not set —</option>
+                      {homeCells.map((c) => <option key={c.id} value={c.id}>{c.name}{member?.mc && c.buscentre ? ` · ${c.buscentre.name}` : ""}</option>)}
+                    </select>
+                    <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>
+                      {member?.mc
+                        ? "Their attendance is counted at this cell, and added to the MC totals only."
+                        : "Counted here on MGS. On LC Live they visit a different cell each week."}
+                    </p>
+                  </div>
+                </section>
+
+                <div className="h-px" style={{ background: "var(--brand-border)" }} />
+              </>
+            )}
+
+            {/* ── Giving ── */}
+            <section className="flex flex-col gap-4">
+              <p className="text-[11px] font-medium uppercase tracking-[0.06em]"
+                 style={{ color: "var(--brand-muted)" }}>Giving</p>
+
+              <div className="flex flex-col gap-1.5">
+                <FieldLabel>Is a tither?</FieldLabel>
+                <select value={isTither ? "yes" : "no"} onChange={(e) => setIsTither(e.target.value === "yes")}
+                        className="h-10 px-3 text-[14px] rounded-lg"
+                        style={{ border: "1px solid var(--brand-border)", color: "var(--brand-text)", background: "var(--surface)" }}>
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+
+              {isTither && (
+                <div className="flex flex-col gap-1.5">
+                  <FieldLabel>Tither ID</FieldLabel>
+                  <Input value={titherId} onChange={(e) => setTitherId(e.target.value)}
+                         placeholder="The ID issued for this tither" className="h-10 text-[14px]"
+                         style={{ borderColor: "var(--brand-border)" }} />
+                  <p className="text-[12px]" style={{ color: "var(--brand-muted)" }}>
+                    Issued outside this app. Can be added later if you don&apos;t have it yet.
+                  </p>
+                </div>
+              )}
+            </section>
+
+            <div className="h-px" style={{ background: "var(--brand-border)" }} />
+
             {/* ── Business ── */}
             <section className="flex flex-col gap-4">
               <p className="text-[11px] font-medium uppercase tracking-[0.06em]"
@@ -1339,13 +1455,13 @@ function EditMemberSheet({
                     </div>
                   )}
 
-                  {/* Buscentre */}
+                  {/* Bacenta */}
                   {(level === "buscentre" || level === "cell" || level === "shepherd") && (
                     <div className="flex flex-col gap-1.5">
-                      <FieldLabel required={level === "buscentre"}>Buscentre</FieldLabel>
+                      <FieldLabel required={level === "buscentre"}>Bacenta</FieldLabel>
                       <NativeSelect value={buscentreId} onChange={setBuscentreId}
                         disabled={buscentres.length === 0}
-                        placeholder={!mcId ? "Select MC first" : "— Select buscentre —"}
+                        placeholder={!mcId ? "Select MC first" : "— Select bacenta —"}
                         options={buscentres} displayFn={(o) => (o as ScopeOption).name} />
                     </div>
                   )}
@@ -1356,7 +1472,7 @@ function EditMemberSheet({
                       <FieldLabel required>Cell</FieldLabel>
                       <NativeSelect value={cellId} onChange={setCellId}
                         disabled={cells.length === 0}
-                        placeholder={!buscentreId ? "Select buscentre first" : "— Select cell —"}
+                        placeholder={!buscentreId ? "Select bacenta first" : "— Select cell —"}
                         options={cells} displayFn={(o) => (o as ScopeOption).name} />
                     </div>
                   )}
@@ -1422,13 +1538,33 @@ function EditMemberSheet({
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
+const FILTERS = ["all", "active", "inactive", "system", "tithers"] as const;
+type Filter = (typeof FILTERS)[number];
+
+// useSearchParams needs a Suspense boundary so the page can still be pre-rendered
 export default function MembersPage() {
+  return <Suspense fallback={null}><MembersPageInner /></Suspense>;
+}
+
+function MembersPageInner() {
+  const router = useRouter();
+  const urlParams = useSearchParams();
   const { data: session } = useSession();
   const { activeView, ready } = useActiveRole();
   const { toast } = useToast();
   const [query,           setQuery]           = useState("");
   const [debouncedQuery,  setDebouncedQuery]  = useState("");
-  const [filter,          setFilter]          = useState<"all" | "active" | "inactive" | "system">("all");
+  const [filter,          setFilter]          = useState<Filter>(() => {
+    const f = urlParams.get("filter");
+    return (FILTERS as readonly string[]).includes(f ?? "") ? (f as Filter) : "all";
+  });
+  // Any number of roles; empty means everyone
+  const [roleFilter, setRoleFilter] = useState<Position[]>(() =>
+    (urlParams.get("role") ?? "").split(",").filter((r): r is Position => (POSITIONS as readonly string[]).includes(r)));
+  const toggleRole = (p: Position) => setRoleFilter((cur) => (cur.includes(p) ? cur.filter((x) => x !== p) : [...cur, p]));
+  // A dashboard card can narrow the list to one bacenta or cell (for people who can see more than their own)
+  const [urlBuscentreId, setUrlBuscentreId] = useState(urlParams.get("buscentreId") ?? "");
+  const [urlCellId, setUrlCellId] = useState(urlParams.get("cellId") ?? "");
   const [viewingMemberId, setViewingMemberId] = useState<string | null>(null);
   const [editing,         setEditing]         = useState<Member | null>(null);
   const [deleting,        setDeleting]        = useState<string | null>(null);
@@ -1454,9 +1590,13 @@ export default function MembersPage() {
   if (filter === "active")   params.set("isActive", "true");
   if (filter === "inactive") params.set("isActive", "false");
   if (filter === "system")   params.set("isUser", "true");
+  if (filter === "tithers")  params.set("isTither", "true");
+  if (roleFilter.length)     params.set("role", [...roleFilter].sort().join(","));
   // Auto-scope — each role only sees their slice
-  if (scopedBuscentreId) params.set("buscentreId", scopedBuscentreId);
-  if (scopedCellId)      params.set("cellId",      scopedCellId);
+  const buscentreScope = scopedBuscentreId || urlBuscentreId;
+  const cellScope      = scopedCellId || urlCellId;
+  if (buscentreScope)    params.set("buscentreId", buscentreScope);
+  if (cellScope)         params.set("cellId",      cellScope);
   if (scopedShepherdId)  params.set("shepherdId",  scopedShepherdId);
 
   // Cached by URL, so coming back shows the last list at once and refreshes it quietly;
@@ -1502,7 +1642,8 @@ export default function MembersPage() {
   const system   = members.filter((m) => m.isUser).length;
 
   // Reset to page 1 whenever the underlying filtered set changes
-  useEffect(() => { setPage(1); }, [debouncedQuery, filter, scopedBuscentreId, scopedCellId, scopedShepherdId]);
+  const roleKey = roleFilter.join(",");
+  useEffect(() => { setPage(1); }, [debouncedQuery, filter, roleKey, buscentreScope, cellScope, scopedShepherdId]);
 
   const totalPages     = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const currentPage    = Math.min(page, totalPages);
@@ -1513,10 +1654,10 @@ export default function MembersPage() {
   return (
     <div className="px-4 sm:px-6 lg:px-8 py-6 max-w-[1200px] mx-auto pb-20 lg:pb-8">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-[24px] font-semibold" style={{ color: "var(--brand-text)" }}>
-            {scopedBuscentreId ? "Buscentre Members" : scopedCellId ? "My Cell Members" : scopedShepherdId ? "My Members" : "Members"}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-3 mb-5 sm:mb-6">
+        <div className="min-w-0">
+          <h1 className="text-[22px] sm:text-[24px] font-semibold" style={{ color: "var(--brand-text)" }}>
+            {scopedBuscentreId ? "Bacenta Members" : scopedCellId ? "My Cell Members" : scopedShepherdId ? "My Members" : "Members"}
           </h1>
           <p className="mt-0.5 text-[14px]" style={{ color: "var(--brand-muted)" }}>
             {loading ? "Loading…" : `${total} member${total !== 1 ? "s" : ""}${scopedCellId || scopedShepherdId ? " in your scope" : ""}`}
@@ -1524,7 +1665,7 @@ export default function MembersPage() {
         </div>
         <div className="flex items-center gap-2">
           {role !== "shepherd" && (
-            <Link href="/members/move" className="h-9 px-3 inline-flex items-center rounded-lg text-[13px] font-medium"
+            <Link href="/members/move" className="h-10 sm:h-9 px-3 inline-flex items-center rounded-lg text-[13px] font-medium"
                   style={{ border: "1px solid var(--brand-border)", color: "var(--brand-link)" }}>
               Move members
             </Link>
@@ -1543,6 +1684,17 @@ export default function MembersPage() {
 
       <SectionDivider label="All Members" />
 
+      {(urlBuscentreId || urlCellId) && !scopedBuscentreId && !scopedCellId && !scopedShepherdId && (
+        <div className="flex items-center justify-between gap-3 rounded-lg px-3 py-2 mb-3 text-[13px]"
+             style={{ background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
+          <span>Showing {urlCellId ? "one cell's" : "one bacenta's"} members only</span>
+          <button className="font-medium underline underline-offset-2 shrink-0 h-8"
+                  onClick={() => { setUrlBuscentreId(""); setUrlCellId(""); router.replace(filter === "all" ? "/members" : `/members?filter=${filter}`); }}>
+            Show everyone
+          </button>
+        </div>
+      )}
+
       {/* Search + filter bar */}
       <div className="flex flex-col sm:flex-row gap-3 mb-4">
         <div className="relative flex-1">
@@ -1551,24 +1703,53 @@ export default function MembersPage() {
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by name, phone, email or cell…"
+            placeholder="Search by name, phone, email, tither ID or cell…"
             className="pl-9 h-10 text-[14px]"
             style={{ borderColor: "var(--brand-border)" }}
           />
         </div>
 
+        {/* Role filter */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button type="button" aria-label="Filter by role"
+                    className="h-10 sm:h-9 px-3 text-[13px] rounded-lg w-full sm:w-auto inline-flex items-center justify-between gap-2"
+                    style={{ border: "1px solid var(--brand-border)", background: roleFilter.length ? "var(--brand-navy-light)" : "var(--surface)", color: roleFilter.length ? "var(--brand-link)" : "var(--brand-text)" }}>
+              <span className="truncate">
+                {roleFilter.length === 0 ? "All roles" : roleFilter.length === 1 ? POSITION_LABEL[roleFilter[0]] : `${roleFilter.length} roles`}
+              </span>
+              <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            {POSITIONS.map((p) => (
+              <DropdownMenuCheckboxItem key={p} checked={roleFilter.includes(p)}
+                onCheckedChange={() => toggleRole(p)}
+                onSelect={(e) => e.preventDefault()} className="py-2.5 sm:py-1.5">
+                {POSITION_LABEL[p]}
+              </DropdownMenuCheckboxItem>
+            ))}
+            {roleFilter.length > 0 && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setRoleFilter([])} className="py-2.5 sm:py-1.5">Clear roles</DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {/* Status filter pills */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {(["all", "active", "inactive", "system"] as const).map((f) => (
+        <div className="scroll-x -mx-4 px-4 sm:mx-0 sm:px-0 flex items-center gap-2 sm:flex-wrap">
+          {(["all", "active", "inactive", "system", "tithers"] as const).map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className="rounded-pill text-[12px] font-medium px-3 py-1.5 transition-colors"
+              className="rounded-pill text-[12px] font-medium px-3.5 py-2 sm:px-3 sm:py-1.5 transition-colors whitespace-nowrap shrink-0"
               style={filter === f
                 ? { background: "var(--brand-navy)", color: "#fff" }
                 : { background: "var(--brand-navy-light)", color: "var(--brand-link)" }}
             >
-              {f === "all" ? "All" : f === "active" ? "Active" : f === "inactive" ? "Inactive" : "System users"}
+              {f === "all" ? "All" : f === "active" ? "Active" : f === "inactive" ? "Inactive" : f === "tithers" ? "Tithers" : "System users"}
             </button>
           ))}
         </div>
@@ -1597,11 +1778,52 @@ export default function MembersPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          {/* Phones: one card per member — name, status and the essentials, no sideways scrolling */}
+          <ul className="md:hidden">
+            {pagedMembers.map((member) => {
+              const place = memberPlacement(member);
+              const shepherd = member.effectiveShepherdName ?? shepherdName(member);
+              return (
+                <li key={member.id} className="flex items-stretch" style={{ borderBottom: "1px solid var(--brand-border)" }}>
+                  <button
+                    className="flex-1 min-w-0 text-left px-4 py-3 active:bg-[var(--brand-navy-light)]"
+                    onClick={() => setViewingMemberId(member.id)}
+                  >
+                    <span className="flex items-center justify-between gap-2">
+                      <span className="inline-flex items-center gap-1.5 min-w-0">
+                        <span className="text-[15px] font-medium truncate" style={{ color: "var(--brand-link)" }}>
+                          {member.firstName} {member.lastName}
+                        </span>
+                        {member.isUser && <SystemUserIcon />}
+                      </span>
+                      <StatusBadge active={member.isActive} />
+                    </span>
+                    <span className="flex gap-1 flex-wrap mt-0.5 empty:hidden"><PositionBadge member={member} /><LevelBadge member={member} />{member.isTither && <TitherBadge />}</span>
+                    <span className="block text-[13px] mt-1 truncate" style={{ color: "var(--brand-text)" }}>
+                      {place.primary}{place.secondary && place.secondary !== "—" ? ` · ${place.secondary}` : ""}
+                    </span>
+                    <span className="block text-[12px] truncate" style={{ color: "var(--brand-muted)" }}>
+                      {shepherd && shepherd !== "—" ? `Shepherd: ${shepherd}` : "No shepherd"}
+                      {member.phone ? ` · ${member.phone}` : ""}
+                    </span>
+                  </button>
+                  <div className="flex flex-col justify-center pr-2 shrink-0">
+                    <Button variant="ghost" size="icon" className="h-11 w-11 rounded-lg" aria-label="Edit member"
+                            onClick={() => setEditing(member)}>
+                      <Pencil className="h-4 w-4" style={{ color: "var(--brand-muted)" }} />
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          <div className="hidden md:block overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow style={{ background: "var(--gray-50)" }}>
-                  {["Name", "Cell", "Buscentre", "Shepherd", "Gender", "Phone", "Joined", "Status", ""].map((h) => (
+                  {["Name", "Cell", "Bacenta", "Shepherd", "Gender", "Phone", "Joined", "Status", ""].map((h) => (
                     <TableHead
                       key={h}
                       className="text-[11px] font-medium uppercase tracking-[0.04em] px-4 py-2.5 whitespace-nowrap"
@@ -1636,6 +1858,7 @@ export default function MembersPage() {
                           {member.isUser && <SystemUserIcon />}
                         </span>
                         <div className="flex gap-1 flex-wrap mt-0.5">
+                          <PositionBadge member={member} />
                           <LevelBadge member={member} />
                         </div>
                       </button>
@@ -1646,7 +1869,7 @@ export default function MembersPage() {
                       {memberPlacement(member).primary}
                     </TableCell>
 
-                    {/* Buscentre */}
+                    {/* Bacenta */}
                     <TableCell className="px-4 py-3 text-[14px]" style={{ color: "var(--brand-muted)" }}>
                       {memberPlacement(member).secondary}
                     </TableCell>
@@ -1676,7 +1899,10 @@ export default function MembersPage() {
 
                     {/* Status */}
                     <TableCell className="px-4 py-3">
-                      <StatusBadge active={member.isActive} />
+                      <div className="flex flex-wrap items-center gap-1">
+                        <StatusBadge active={member.isActive} />
+                        {member.isTither && <TitherBadge />}
+                      </div>
                     </TableCell>
 
                     {/* Actions */}
@@ -1712,6 +1938,7 @@ export default function MembersPage() {
               </TableBody>
             </Table>
           </div>
+          </>
         )}
       </div>
 
@@ -1729,7 +1956,7 @@ export default function MembersPage() {
               <div className="flex items-center gap-1">
                 <Button
                   variant="ghost" size="icon"
-                  className="h-8 w-8 rounded-lg"
+                  className="h-10 w-10 sm:h-8 sm:w-8 rounded-lg"
                   aria-label="Previous page"
                   disabled={currentPage <= 1}
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -1741,7 +1968,7 @@ export default function MembersPage() {
                 </span>
                 <Button
                   variant="ghost" size="icon"
-                  className="h-8 w-8 rounded-lg"
+                  className="h-10 w-10 sm:h-8 sm:w-8 rounded-lg"
                   aria-label="Next page"
                   disabled={currentPage >= totalPages}
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
@@ -1753,7 +1980,7 @@ export default function MembersPage() {
 
             <button
               onClick={() => { setShowAll((s) => !s); setPage(1); }}
-              className="rounded-pill text-[12px] font-medium px-3 py-1.5 transition-colors"
+              className="rounded-pill text-[12px] font-medium px-3.5 py-2 sm:px-3 sm:py-1.5 transition-colors"
               style={showAll
                 ? { background: "var(--brand-navy)", color: "#fff" }
                 : { background: "var(--brand-navy-light)", color: "var(--brand-link)" }}

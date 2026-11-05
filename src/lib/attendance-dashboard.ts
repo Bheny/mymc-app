@@ -2,7 +2,7 @@
 // Works only on the app's own records (services, attendance marks, first timers).
 //
 // Two ways of counting, kept apart on purpose:
-//   · "attended"  = members marked present + first timers + returning guests — everyone in the room.
+//   · "attended"  = members marked present + first timers + returning guests + senior shepherds — everyone in the room.
 //                   Used for medians, averages, trends and the targets.
 //   · rate        = members present ÷ members marked — about the roster only.
 
@@ -18,6 +18,10 @@ export type DashService = {
   present: number; absent: number; excused: number; firstTimers: number;
   /** Returning guests (not yet members) who came again — in the room, but not on any roster */
   guests: number;
+  /** Senior shepherds counted here (home cell on MGS, visiting on LC Live) */
+  leaders?: number;
+  /** MC pastors counted here — only added to the numbers when the view is the whole MC or above */
+  mcLeaders?: number;
   sh: ShepherdCount[];
 };
 /** A first timer, and whether anyone has followed them up (reached out, called, visited, invited) */
@@ -70,7 +74,8 @@ export function median(xs: number[]): number {
 const mean = (xs: number[]) => (xs.length ? Math.round((xs.reduce((a, b) => a + b, 0) / xs.length) * 10) / 10 : 0);
 export const total = (s: { present: number; absent: number; excused: number }) => s.present + s.absent + s.excused;
 /** Everyone in the room at one service: members present, first timers, and returning guests */
-export const attended = (s: { present: number; firstTimers: number; guests?: number }) => s.present + s.firstTimers + (s.guests ?? 0);
+export const attended = (s: { present: number; firstTimers: number; guests?: number; leaders?: number }) =>
+  s.present + s.firstTimers + (s.guests ?? 0) + (s.leaders ?? 0);
 
 export type Metric = "rate" | "present";
 export type Agg = { present: number; total: number; firstTimers: number; attended: number };
@@ -100,7 +105,7 @@ export function headline(services: DashService[]): Headline {
 }
 
 // ── Attendance targets, per service ────────────────────────────────────────────
-// A cell is 13 (10 members + 2 shepherds + the cell shepherd); a buscentre is two cells, an MC two buscentres.
+// A cell is 13 (10 members + 2 shepherds + the cell shepherd); a bacenta is two cells, an MC two buscentres.
 export const TARGETS = { cell: 13, buscentre: 26, mc: 52 } as const;
 export type TargetLevel = "cell" | "buscentre" | "mc" | "branch";
 export const TARGET_LEVEL_LABEL: Record<TargetLevel, string> = { cell: "cell", buscentre: "buscentre", mc: "MC", branch: "branch" };

@@ -66,7 +66,11 @@ export function AttendanceDashboard({ actingParam, canRecordFor = false }: { act
   // Services in view. `counted` excludes cancelled services (they have no attendance).
   const live    = useMemo(() => (h?.services ?? []).filter((s) => cellSet.has(s.cellId) && inRange(s.date) && (service === "all" || s.type === service)),
     [h, cellSet, range, service]); // eslint-disable-line react-hooks/exhaustive-deps
-  const counted = useMemo(() => live.filter((s) => !s.cancelled), [live]);
+  // MC pastors are counted at MC level only: add them when the view is the whole MC (or wider), never for a bacenta or cell
+  const wholeMc = !cellId && !bcId && h?.scopeLevel !== "cell" && h?.scopeLevel !== "buscentre";
+  const counted = useMemo(() => live.filter((s) => !s.cancelled).map((s) => ({
+    ...s, leaders: (s.leaders ?? 0) + (wholeMc ? (s.mcLeaders ?? 0) : 0), mcLeaders: 0,
+  })), [live, wholeMc]);
 
   const mgs = useMemo(() => headline(counted.filter((s) => s.type === "MGS")), [counted]);
   const lc  = useMemo(() => headline(counted.filter((s) => s.type === "LC_LIVE")), [counted]);
@@ -104,7 +108,7 @@ export function AttendanceDashboard({ actingParam, canRecordFor = false }: { act
   }, [counted, h, group, metric, visible.length]);
   const single = visible.length <= 1;
 
-  // What this view is expected to reach per service: 13 a cell, 26 a buscentre, 52 an MC
+  // What this view is expected to reach per service: 13 a cell, 26 a bacenta, 52 an MC
   const level: TargetLevel = cellId ? "cell" : bcId ? "buscentre" : mcId ? "mc"
     : h?.scopeLevel === "cell" ? "cell" : h?.scopeLevel === "buscentre" ? "buscentre" : h?.scopeLevel === "mc" ? "mc" : "branch";
   const mcCount = new Set(visible.map((c) => c.mcId)).size;
@@ -170,8 +174,8 @@ export function AttendanceDashboard({ actingParam, canRecordFor = false }: { act
           </select>
         )}
         {opts.bcs.length > 1 && (
-          <select aria-label="Buscentre" value={bcId} onChange={(e) => { setBcId(e.target.value); setCellId(""); }} className="h-9 px-3 text-[13px] rounded-lg" style={selectStyle}>
-            <option value="">All buscentres</option>{opts.bcs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+          <select aria-label="Bacenta" value={bcId} onChange={(e) => { setBcId(e.target.value); setCellId(""); }} className="h-9 px-3 text-[13px] rounded-lg" style={selectStyle}>
+            <option value="">All bacentas</option>{opts.bcs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
           </select>
         )}
         {opts.cells.length > 1 && (
@@ -295,7 +299,7 @@ export function AttendanceDashboard({ actingParam, canRecordFor = false }: { act
                           : `${metric === "rate" ? "Share of members present" : `Median attending per service · dashed line is the ${TARGET_LEVEL_LABEL[group]} target of ${TARGETS[group]}`} · click a bar to filter`}
                         action={groupOptions.length > 1 ? (
                           <Segmented<GroupBy> ariaLabel="Group by" value={group} onChange={setGroupPick}
-                            options={groupOptions.map((g) => ({ key: g, label: g === "mc" ? "MC" : g === "buscentre" ? "Buscentre" : g === "cell" ? "Cell" : "Shepherd" }))} />
+                            options={groupOptions.map((g) => ({ key: g, label: g === "mc" ? "MC" : g === "buscentre" ? "Bacenta" : g === "cell" ? "Cell" : "Shepherd" }))} />
                         ) : undefined}>
                     <div style={{ height: Math.max(160, bars.length * 34 + 16) }}>
                       <ResponsiveContainer width="100%" height="100%">

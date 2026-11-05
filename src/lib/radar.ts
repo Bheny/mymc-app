@@ -1,7 +1,7 @@
 // The "radar" rule. Client-safe: no server imports.
 //
 // A guest who isn't a member yet and has come to 3 or more services in a calendar month
-// comes to the attention of their buscentre head, who has a conversation with them about
+// comes to the attention of their bacenta head, who has a conversation with them about
 // whether they'd like to stay. The conversation clears them until they qualify again.
 // (Anyone can also become a member straight away — nothing here gates that.)
 
@@ -20,7 +20,7 @@ export type RadarStatus =
 
 /**
  * `serviceDates`: the date of each distinct service they attended as a guest (first visit and
- * returning visits alike). `conversationAt`: when the buscentre head last spoke to them, if ever.
+ * returning visits alike). `conversationAt`: when the bacenta head last spoke to them, if ever.
  *
  * The current month and the one before it are looked at, so someone who reached 3 visits at the
  * end of last month still shows up in the first days of this one.

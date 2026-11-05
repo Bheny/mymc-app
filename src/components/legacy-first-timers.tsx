@@ -176,7 +176,7 @@ export function FirstTimersSection({
             <Legend />
           </div>
           <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table className="w-full text-[13px] min-w-[560px]">
+            <table className="sticky-first w-full text-[13px] min-w-[560px]">
               <thead>
                 <tr className="text-[11px] uppercase tracking-[0.04em] text-left" style={{ color: "var(--brand-muted)" }}>
                   <th className="px-3 py-2 font-medium">MC</th>
@@ -238,7 +238,7 @@ export function FirstTimersSection({
             Who&apos;s following up <span className="font-normal" style={{ color: "var(--brand-muted)" }}>· {fmt(s.withHandler)} of {fmt(s.total)} have a handler recorded</span>
           </p>
           <div className="overflow-x-auto -mx-4 sm:mx-0">
-            <table className="w-full text-[13px] min-w-[420px]">
+            <table className="sticky-first w-full text-[13px] min-w-[420px]">
               <thead>
                 <tr className="text-[11px] uppercase tracking-[0.04em] text-left" style={{ color: "var(--brand-muted)" }}>
                   <th className="px-3 py-2 font-medium">Handler</th>

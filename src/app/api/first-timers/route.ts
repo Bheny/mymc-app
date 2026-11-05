@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     if (!cellId) return NextResponse.json({ error: "No cell assigned" }, { status: 400 });
     cellFilter = { cellId };
   } else if (userRole === "buscentre_head" || actingBuscentreId) {
-    if (!buscentreId) return NextResponse.json({ error: "No buscentre assigned" }, { status: 400 });
+    if (!buscentreId) return NextResponse.json({ error: "No bacenta assigned" }, { status: 400 });
     cellFilter = { cell: { buscentreId } };
   }
 
