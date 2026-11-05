@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ClipboardList, Plus, ChevronRight, CheckCircle2, XCircle, Clock, AlertTriangle, Loader2, LayoutDashboard, Filter } from "lucide-react";
+import { ClipboardList, Plus, ChevronRight, CheckCircle2, XCircle, Clock, AlertTriangle, Loader2, LayoutDashboard, Filter, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useActiveRole } from "@/hooks/use-active-role";
 import { AttendanceDashboard } from "@/components/attendance-dashboard";
 import { RecentRecordings } from "@/components/attendance/recent-recordings";
 import { MissedThisWeek } from "@/components/attendance/missed-this-week";
+import { AttendanceReportSheet } from "@/components/attendance/attendance-report-sheet";
 import { AttendanceDrilldownSection } from "@/components/attendance-drilldown-section";
 import { AttendanceReviewSection } from "@/components/attendance-review-section";
 
@@ -87,6 +88,7 @@ export default function AttendancePage() {
       : "";
 
   const [tab, setTab] = useState<"overview" | "drilldown" | "review">("overview");
+  const [reportOpen, setReportOpen] = useState(false);
   const reviewScope = {
     branchId:    activeView?.branchId,
     mcId:        activeView?.mcId,
@@ -146,6 +148,12 @@ export default function AttendancePage() {
           </p>
 
         </div>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+        {role && role !== "member" && (
+          <Button variant="outline" onClick={() => setReportOpen(true)} className="h-9 px-3 text-[14px] font-medium" style={{ borderRadius: 8 }}>
+            <Share2 className="mr-2 h-4 w-4" /> Generate report
+          </Button>
+        )}
         {(canRecord || role === "buscentre_head") && (
           <Link href="/attendance/new">
             <Button className="h-9 px-4 text-[14px] font-medium"
@@ -154,7 +162,10 @@ export default function AttendancePage() {
             </Button>
           </Link>
         )}
+        </div>
       </div>
+
+      <AttendanceReportSheet open={reportOpen} onClose={() => setReportOpen(false)} role={role} actingParam={overviewActingParam} />
 
       {/* Overview / Review toggle */}
       <div className="flex justify-end mb-3">

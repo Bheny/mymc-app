@@ -77,7 +77,7 @@ export async function PATCH(request: Request, { params }: Params) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
 
-  const { memberId, status, notes } = await request.json();
+  const { memberId, status, notes, online } = await request.json();
   if (!memberId || !["PRESENT", "ABSENT", "EXCUSED"].includes(status)) {
     return NextResponse.json({ error: "memberId and a status of PRESENT, ABSENT or EXCUSED are required" }, { status: 400 });
   }
@@ -96,10 +96,13 @@ export async function PATCH(request: Request, { params }: Params) {
     if (!member) return NextResponse.json({ error: "That person isn't a member of this cell" }, { status: 400 });
   }
 
+  // "Online" only means something for someone who was present; changing to absent/excused clears it,
+  // and a change of status that doesn't mention it leaves it as it was
+  const onlineUpdate = status !== "PRESENT" ? { online: false } : typeof online === "boolean" ? { online } : {};
   const record = await prisma.attendance.upsert({
     where:  { serviceId_memberId: { serviceId: params.id, memberId } },
-    update: { status, notes: notes ?? null, markedById: session.user.id, markedAt: new Date() },
-    create: { serviceId: params.id, memberId, status, notes: notes ?? null, markedById: session.user.id },
+    update: { status, notes: notes ?? null, ...onlineUpdate, markedById: session.user.id, markedAt: new Date() },
+    create: { serviceId: params.id, memberId, status, notes: notes ?? null, online: status === "PRESENT" && online === true, markedById: session.user.id },
   });
 
   return NextResponse.json(record);

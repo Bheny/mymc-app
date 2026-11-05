@@ -480,6 +480,8 @@ model Attendance {
   memberId   String           @map("member_id")
   status     AttendanceStatus
   notes      String?
+  // Present, but joined online rather than in the room (shown as "(Online)" in the attendance report)
+  online     Boolean          @default(false)
   markedById String?          @map("marked_by_id")
   markedAt   DateTime         @default(now()) @map("marked_at")
 

@@ -188,11 +188,12 @@ export async function POST(request: Request) {
 
       if (!cancelled && attendance?.length) {
         await tx.attendance.createMany({
-          data: attendance.map((a: { memberId: string; status: string; notes?: string }) => ({
+          data: attendance.map((a: { memberId: string; status: string; notes?: string; online?: boolean }) => ({
             serviceId:  svc.id,
             memberId:   a.memberId,
             status:     a.status as AttendanceStatus,
             notes:      a.notes ?? null,
+            online:     a.status === "PRESENT" && a.online === true,
             markedById: session.user.id,
           })),
         });

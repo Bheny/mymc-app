@@ -57,6 +57,7 @@ type ServiceDetail = {
     id:     string;
     status: AttendanceStatus;
     notes:  string | null;
+    online?: boolean;
     member: {
       id:        string;
       firstName: string;
@@ -179,6 +180,36 @@ export default function AttendanceDetailPage() {
     } else {
       const d = await res.json().catch(() => ({}));
       setFtError(d.error ?? "Failed to add first timer.");
+    }
+  }
+
+  // Present, but joined online (or back to in the room)
+  async function toggleOnline(memberId: string, next: boolean) {
+    setSaving(memberId);
+    try {
+      await mutate(
+        async () => {
+          const res = await fetch(`/api/services/${id}`, {
+            method:  "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body:    JSON.stringify({ memberId, status: "PRESENT", online: next }),
+          });
+          if (!res.ok) {
+            const d = await res.json().catch(() => ({}));
+            throw new Error(d.error ?? "The change wasn't saved.");
+          }
+          return undefined;
+        },
+        {
+          optimisticData: (cur) => (cur ? { ...cur, attendance: cur.attendance.map((a) => (a.member.id === memberId ? { ...a, online: next } : a)) } : cur) as ServiceDetail,
+          rollbackOnError: true, populateCache: false, revalidate: false,
+        },
+      );
+    } catch (e) {
+      toast({ title: "Not saved", description: (e as Error).message, variant: "destructive" });
+    } finally {
+      setSaving(null);
+      mutate();
     }
   }
 
@@ -342,14 +373,23 @@ export default function AttendanceDetailPage() {
                   >
                     {initials}
                   </div>
-                  <span className="flex-1 text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>
-                    {a.member.firstName} {a.member.lastName}
-                    {a.member.gender && (
-                      <span className="ml-1.5 text-[12px] font-normal" style={{ color: "var(--brand-muted)" }}>
-                        {a.member.gender[0]}
-                      </span>
+                  <div className="flex-1 min-w-0">
+                    <span className="block text-[14px] font-medium" style={{ color: "var(--brand-text)" }}>
+                      {a.member.firstName} {a.member.lastName}
+                      {a.member.gender && (
+                        <span className="ml-1.5 text-[12px] font-normal" style={{ color: "var(--brand-muted)" }}>
+                          {a.member.gender[0]}
+                        </span>
+                      )}
+                    </span>
+                    {status === "PRESENT" && service.mode !== "ONLINE" && (
+                      <button type="button" aria-pressed={!!a.online} onClick={() => toggleOnline(a.member.id, !a.online)}
+                              className="mt-0.5 h-6 px-2 rounded-pill text-[11px] font-medium"
+                              style={a.online ? { background: "var(--brand-navy)", color: "#fff" } : { background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
+                        {a.online ? "Online ✓" : "Joined online?"}
+                      </button>
                     )}
-                  </span>
+                  </div>
 
                   {/* Inline edit buttons */}
                   <div className="flex items-center gap-1 shrink-0">

@@ -185,6 +185,8 @@ export default function NewAttendancePage() {
   const [allMembers,        setAllMembers]        = useState<Member[]>([]);
   const [shepherdAttendees, setShepherdAttendees] = useState<Member[]>([]);
   const [attendance,        setAttendance]        = useState<Record<string, AttendanceStatus | null>>({});
+  // Present members who joined online rather than in the room
+  const [online,            setOnline]            = useState<Record<string, boolean>>({});
   const [loadingMembers,    setLoadingMembers]    = useState(true);
 
   // First timers (not shown for Shepherds Meeting)
@@ -404,13 +406,14 @@ export default function NewAttendancePage() {
 
   function setStatus(memberId: string, status: AttendanceStatus) {
     setAttendance((prev) => ({ ...prev, [memberId]: status }));
+    if (status !== "PRESENT") setOnline((prev) => (prev[memberId] ? { ...prev, [memberId]: false } : prev));
   }
 
   async function handleSubmit() {
     if (!allDone) { setError("Mark attendance for every member before submitting."); return; }
     setSaving(true); setError("");
 
-    const records = Object.entries(attendance).map(([memberId, status]) => ({ memberId, status: status! }));
+    const records = Object.entries(attendance).map(([memberId, status]) => ({ memberId, status: status!, online: status === "PRESENT" && !!online[memberId] }));
     const validFTs = firstTimers.filter((ft) => ft.firstName.trim() && ft.lastName.trim());
 
     const res = await fetch("/api/services", {
@@ -721,14 +724,27 @@ export default function NewAttendancePage() {
                     >
                       {initials}
                     </div>
-                    <span className="flex-1 min-w-0 text-[14px] font-medium truncate" style={{ color: "var(--brand-text)" }}>
-                      {m.firstName} {m.lastName}
-                      {m.gender && (
-                        <span className="ml-1.5 text-[12px] font-normal" style={{ color: "var(--brand-muted)" }}>
-                          {m.gender[0]}
-                        </span>
+                    <div className="flex-1 min-w-0">
+                      <span className="block text-[14px] font-medium truncate" style={{ color: "var(--brand-text)" }}>
+                        {m.firstName} {m.lastName}
+                        {m.gender && (
+                          <span className="ml-1.5 text-[12px] font-normal" style={{ color: "var(--brand-muted)" }}>
+                            {m.gender[0]}
+                          </span>
+                        )}
+                      </span>
+                      {/* Joined online instead of in the room — shown as "(Online)" in the attendance report */}
+                      {status === "PRESENT" && !isShepherdsMeeting && serviceMode !== "ONLINE" && (
+                        <button type="button" aria-pressed={!!online[m.id]}
+                                onClick={() => setOnline((prev) => ({ ...prev, [m.id]: !prev[m.id] }))}
+                                className="mt-0.5 h-6 px-2 rounded-pill text-[11px] font-medium"
+                                style={online[m.id]
+                                  ? { background: "var(--brand-navy)", color: "#fff" }
+                                  : { background: "var(--brand-navy-light)", color: "var(--brand-link)" }}>
+                          {online[m.id] ? "Online ✓" : "Joined online?"}
+                        </button>
                       )}
-                    </span>
+                    </div>
                     {/* P / A / E buttons */}
                     <div className="flex items-center gap-1 shrink-0">
                       {(["PRESENT", "ABSENT", "EXCUSED"] as AttendanceStatus[]).map((s) => (
